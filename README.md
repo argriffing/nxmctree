@@ -1,5 +1,4 @@
 Markov chain algorithms on a Python NetworkX tree graph
--------------------------------------------------------
 
 
 Required dependencies
