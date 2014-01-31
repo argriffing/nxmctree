@@ -1,3 +1,5 @@
+from __future__ import division, print_function, absolute_import
+
 print('hello init')
 
 # This idiom is used by scipy to check if it is running during the setup.
