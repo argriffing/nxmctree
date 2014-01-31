@@ -1,4 +1,6 @@
 
+Markov chain algorithms on a Python NetworkX tree graph
+
 Requirements
 ------------
 
@@ -6,3 +8,4 @@ Requirements
  * pip
  * NetworkX
    - `pip install --user git+https://github.com/networkx/networkx`
+
