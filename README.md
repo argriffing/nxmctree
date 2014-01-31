@@ -20,7 +20,13 @@ Install
 `$ pip install --user git+https://github.com/argriffing/nxmctree`
 
 
+Test
+
+`$ python -c "import nxmctree; nxmctree.test()"`
+
+
 Uninstall
 
 `$ pip uninstall nxmctree`
+
 
