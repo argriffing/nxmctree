@@ -7,12 +7,17 @@ Requirements
  * Python 2.7+
  * pip
  * NetworkX
-   - `pip install --user git+https://github.com/networkx/networkx`
+   - `$ pip install --user git+https://github.com/networkx/networkx`
 
 
 Installation
 ------------
 
-`pip install --user git+https://github.com/argriffing/nxmctree`
+`$ pip install --user git+https://github.com/argriffing/nxmctree`
 
+
+Uninstall
+---------
+
+`$ pip uninstall nxmctree`
 

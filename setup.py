@@ -7,6 +7,9 @@
 
 from distutils.core import setup
 
+# This idiom is used by scipy to check if it is running during the setup.
+__NXMCTREE_SETUP__ = True
+
 setup(
         name='nxmctree',
         version='0.1',
