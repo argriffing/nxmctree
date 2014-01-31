@@ -1,1 +1,9 @@
+# compiled source
 *.pyc
+
+# setup.py working directory
+build
+
+# log files
+*.log
+
