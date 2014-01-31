@@ -24,6 +24,7 @@ setup(
         download_url='https://github.com/argriffing/nxmctree/',
         packages=['nxmctree'],
         test_suite='nose.collector',
+        package_data={'nxmctree' : ['tests/test_*.py']},
         )
 
 
