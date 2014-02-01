@@ -49,6 +49,7 @@ def get_feasibility_info_slow(T, edge_to_adjacency, root,
         get_edge_to_joint_posterior_feasibility(*args),
         )
 
+
 def get_feasibility(T, edge_to_adjacency, root,
         root_prior_feasible_set, node_to_data_feasible_set):
     """
@@ -57,7 +58,7 @@ def get_feasibility(T, edge_to_adjacency, root,
     The meanings of the parameters are the same as for the other functions.
 
     """
-    root_fset = _backward(T, edge_to_adjacency, root,
+    root_fset = get_root_posterior_feasible_set(T, edge_to_adjacency, root,
             root_prior_feasible_set, node_to_data_feasible_set)
     return True if root_fset else False
 
