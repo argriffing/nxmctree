@@ -8,10 +8,17 @@ import itertools
 
 import networkx as nx
 from numpy.testing import (run_module_suite, TestCase,
-        decorators, assert_equal)
+        decorators, assert_, assert_equal)
 
 import nxmctree
-from nxmctree.feasibility import get_node_to_posterior_feasible_set
+from nxmctree.feasibility import (
+        get_feasibility,
+        get_root_posterior_feasible_set,
+        get_node_to_posterior_feasible_set,
+        get_edge_to_joint_posterior_feasibility,
+        get_feasibility_info_slow,
+        )
+
 
 class Test_ShortPathFeasibility(TestCase):
 
@@ -55,6 +62,15 @@ class Test_ShortPathFeasibility(TestCase):
         for root in self.nodes:
             T = nx.dfs_tree(self.G, root)
             edge_to_adjacency = dict((edge, self.A) for edge in T.edges())
+
+            # Assert that the combination of input parameters is feasible.
+            feas = get_feasibility(
+                    T, edge_to_adjacency, root,
+                    root_prior_feasible_set, node_to_data_feasible_set)
+            assert_(feas)
+
+            # Assert that the posterior feasibility is the same
+            # as the feasibility imposed by the data.
             v_to_fset = nxmctree.feasibility.get_node_to_posterior_feasible_set(
                     T, edge_to_adjacency, root,
                     root_prior_feasible_set, node_to_data_feasible_set)

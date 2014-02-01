@@ -1,5 +1,5 @@
 """
-Markov chain algorithms on trees.
+Markov chain feasibility algorithms on trees using NetworkX graphs.
 
 Regarding notation, sometimes a variable named 'v' (indicating a 'vertex' of
 a graph) is used to represent a networkx graph node,
@@ -13,7 +13,89 @@ from __future__ import division, print_function, absolute_import
 
 import networkx as nx
 
-__all__ = ['get_node_to_posterior_feasible_set']
+__all__ = [
+        'get_feasibility',
+        'get_root_posterior_feasible_set',
+        'get_node_to_posterior_feasible_set',
+        'get_edge_to_joint_posterior_feasibility',
+
+        # This function is for testing.
+        'get_feasibility_info_slow',
+        ]
+
+def get_feasibility_info_slow(T, edge_to_adjacency, root,
+        root_prior_feasible_set, node_to_data_feasible_set):
+    """
+    Get all of the feasibility info.
+
+    This function is intended only for testing.
+    It is slow and calls each function separately instead of reusing code.
+    The meanings of the parameters are the same as for the other functions.
+
+    The four posterior outputs are in order of increasing complicatedness.
+    The first output is just the binary feasibility of the input combination.
+    The second output is a set of feasible states at the root.
+    The third output maps a node to a set of feasible states.
+    The fourth output maps edges to networkx digraphs whose edges represent
+    jointly feasible endpoint states.
+
+    """
+    args = (T, edge_to_adjacency, root,
+        root_prior_feasible_set, node_to_data_feasible_set)
+    return (
+        get_feasibility(*args),
+        get_root_posterior_feasible_set(*args),
+        get_node_to_posterior_feasible_set(*args),
+        get_edge_to_joint_posterior_feasibility(*args),
+        )
+
+def get_feasibility(T, edge_to_adjacency, root,
+        root_prior_feasible_set, node_to_data_feasible_set):
+    """
+    Get the feasibility of this combination of parameters.
+
+    The meanings of the parameters are the same as for the other functions.
+
+    """
+    root_fset = _backward(T, edge_to_adjacency, root,
+            root_prior_feasible_set, node_to_data_feasible_set)
+    return True if root_fset else False
+
+
+def get_root_posterior_feasible_set(T, edge_to_adjacency, root,
+        root_prior_feasible_set, node_to_data_feasible_set):
+    """
+    Get the posterior set of feasible states at the root.
+
+    The meanings of the parameters are the same as for the other functions.
+
+    """
+    v_to_subtree_feasible_set = _backward(T, edge_to_adjacency, root,
+            root_prior_feasible_set, node_to_data_feasible_set)
+    return v_to_subtree_feasible_set[root]
+
+
+def get_edge_to_joint_posterior_feasibility(T, edge_to_adjacency, root,
+        root_prior_feasible_set, node_to_data_feasible_set):
+    """
+    For each edge, get the joint feasibility of states at edge endpoints.
+
+    The interpretation of the parameters is the same as elsewhere.
+
+    """
+    v_to_fset = get_node_to_posterior_feasible_set(T, edge_to_adjacency, root,
+            root_prior_feasible_set, node_to_data_feasible_set)
+    edge_to_joint_fset = {}
+    for edge in nx.bfs_edges(T, root):
+        A = edge_to_adjacency[edge]
+        J = nx.DiGraph()
+        va, vb = edge
+        for sa in v_to_fset[va]:
+            if sa in A:
+                sbs = set(A[sa]) & v_to_fset[va]
+                J.add_edges_from((sa, sb) for sb in sbs)
+        edge_to_joint_fset[edge] = J
+    return edge_to_joint_fset
 
 
 def get_node_to_posterior_feasible_set(T, edge_to_adjacency, root,
