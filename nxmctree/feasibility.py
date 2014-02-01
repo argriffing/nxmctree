@@ -17,9 +17,7 @@ __all__ = ['get_node_to_posterior_feasible_set']
 
 
 def get_node_to_posterior_feasible_set(T, edge_to_adjacency, root,
-        root_prior_feasible_set,
-        node_to_data_feasible_set,
-        ):
+        root_prior_feasible_set, node_to_data_feasible_set):
     """
     For each node get the marginal posterior set of feasible states.
 
@@ -70,7 +68,7 @@ def _backward(T, edge_to_adjacency, root,
     """
     v_to_subtree_feasible_set = {}
     for v in reversed(nx.topological_sort(T, [root])):
-        cs = T[v].successors()
+        cs = T[v]
         fset_data = node_to_data_feasible_set[v]
         if cs:
             fset = set()
@@ -98,9 +96,8 @@ def _forward(T, edge_to_adjacency, root,
         va, vb = edge
         A = edge_to_adjacency[edge]
         fset = set()
-        for s in v_to_subtree_feasible_set[va]:
-            if set(A[s].successors()) & v_to_subtree_feasible_set[vb]:
-                fset.add(s)
+        for s in v_to_posterior_feasible_set[va]:
+            fset.update(set(A[s]) & v_to_subtree_feasible_set[vb])
         v_to_posterior_feasible_set[vb] = fset
     return v_to_posterior_feasible_set
 
@@ -121,7 +118,7 @@ def _state_is_subtree_feasible(edge_to_adjacency,
         A = edge_to_adjacency[edge]
         if s not in A:
             return False
-        if not set(A[s].successors()) & v_to_subtree_feasible_set[c]:
+        if not set(A[s]) & v_to_subtree_feasible_set[c]:
             return False
     return True
 
