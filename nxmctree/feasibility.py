@@ -1,12 +1,22 @@
 """
 Markov chain algorithms on trees.
 
+Regarding notation, sometimes a variable named 'v' (indicating a 'vertex' of
+a graph) is used to represent a networkx graph node,
+because this name is shorter than 'node' and looks less like a count than 'n'.
+The 'edge_to_adjacency' is a map from a directed edge on the networkx graph
+(in the direction from the root toward the tips) to a networkx
+directed graph representing a sparse state transition feasibility matrix.
+
 """
 from __future__ import division, print_function, absolute_import
 
 import networkx as nx
 
-def get_node_to_posterior_feasible_set(T, root,
+__all__ = ['get_node_to_posterior_feasible_set']
+
+
+def get_node_to_posterior_feasible_set(T, edge_to_adjacency, root,
         root_prior_feasible_set,
         node_to_data_feasible_set,
         ):
@@ -22,11 +32,10 @@ def get_node_to_posterior_feasible_set(T, root,
     Parameters
     ----------
     T : directed networkx tree graph
-        Edges are annotated with adjacency matrices A.
-        These adjacency matrices are treated as unweighted for the purposes
-        of feasibility.
-        If the edges of the adjacency matrices are weighted,
-        the weights are ignored here.
+        Edge and node annotations are ignored.
+    edge_to_adjacency : dict
+        A map from directed edges of the tree graph
+        to networkx graphs representing state transition feasibility.
     root : hashable
         This is the root node.
         Following networkx convention, this may be anything hashable.
@@ -45,59 +54,74 @@ def get_node_to_posterior_feasible_set(T, root,
         Map from node to set of posterior feasible states.
 
     """
-    v_to_subtree_feasible_set = _tips_to_root(
-            T, root, root_prior_feasible_set, node_to_data_feasible_set)
-    _root_to_tips()
+    v_to_subtree_feasible_set = _backward(T, edge_to_adjacency, root,
+            root_prior_feasible_set, node_to_data_feasible_set)
+    v_to_posterior_feasible_set = _forward(T, edge_to_adjacency, root,
+            v_to_subtree_feasible_set)
+    return v_to_posterior_feasible_set
 
 
-def _state_is_subtree_feasible(T, v_to_subtree_feasible_set, v, cs, s):
+def _backward(T, edge_to_adjacency, root,
+        root_prior_feasible_set, node_to_data_feasible_set):
     """
-    T : directed tree
+    Determine the subtree feasible state set of each node.
+    This is the backward pass of a backward-forward algorithm.
+
+    """
+    v_to_subtree_feasible_set = {}
+    for v in reversed(nx.topological_sort(T, [root])):
+        cs = T[v].successors()
+        fset_data = node_to_data_feasible_set[v]
+        if cs:
+            fset = set()
+            for s in fset_data:
+                if _state_is_subtree_feasible(edge_to_adjacency,
+                        v_to_subtree_feasible_set, v, cs, s):
+                    fset.add(s)
+        else:
+            fset = set(fset_data)
+        if v == root:
+            fset &= root_prior_feasible_set
+        v_to_subtree_feasible_set[v] = fset
+    return v_to_subtree_feasible_set
+
+
+def _forward(T, edge_to_adjacency, root,
+        v_to_subtree_feasible_set):
+    """
+    Forward pass.
+
+    """
+    v_to_posterior_feasible_set = {}
+    v_to_posterior_feasible_set[root] = set(v_to_subtree_feasible_set[root])
+    for edge in nx.bfs_edges(T, root):
+        va, vb = edge
+        A = edge_to_adjacency[edge]
+        fset = set()
+        for s in v_to_subtree_feasible_set[va]:
+            if set(A[s].successors()) & v_to_subtree_feasible_set[vb]:
+                fset.add(s)
+        v_to_posterior_feasible_set[vb] = fset
+    return v_to_posterior_feasible_set
+
+
+def _state_is_subtree_feasible(edge_to_adjacency,
+        v_to_subtree_feasible_set, v, cs, s):
+    """
+    edge_to_adjacency : dict
+        A map from directed edges of the tree graph
+        to networkx graphs representing state transition feasibility.
     v_to_subtree_feasible_set : which states are allowed in child nodes
     v : node under consideration
     cs : child nodes of v
     s : state under consideration
     """
     for c in cs:
-        A = T[v][c].A
+        edge = v, c
+        A = edge_to_adjacency[edge]
         if s not in A:
             return False
         if not set(A[s].successors()) & v_to_subtree_feasible_set[c]:
             return False
     return True
 
-
-def _tips_to_root(T, root, root_prior_feasible_set, node_to_data_feasible_set):
-    """
-    Backward pass.
-
-    """
-    # Initialize the map from node to subtree feasibility state set.
-    v_to_subtree_feasible_set = {}
-
-    # Determine the subtree feasible set for every node but the root.
-    for v in reversed(nx.topological_sort(T, [root])):
-        cs = T[v].successors()
-        fset_data = set(node_to_data_feasible_set[v])
-        if cs:
-            fset = set()
-            for s in set(fset):
-                if _state_is_subtree_feasible(
-                        T, v_to_subtree_feasible_set, v, cs, s):
-                    fset.add(s)
-        else:
-            fset = fset_data
-        if v == root:
-            fset &= root_prior_feasible_set
-        v_to_subtree_feasible_set[v] = fset
-
-    # Return the map from node to subtree feasibility state set.
-    return v_to_subtree_feasible_set
-
-
-def _root_to_tips():
-    """
-    Forward pass.
-
-    """
-    pass
