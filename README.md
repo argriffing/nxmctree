@@ -20,7 +20,7 @@ Testing (user):
  * `$ python -c "import nxmctree; nxmctree.test()"`
 
 Testing (development):
- * `$ python runtests.py
+ * `$ python runtests.py`
 
 Uninstall:
  * `$ pip uninstall nxmctree`
