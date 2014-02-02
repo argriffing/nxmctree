@@ -8,13 +8,15 @@ import random
 
 import networkx as nx
 from numpy.testing import (run_module_suite, TestCase,
-        decorators, assert_, assert_equal)
+        decorators, assert_, assert_equal, assert_allclose)
 
 import nxmctree
 from nxmctree.util import dict_distn
 from nxmctree.nputil import assert_dict_distn_allclose
 from nxmctree.likelihood import (
         get_likelihood,
+        get_likelihood_brute,
+        get_history_likelihood,
         get_root_posterior_partial_likelihoods,
         get_node_to_posterior_distn,
         get_node_to_posterior_distn_brute,
@@ -36,7 +38,7 @@ def _random_transition_graph(states, pzero):
             if random.random() > pzero:
                 P.add_edge(sa, sb, weight=random.expovariate(1))
     for sa in states:
-        if P[sa]:
+        if sa in P:
             total = sum(P[sa][sb]['weight'] for sb in P[sa])
             for sb in P[sa]:
                 P[sa][sb]['weight'] /= total
@@ -70,7 +72,78 @@ def _random_data_feasible_sets(nodes, states, pzero):
 
 class Test_Likelihood(TestCase):
 
-    def test_history_log_likelihood(self):
+
+    def test_likelihood_dynamic_vs_brute(self):
+        # Compare dynamic programming vs. summing over all histories.
+
+        nodes = set(range(4))
+        states = set(['a', 'b', 'c'])
+
+        G = nx.Graph()
+        G.add_edge(0, 1)
+        G.add_edge(0, 2)
+        G.add_edge(0, 3)
+
+        nsamples = 20
+        for i in range(nsamples):
+
+            for root in nodes:
+
+                pzero = 0.2
+                T = nx.dfs_tree(G, root)
+                root_prior_distn = _random_dict_distn(states, pzero)
+                edge_to_P = {}
+                for edge in T.edges():
+                    P = _random_transition_graph(states, pzero)
+                    edge_to_P[edge] = P
+                node_to_data_feasible_set = _random_data_feasible_sets(
+                        nodes, states, pzero)
+
+                lk_dynamic = get_likelihood(
+                        T, edge_to_P, root,
+                        root_prior_distn, node_to_data_feasible_set)
+                lk_brute = get_likelihood_brute(
+                        T, edge_to_P, root,
+                        root_prior_distn, node_to_data_feasible_set)
+
+                if lk_dynamic is None or lk_brute is None:
+                    assert_equal(lk_dynamic, lk_brute)
+                else:
+                    assert_allclose(lk_dynamic, lk_brute)
+
+
+    def test_unrestricted_log_likelihood(self):
+        # When there is no data restriction the likelihood should be 1.
+
+        nsamples = 10
+        for i in range(nsamples):
+
+            nodes = set(range(4))
+            states = set(['a', 'b', 'c'])
+
+            G = nx.Graph()
+            G.add_edge(0, 1)
+            G.add_edge(0, 2)
+            G.add_edge(0, 3)
+
+            for root in nodes:
+
+                pzero = 0
+                T = nx.dfs_tree(G, root)
+                root_prior_distn = _random_dict_distn(states, pzero)
+                edge_to_P = {}
+                for edge in T.edges():
+                    P = _random_transition_graph(states, pzero)
+                    edge_to_P[edge] = P
+                node_to_data_feasible_set = _random_data_feasible_sets(
+                        nodes, states, pzero)
+
+                lk = get_likelihood(T, edge_to_P, root,
+                        root_prior_distn, node_to_data_feasible_set)
+
+                assert_allclose(lk, 1)
+
+    def test_dynamic_history_likelihood(self):
         # In this test the history is completely specified.
 
         G = nx.Graph()
@@ -125,22 +198,19 @@ class Test_Likelihood(TestCase):
         assert_equal(actual_likelihood, desired_likelihood)
 
 
-    def test_dynamic_vs_brute_node_posterior_distns(self):
+    def test_node_posterior_distns_dynamic_vs_brute(self):
         # Check that both methods give the same posterior distributions.
+
+        nodes = set(range(4))
+        states = set(['a', 'b', 'c'])
+
+        G = nx.Graph()
+        G.add_edge(0, 1)
+        G.add_edge(0, 2)
+        G.add_edge(0, 3)
 
         nsamples = 10
         for i in range(nsamples):
-
-            nodes = set(range(4))
-            states = set(['a', 'b', 'c'])
-
-            G = nx.Graph()
-            G.add_weighted_edges_from([
-                    (0, 1, random.expovariate(1)),
-                    (0, 2, random.expovariate(1)),
-                    (0, 3, random.expovariate(1)),
-                    ])
-
 
             for root in nodes:
 

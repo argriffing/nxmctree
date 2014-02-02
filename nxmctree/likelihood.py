@@ -20,6 +20,7 @@ from nxmctree.util import (
 
 __all__ = [
         'get_likelihood',
+        'get_history_likelihood',
         'get_root_posterior_partial_likelihoods',
         'get_node_to_posterior_distn',
         'get_node_to_posterior_distn_brute',
@@ -44,6 +45,53 @@ def get_likelihood(T, edge_to_P, root,
         return sum(root_post.values())
     else:
         return None
+
+
+def get_likelihood_brute(T, edge_to_P, root,
+        root_prior_distn, node_to_data_feasible_set):
+    """
+    Get the likelihood of this combination of parameters.
+
+    Use brute force enumeration over all possible states.
+    The meanings of the parameters are the same as for the other functions.
+
+    """
+    lk_total = None
+    nodes = set(node_to_data_feasible_set)
+    pairs = node_to_data_feasible_set.items()
+    nodes, sets = zip(*pairs)
+    for assignment in itertools.product(*sets):
+        history = zip(nodes, assignment)
+        node_to_state = dict(history)
+        lk = get_history_likelihood(T, edge_to_P, root,
+                root_prior_distn, node_to_state)
+        if lk is not None:
+            if lk_total is None:
+                lk_total = lk
+            else:
+                lk_total += lk
+    return lk_total
+
+
+def get_history_likelihood(T, edge_to_P, root,
+        root_prior_distn, node_to_state):
+    """
+    """
+    root_state = node_to_state[root]
+    if root_state not in root_prior_distn:
+        return None
+    lk = root_prior_distn[root_state]
+    for edge in nx.bfs_edges(T, root):
+        va, vb = edge
+        P = edge_to_P[edge]
+        sa = node_to_state[va]
+        sb = node_to_state[vb]
+        if sa not in P:
+            return None
+        if sb not in P[sa]:
+            return None
+        lk *= P[sa][sb]['weight']
+    return lk
 
 
 def get_root_posterior_partial_likelihoods(T, edge_to_P, root,
@@ -87,11 +135,8 @@ def get_node_to_posterior_distn_brute(T, edge_to_P, root,
     v_to_d = dict((v, defaultdict(float)) for v in nodes)
     pairs = node_to_data_feasible_set.items()
     nodes, sets = zip(*pairs)
-    print('nodes', nodes)
-    print('sets', sets)
     for assignment in itertools.product(*sets):
         history = zip(nodes, assignment)
-        print('assignment', assignment)
         v_to_data_fset = dict((v, {s}) for v, s in history)
         lk = get_likelihood(T, edge_to_P, root,
                 root_prior_distn, v_to_data_fset)
