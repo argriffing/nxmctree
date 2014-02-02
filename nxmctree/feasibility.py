@@ -4,9 +4,10 @@ Markov chain feasibility algorithms on trees using NetworkX graphs.
 Regarding notation, sometimes a variable named 'v' (indicating a 'vertex' of
 a graph) is used to represent a networkx graph node,
 because this name is shorter than 'node' and looks less like a count than 'n'.
-The 'edge_to_adjacency' is a map from a directed edge on the networkx graph
-(in the direction from the root toward the tips) to a networkx
-directed graph representing a sparse state transition feasibility matrix.
+The 'edge_to_adjacency' is a map from a directed edge on
+the networkx tree graph (in the direction from the root toward the tips)
+to a networkx directed graph representing a sparse state transition
+feasibility matrix.
 
 """
 from __future__ import division, print_function, absolute_import
