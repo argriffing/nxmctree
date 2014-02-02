@@ -137,9 +137,9 @@ def get_node_to_posterior_distn_brute(T, edge_to_P, root,
     nodes, sets = zip(*pairs)
     for assignment in itertools.product(*sets):
         history = zip(nodes, assignment)
-        v_to_data_fset = dict((v, {s}) for v, s in history)
-        lk = get_likelihood(T, edge_to_P, root,
-                root_prior_distn, v_to_data_fset)
+        node_to_state = dict(history)
+        lk = get_history_likelihood(T, edge_to_P, root,
+                root_prior_distn, node_to_state)
         if lk is not None:
             for v, s in history:
                 v_to_d[v][s] += lk
@@ -189,18 +189,40 @@ def _forward(T, edge_to_P, root,
     for edge in nx.bfs_edges(T, root):
         va, vb = edge
         P = edge_to_P[edge]
-        fset = set()
-        for sa in v_to_posterior_distn[va]:
-            fset.update(set(P[sa]) & set(v_to_subtree_partial_likelihoods[vb]))
-        print('fset', fset)
-        d = dict((sb, 0) for sb in fset)
-        for sb in fset:
-            p_subtree = v_to_subtree_partial_likelihoods[vb][sb]
-            for sa, p_prev in v_to_posterior_distn[va].items():
-                if sb in P[sa]:
-                    print(sa, sb)
-                    d[sb] += p_prev * P[sa][sb]['weight'] * p_subtree
-        v_to_posterior_distn[vb] = dict_distn(d)
+        #fset = set()
+        #for sa in v_to_posterior_distn[va]:
+            #fset.update(set(P[sa]) & set(v_to_subtree_partial_likelihoods[vb]))
+        #print('fset', fset)
+        #d = dict((sb, 0) for sb in fset)
+
+        # For each parent state, compute the distribution over child states.
+        distn = defaultdict(float)
+        parent_distn = v_to_posterior_distn[va]
+        for sa, pa in parent_distn.items():
+
+            # Construct conditional transition probabilities.
+            fset = set(P[sa]) & set(v_to_subtree_partial_likelihoods[vb])
+            sb_weights = {}
+            for sb in fset:
+                a = P[sa][sb]['weight']
+                b = v_to_subtree_partial_likelihoods[vb][sb]
+                sb_weights[sb] = a * b
+            sb_distn = dict_distn(sb_weights)
+
+            # Add to the marginal distribution.
+            for sb, pb in sb_distn.items():
+                distn[sb] += pa * pb
+
+        v_to_posterior_distn[vb] = distn
+
+        #TODO old
+        #for sb in fset:
+            #p_subtree = v_to_subtree_partial_likelihoods[vb][sb]
+            #for sa, p_prev in v_to_posterior_distn[va].items():
+                #if sb in P[sa]:
+                    #print(sa, sb)
+                    #d[sb] += p_prev * P[sa][sb]['weight'] * p_subtree
+        #v_to_posterior_distn[vb] = dict_distn(d)
     return v_to_posterior_distn
 
 

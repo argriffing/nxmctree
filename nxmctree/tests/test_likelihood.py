@@ -112,7 +112,7 @@ class Test_Likelihood(TestCase):
                     assert_allclose(lk_dynamic, lk_brute)
 
 
-    def test_unrestricted_log_likelihood(self):
+    def test_unrestricted_likelihood(self):
         # When there is no data restriction the likelihood should be 1.
 
         nsamples = 10
