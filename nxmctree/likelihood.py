@@ -15,8 +15,7 @@ from collections import defaultdict
 import networkx as nx
 
 import nxmctree
-from nxmctree.util import (
-        FeasibilityError, dict_distn, dict_elementwise_sum)
+from nxmctree.util import dict_distn
 
 __all__ = [
         'get_likelihood',
