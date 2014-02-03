@@ -85,6 +85,8 @@ def get_edge_to_joint_posterior_feasibility(T, edge_to_adjacency, root,
     The interpretation of the parameters is the same as elsewhere.
 
     """
+    if not T:
+        return {}
     v_to_fset = get_node_to_posterior_feasible_set(T, edge_to_adjacency, root,
             root_prior_feasible_set, node_to_data_feasible_set)
     edge_to_joint_fset = {}
@@ -151,9 +153,16 @@ def _backward(T, edge_to_adjacency, root,
 
     """
     v_to_subtree_feasible_set = {}
-    for v in reversed(nx.topological_sort(T, [root])):
-        cs = T[v]
+    if T:
+        postorder_nodes = reversed(nx.topological_sort(T, [root]))
+    else:
+        postorder_nodes = [root]
+    for v in postorder_nodes:
         fset_data = node_to_data_feasible_set[v]
+        if T and T[v]:
+            cs = T[v]
+        else:
+            cs = set()
         if cs:
             fset = set()
             for s in fset_data:
@@ -176,6 +185,8 @@ def _forward(T, edge_to_adjacency, root,
     """
     v_to_posterior_feasible_set = {}
     v_to_posterior_feasible_set[root] = set(v_to_subtree_feasible_set[root])
+    if not T:
+        return v_to_posterior_feasible_set
     for edge in nx.bfs_edges(T, root):
         va, vb = edge
         A = edge_to_adjacency[edge]

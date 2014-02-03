@@ -17,6 +17,7 @@ from nxmctree.feasibility import (
         get_node_to_posterior_feasible_set,
         get_edge_to_joint_posterior_feasibility,
         )
+from nxmctree.puzzles import gen_random_systems
 
 
 class Test_ShortPathFeasibility(TestCase):
@@ -167,6 +168,24 @@ class Test_LongPathFeasibility(TestCase):
                         T, edge_to_adjacency, root,
                         root_prior_feasible_set, node_to_data_feasible_set)
                 assert_equal(v_to_fset, node_to_implied_feasible_set)
+
+
+def test_puzzles():
+    # Check for raised exceptions but do not check the answers.
+    pzero = 0.2
+    for T, e_to_P, r, r_prior, node_feas in gen_random_systems(pzero):
+        edge_to_A = e_to_P
+        root = r
+        root_prior_feasible_set = set(r_prior)
+        node_to_data_feasible_set = node_feas
+        for f in (
+                get_feasibility,
+                get_root_posterior_feasible_set,
+                get_node_to_posterior_feasible_set,
+                get_edge_to_joint_posterior_feasibility,
+                ):
+            f(T, edge_to_A, root,
+                    root_prior_feasible_set, node_to_data_feasible_set)
 
 
 if __name__ == '__main__':
