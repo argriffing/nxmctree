@@ -108,39 +108,44 @@ class Test_Likelihood(TestCase):
 
     def test_likelihood_dynamic_vs_brute(self):
         # Compare dynamic programming vs. summing over all histories.
-
         pzero = 0.2
-        for system in _gen_random_systems(pzero):
-
-            (T, edge_to_P, root, root_prior_distn,
-                    node_to_data_feasible_set) = system
-
-            lk_dynamic = get_likelihood(
-                    T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
-            lk_brute = get_likelihood_brute(
-                    T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
-
+        for T, e_to_P, r, r_prior, node_feas in _gen_random_systems(pzero):
+            lk_dynamic = get_likelihood(T, e_to_P, r, r_prior, node_feas)
+            lk_brute = get_likelihood_brute(T, e_to_P, r, r_prior, node_feas)
             if lk_dynamic is None or lk_brute is None:
                 assert_equal(lk_dynamic, lk_brute)
             else:
                 assert_allclose(lk_dynamic, lk_brute)
 
-
     def test_unrestricted_likelihood(self):
         # When there is no data restriction the likelihood should be 1.
-
         pzero = 0
-        for system in _gen_random_systems(pzero):
-
-            (T, edge_to_P, root, root_prior_distn,
-                    node_to_data_feasible_set) = system
-
-            lk = get_likelihood(T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
-
+        for T, e_to_P, r, r_prior, node_feas in _gen_random_systems(pzero):
+            lk = get_likelihood(T, e_to_P, r, r_prior, node_feas)
             assert_allclose(lk, 1)
+
+    def test_node_posterior_distns_dynamic_vs_brute(self):
+        # Check that both methods give the same posterior distributions.
+        pzero = 0.2
+        for T, e_to_P, r, r_prior, node_feas in _gen_random_systems(pzero):
+            v_to_d = get_node_to_posterior_distn(
+                    T, e_to_P, r, r_prior, node_feas)
+            v_to_d_brute = get_node_to_posterior_distn_brute(
+                    T, e_to_P, r, r_prior, node_feas)
+            for v in set(node_feas):
+                assert_dict_distn_allclose(v_to_d[v], v_to_d_brute[v])
+
+    def test_edge_joint_posterior_distn_dynamic_vs_brute(self):
+        # Check that both methods give the same posterior distributions.
+        pzero = 0.2
+        for T, e_to_P, r, r_prior, node_feas in _gen_random_systems(pzero):
+            edge_to_J = get_edge_to_joint_posterior_distn(
+                    T, e_to_P, r, r_prior, node_feas)
+            edge_to_J_brute = get_edge_to_joint_posterior_distn_brute(
+                    T, e_to_P, r, r_prior, node_feas)
+            for edge in T.edges():
+                assert_nx_distn_allclose(
+                        edge_to_J[edge], edge_to_J_brute[edge])
 
     def test_dynamic_history_likelihood(self):
         # In this test the history is completely specified.
@@ -197,46 +202,6 @@ class Test_Likelihood(TestCase):
         assert_equal(actual_likelihood, desired_likelihood)
 
 
-    def test_node_posterior_distns_dynamic_vs_brute(self):
-        # Check that both methods give the same posterior distributions.
-
-        pzero = 0.2
-        for system in _gen_random_systems(pzero):
-
-            (T, edge_to_P, root, root_prior_distn,
-                    node_to_data_feasible_set) = system
-
-            v_to_d = get_node_to_posterior_distn(
-                    T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
-            v_to_d_brute = get_node_to_posterior_distn_brute(
-                    T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
-
-            nodes = set(node_to_data_feasible_set)
-            for v in nodes:
-                assert_dict_distn_allclose(v_to_d[v], v_to_d_brute[v])
-
-
-    def test_edge_joint_posterior_distn_dynamic_vs_brute(self):
-        # Check that both methods give the same posterior distributions.
-
-        pzero = 0.2
-        for system in _gen_random_systems(pzero):
-
-            (T, edge_to_P, root, root_prior_distn,
-                    node_to_data_feasible_set) = system
-
-            edge_to_J = get_edge_to_joint_posterior_distn(
-                    T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
-            edge_to_J_brute = get_edge_to_joint_posterior_distn_brute(
-                    T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
-
-            for edge in T.edges():
-                assert_nx_distn_allclose(
-                        edge_to_J[edge], edge_to_J_brute[edge])
 
 
 if __name__ == '__main__':
