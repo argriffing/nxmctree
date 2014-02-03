@@ -72,78 +72,75 @@ def _random_data_feasible_sets(nodes, states, pzero):
     return d
 
 
+def _gen_random_systems(pzero):
+    """
+    Sample whole systems, where pzero indicates sparsity.
+    Yield (T, edge_to_P, root, root_prior_distn, node_to_data_feasible_set).
+    """
+    nodes = set(range(4))
+    states = set(['a', 'b', 'c'])
+
+    G = nx.Graph()
+    G.add_edge(0, 1)
+    G.add_edge(0, 2)
+    G.add_edge(0, 3)
+
+    nsamples = 10
+    for i in range(nsamples):
+
+        for root in nodes:
+
+            T = nx.dfs_tree(G, root)
+            root_prior_distn = _random_dict_distn(states, pzero)
+            edge_to_P = {}
+            for edge in T.edges():
+                P = _random_transition_graph(states, pzero)
+                edge_to_P[edge] = P
+            node_to_data_feasible_set = _random_data_feasible_sets(
+                    nodes, states, pzero)
+
+            yield (T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set)
+
+
 class Test_Likelihood(TestCase):
 
 
     def test_likelihood_dynamic_vs_brute(self):
         # Compare dynamic programming vs. summing over all histories.
 
-        nodes = set(range(4))
-        states = set(['a', 'b', 'c'])
+        pzero = 0.2
+        for system in _gen_random_systems(pzero):
 
-        G = nx.Graph()
-        G.add_edge(0, 1)
-        G.add_edge(0, 2)
-        G.add_edge(0, 3)
+            (T, edge_to_P, root, root_prior_distn,
+                    node_to_data_feasible_set) = system
 
-        nsamples = 20
-        for i in range(nsamples):
+            lk_dynamic = get_likelihood(
+                    T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set)
+            lk_brute = get_likelihood_brute(
+                    T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set)
 
-            for root in nodes:
-
-                pzero = 0.2
-                T = nx.dfs_tree(G, root)
-                root_prior_distn = _random_dict_distn(states, pzero)
-                edge_to_P = {}
-                for edge in T.edges():
-                    P = _random_transition_graph(states, pzero)
-                    edge_to_P[edge] = P
-                node_to_data_feasible_set = _random_data_feasible_sets(
-                        nodes, states, pzero)
-
-                lk_dynamic = get_likelihood(
-                        T, edge_to_P, root,
-                        root_prior_distn, node_to_data_feasible_set)
-                lk_brute = get_likelihood_brute(
-                        T, edge_to_P, root,
-                        root_prior_distn, node_to_data_feasible_set)
-
-                if lk_dynamic is None or lk_brute is None:
-                    assert_equal(lk_dynamic, lk_brute)
-                else:
-                    assert_allclose(lk_dynamic, lk_brute)
+            if lk_dynamic is None or lk_brute is None:
+                assert_equal(lk_dynamic, lk_brute)
+            else:
+                assert_allclose(lk_dynamic, lk_brute)
 
 
     def test_unrestricted_likelihood(self):
         # When there is no data restriction the likelihood should be 1.
 
-        nsamples = 10
-        for i in range(nsamples):
+        pzero = 0
+        for system in _gen_random_systems(pzero):
 
-            nodes = set(range(4))
-            states = set(['a', 'b', 'c'])
+            (T, edge_to_P, root, root_prior_distn,
+                    node_to_data_feasible_set) = system
 
-            G = nx.Graph()
-            G.add_edge(0, 1)
-            G.add_edge(0, 2)
-            G.add_edge(0, 3)
+            lk = get_likelihood(T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set)
 
-            for root in nodes:
-
-                pzero = 0
-                T = nx.dfs_tree(G, root)
-                root_prior_distn = _random_dict_distn(states, pzero)
-                edge_to_P = {}
-                for edge in T.edges():
-                    P = _random_transition_graph(states, pzero)
-                    edge_to_P[edge] = P
-                node_to_data_feasible_set = _random_data_feasible_sets(
-                        nodes, states, pzero)
-
-                lk = get_likelihood(T, edge_to_P, root,
-                        root_prior_distn, node_to_data_feasible_set)
-
-                assert_allclose(lk, 1)
+            assert_allclose(lk, 1)
 
     def test_dynamic_history_likelihood(self):
         # In this test the history is completely specified.
@@ -203,76 +200,43 @@ class Test_Likelihood(TestCase):
     def test_node_posterior_distns_dynamic_vs_brute(self):
         # Check that both methods give the same posterior distributions.
 
-        nodes = set(range(4))
-        states = set(['a', 'b', 'c'])
+        pzero = 0.2
+        for system in _gen_random_systems(pzero):
 
-        G = nx.Graph()
-        G.add_edge(0, 1)
-        G.add_edge(0, 2)
-        G.add_edge(0, 3)
+            (T, edge_to_P, root, root_prior_distn,
+                    node_to_data_feasible_set) = system
 
-        nsamples = 10
-        for i in range(nsamples):
+            v_to_d = get_node_to_posterior_distn(
+                    T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set)
+            v_to_d_brute = get_node_to_posterior_distn_brute(
+                    T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set)
 
-            for root in nodes:
-
-                pzero = 0.2
-                T = nx.dfs_tree(G, root)
-                root_prior_distn = _random_dict_distn(states, pzero)
-                edge_to_P = {}
-                for edge in T.edges():
-                    P = _random_transition_graph(states, pzero)
-                    edge_to_P[edge] = P
-                node_to_data_feasible_set = _random_data_feasible_sets(
-                        nodes, states, pzero)
-
-                v_to_d = get_node_to_posterior_distn(
-                        T, edge_to_P, root,
-                        root_prior_distn, node_to_data_feasible_set)
-                v_to_d_brute = get_node_to_posterior_distn_brute(
-                        T, edge_to_P, root,
-                        root_prior_distn, node_to_data_feasible_set)
-
-                for v in nodes:
-                    assert_dict_distn_allclose(v_to_d[v], v_to_d_brute[v])
+            nodes = set(node_to_data_feasible_set)
+            for v in nodes:
+                assert_dict_distn_allclose(v_to_d[v], v_to_d_brute[v])
 
 
     def test_edge_joint_posterior_distn_dynamic_vs_brute(self):
         # Check that both methods give the same posterior distributions.
 
-        nodes = set(range(4))
-        states = set(['a', 'b', 'c'])
+        pzero = 0.2
+        for system in _gen_random_systems(pzero):
 
-        G = nx.Graph()
-        G.add_edge(0, 1)
-        G.add_edge(0, 2)
-        G.add_edge(0, 3)
+            (T, edge_to_P, root, root_prior_distn,
+                    node_to_data_feasible_set) = system
 
-        nsamples = 10
-        for i in range(nsamples):
+            edge_to_J = get_edge_to_joint_posterior_distn(
+                    T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set)
+            edge_to_J_brute = get_edge_to_joint_posterior_distn_brute(
+                    T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set)
 
-            for root in nodes:
-
-                pzero = 0.2
-                T = nx.dfs_tree(G, root)
-                root_prior_distn = _random_dict_distn(states, pzero)
-                edge_to_P = {}
-                for edge in T.edges():
-                    P = _random_transition_graph(states, pzero)
-                    edge_to_P[edge] = P
-                node_to_data_feasible_set = _random_data_feasible_sets(
-                        nodes, states, pzero)
-
-                edge_to_J = get_edge_to_joint_posterior_distn(
-                        T, edge_to_P, root,
-                        root_prior_distn, node_to_data_feasible_set)
-                edge_to_J_brute = get_edge_to_joint_posterior_distn_brute(
-                        T, edge_to_P, root,
-                        root_prior_distn, node_to_data_feasible_set)
-
-                for edge in T.edges():
-                    assert_nx_distn_allclose(
-                            edge_to_J[edge], edge_to_J_brute[edge])
+            for edge in T.edges():
+                assert_nx_distn_allclose(
+                        edge_to_J[edge], edge_to_J_brute[edge])
 
 
 if __name__ == '__main__':
