@@ -16,7 +16,6 @@ from nxmctree.feasibility import (
         get_root_posterior_feasible_set,
         get_node_to_posterior_feasible_set,
         get_edge_to_joint_posterior_feasibility,
-        get_feasibility_info_slow,
         )
 
 
