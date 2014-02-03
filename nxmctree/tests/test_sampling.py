@@ -21,6 +21,7 @@ from nxmctree.likelihood import (
 from nxmctree.sampling import(
         sample_states,
         )
+from nxmctree.puzzles import gen_random_systems
 
 
 def _sampling_helper(sqrt_nsamples):
@@ -152,6 +153,16 @@ def test_sampling_slow():
 def test_sampling_fast():
     sqrt_nsamples = 50
     _sampling_helper(sqrt_nsamples)
+
+
+def test_puzzles():
+    # Check for raised exceptions but do not check the answers.
+    pzero = 0.2
+    for T, e_to_P, r, r_prior, node_feas in gen_random_systems(pzero):
+        v_to_subtree_partial_likelihoods = _backward(
+                T, e_to_P, r, r_prior, node_feas)
+        node_to_state = sample_states(T, e_to_P, r,
+                v_to_subtree_partial_likelihoods)
 
 
 if __name__ == '__main__':

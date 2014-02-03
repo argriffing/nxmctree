@@ -15,7 +15,7 @@ __all__ = [
 
 def dict_random_choice(d):
     if not d:
-        raise ValueError('empty support')
+        return None
     total = sum(d.values())
     x = random.uniform(0, total)
     for i, w in d.items():
@@ -32,8 +32,12 @@ def sample_states(T, edge_to_P, root, v_to_subtree_partial_likelihoods):
 
     """
     root_partial_likelihoods = v_to_subtree_partial_likelihoods[root]
+    if not root_partial_likelihoods:
+        return None
     v_to_sampled_state = {}
     v_to_sampled_state[root] = dict_random_choice(root_partial_likelihoods)
+    if not T:
+        return v_to_sampled_state
     for edge in nx.bfs_edges(T, root):
         va, vb = edge
         P = edge_to_P[edge]
