@@ -54,48 +54,49 @@ def sample_data_feasible_sets(nodes, states, pzero):
     return d
 
 
-def gen_random_systems(pzero):
+def sample_single_node_system(pzero):
     """
-    Sample whole systems, where pzero indicates sparsity.
-    Yield (T, edge_to_P, root, root_prior_distn, node_to_data_feasible_set).
+    Sample a system with a single node.
     """
-    nsamples = 10
-
-    # Make some random systems with a single node.
-    for i in range(nsamples):
-        root = 42
-        nodes = {root}
-        states = set(['a', 'b', 'c'])
-        T = nx.DiGraph()
-        root_prior_distn = sample_dict_distn(states, pzero)
-        edge_to_P = {}
-        node_to_data_feasible_set = sample_data_feasible_sets(
-                nodes, states, pzero)
-        yield (T, edge_to_P, root,
-                root_prior_distn, node_to_data_feasible_set)
-
-    # Make some random systems with multiple nodes.
-    nodes = set(range(4))
+    root = 42
+    nodes = {root}
     states = set(['a', 'b', 'c'])
+    T = nx.DiGraph()
+    root_prior_distn = sample_dict_distn(states, pzero)
+    edge_to_P = {}
+    node_to_data_feasible_set = sample_data_feasible_sets(
+            nodes, states, pzero)
+    return (T, edge_to_P, root,
+            root_prior_distn, node_to_data_feasible_set)
 
+def sample_four_node_system(pzero):
+    nnodes = 4
+    root = random.randrange(nnodes)
+    nodes = set(range(nnodes))
+    states = set(['a', 'b', 'c'])
     G = nx.Graph()
     G.add_edge(0, 1)
     G.add_edge(0, 2)
     G.add_edge(0, 3)
+    T = nx.dfs_tree(G, root)
+    root_prior_distn = sample_dict_distn(states, pzero)
+    edge_to_P = {}
+    for edge in T.edges():
+        P = sample_transition_graph(states, pzero)
+        edge_to_P[edge] = P
+    node_to_data_feasible_set = sample_data_feasible_sets(
+            nodes, states, pzero)
+    return (T, edge_to_P, root,
+            root_prior_distn, node_to_data_feasible_set)
 
-    for i in range(nsamples):
 
-        for root in nodes:
+def gen_random_systems(pzero):
+    """
+    Sample whole systems, where pzero indicates sparsity.
+    Yield (T, edge_to_P, root, root_prior_distn, node_to_data_feasible_set).
 
-            T = nx.dfs_tree(G, root)
-            root_prior_distn = sample_dict_distn(states, pzero)
-            edge_to_P = {}
-            for edge in T.edges():
-                P = sample_transition_graph(states, pzero)
-                edge_to_P[edge] = P
-            node_to_data_feasible_set = sample_data_feasible_sets(
-                    nodes, states, pzero)
-
-            yield (T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
+    """
+    for i in range(20):
+        yield sample_single_node_system(pzero)
+        yield sample_single_node_system(pzero)
 
