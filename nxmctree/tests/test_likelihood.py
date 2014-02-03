@@ -12,16 +12,18 @@ from numpy.testing import (run_module_suite, TestCase,
 
 import nxmctree
 from nxmctree.util import dict_distn
-from nxmctree.nputil import assert_dict_distn_allclose
+from nxmctree.nputil import (
+        assert_dict_distn_allclose, assert_nx_distn_allclose)
 from nxmctree.likelihood import (
         get_likelihood,
-        get_likelihood_brute,
-        get_history_likelihood,
         get_root_posterior_partial_likelihoods,
         get_node_to_posterior_distn,
+        get_edge_to_joint_posterior_distn,
+        )
+from nxmctree.lkbrute import (
+        get_likelihood_brute,
         get_node_to_posterior_distn_brute,
-        #get_edge_to_joint_posterior_feasibility,
-        #get_feasibility_info_slow,
+        get_edge_to_joint_posterior_distn_brute,
         )
 
 
@@ -233,6 +235,44 @@ class Test_Likelihood(TestCase):
 
                 for v in nodes:
                     assert_dict_distn_allclose(v_to_d[v], v_to_d_brute[v])
+
+
+    def test_edge_joint_posterior_distn_dynamic_vs_brute(self):
+        # Check that both methods give the same posterior distributions.
+
+        nodes = set(range(4))
+        states = set(['a', 'b', 'c'])
+
+        G = nx.Graph()
+        G.add_edge(0, 1)
+        G.add_edge(0, 2)
+        G.add_edge(0, 3)
+
+        nsamples = 10
+        for i in range(nsamples):
+
+            for root in nodes:
+
+                pzero = 0.2
+                T = nx.dfs_tree(G, root)
+                root_prior_distn = _random_dict_distn(states, pzero)
+                edge_to_P = {}
+                for edge in T.edges():
+                    P = _random_transition_graph(states, pzero)
+                    edge_to_P[edge] = P
+                node_to_data_feasible_set = _random_data_feasible_sets(
+                        nodes, states, pzero)
+
+                edge_to_J = get_edge_to_joint_posterior_distn(
+                        T, edge_to_P, root,
+                        root_prior_distn, node_to_data_feasible_set)
+                edge_to_J_brute = get_edge_to_joint_posterior_distn_brute(
+                        T, edge_to_P, root,
+                        root_prior_distn, node_to_data_feasible_set)
+
+                for edge in T.edges():
+                    assert_nx_distn_allclose(
+                            edge_to_J[edge], edge_to_J_brute[edge])
 
 
 if __name__ == '__main__':

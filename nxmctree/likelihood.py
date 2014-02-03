@@ -20,14 +20,9 @@ from nxmctree.util import (
 
 __all__ = [
         'get_likelihood',
-        'get_history_likelihood',
         'get_root_posterior_partial_likelihoods',
         'get_node_to_posterior_distn',
-        'get_node_to_posterior_distn_brute',
-        #'get_edge_to_joint_posterior_feasibility',
-
-        # This function is for testing.
-        #'get_feasibility_info_slow',
+        'get_edge_to_joint_posterior_distn',
         ]
 
 
@@ -45,53 +40,6 @@ def get_likelihood(T, edge_to_P, root,
         return sum(root_post.values())
     else:
         return None
-
-
-def get_likelihood_brute(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
-    """
-    Get the likelihood of this combination of parameters.
-
-    Use brute force enumeration over all possible states.
-    The meanings of the parameters are the same as for the other functions.
-
-    """
-    lk_total = None
-    nodes = set(node_to_data_feasible_set)
-    pairs = node_to_data_feasible_set.items()
-    nodes, sets = zip(*pairs)
-    for assignment in itertools.product(*sets):
-        history = zip(nodes, assignment)
-        node_to_state = dict(history)
-        lk = get_history_likelihood(T, edge_to_P, root,
-                root_prior_distn, node_to_state)
-        if lk is not None:
-            if lk_total is None:
-                lk_total = lk
-            else:
-                lk_total += lk
-    return lk_total
-
-
-def get_history_likelihood(T, edge_to_P, root,
-        root_prior_distn, node_to_state):
-    """
-    """
-    root_state = node_to_state[root]
-    if root_state not in root_prior_distn:
-        return None
-    lk = root_prior_distn[root_state]
-    for edge in nx.bfs_edges(T, root):
-        va, vb = edge
-        P = edge_to_P[edge]
-        sa = node_to_state[va]
-        sb = node_to_state[vb]
-        if sa not in P:
-            return None
-        if sb not in P[sa]:
-            return None
-        lk *= P[sa][sb]['weight']
-    return lk
 
 
 def get_root_posterior_partial_likelihoods(T, edge_to_P, root,
@@ -122,30 +70,19 @@ def get_node_to_posterior_distn(T, edge_to_P, root,
     return v_to_posterior_distn
 
 
-def get_node_to_posterior_distn_brute(T, edge_to_P, root,
+def get_edge_to_joint_posterior_distn(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
-    Get the map from node to state distribution.
+    Get the map from edge to joint state distribution at endpoint nodes.
 
-    Use brute force enumeration over all possible states.
     The meanings of the parameters are the same as for the other functions.
 
     """
-    nodes = set(node_to_data_feasible_set)
-    v_to_d = dict((v, defaultdict(float)) for v in nodes)
-    pairs = node_to_data_feasible_set.items()
-    nodes, sets = zip(*pairs)
-    for assignment in itertools.product(*sets):
-        history = zip(nodes, assignment)
-        node_to_state = dict(history)
-        lk = get_history_likelihood(T, edge_to_P, root,
-                root_prior_distn, node_to_state)
-        if lk is not None:
-            for v, s in history:
-                v_to_d[v][s] += lk
-    v_to_posterior_distn = dict(
-            (v, dict_distn(d)) for v, d in v_to_d.items())
-    return v_to_posterior_distn
+    v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
+            root_prior_distn, node_to_data_feasible_set)
+    edge_to_J = _forward_edges(T, edge_to_P, root,
+            v_to_subtree_partial_likelihoods)
+    return edge_to_J
 
 
 def _backward(T, edge_to_P, root,
@@ -182,6 +119,8 @@ def _forward(T, edge_to_P, root,
     """
     Forward pass.
 
+    Return a map from node to posterior state distribution.
+
     """
     root_partial_likelihoods = v_to_subtree_partial_likelihoods[root]
     v_to_posterior_distn = {}
@@ -189,11 +128,6 @@ def _forward(T, edge_to_P, root,
     for edge in nx.bfs_edges(T, root):
         va, vb = edge
         P = edge_to_P[edge]
-        #fset = set()
-        #for sa in v_to_posterior_distn[va]:
-            #fset.update(set(P[sa]) & set(v_to_subtree_partial_likelihoods[vb]))
-        #print('fset', fset)
-        #d = dict((sb, 0) for sb in fset)
 
         # For each parent state, compute the distribution over child states.
         distn = defaultdict(float)
@@ -215,15 +149,51 @@ def _forward(T, edge_to_P, root,
 
         v_to_posterior_distn[vb] = distn
 
-        #TODO old
-        #for sb in fset:
-            #p_subtree = v_to_subtree_partial_likelihoods[vb][sb]
-            #for sa, p_prev in v_to_posterior_distn[va].items():
-                #if sb in P[sa]:
-                    #print(sa, sb)
-                    #d[sb] += p_prev * P[sa][sb]['weight'] * p_subtree
-        #v_to_posterior_distn[vb] = dict_distn(d)
     return v_to_posterior_distn
+
+
+def _forward_edges(T, edge_to_P, root,
+        v_to_subtree_partial_likelihoods):
+    """
+    Forward pass.
+
+    Return a map from edge to joint state distribution.
+    Also calculate the posterior state distributions at nodes,
+    but do not return them.
+
+    """
+    root_partial_likelihoods = v_to_subtree_partial_likelihoods[root]
+    v_to_posterior_distn = {}
+    v_to_posterior_distn[root] = dict_distn(root_partial_likelihoods)
+    edge_to_J = dict((edge, nx.DiGraph()) for edge in T.edges())
+    for edge in nx.bfs_edges(T, root):
+        va, vb = edge
+        P = edge_to_P[edge]
+        J = edge_to_J[edge]
+
+        # For each parent state, compute the distribution over child states.
+        distn = defaultdict(float)
+        parent_distn = v_to_posterior_distn[va]
+        for sa, pa in parent_distn.items():
+
+            # Construct conditional transition probabilities.
+            fset = set(P[sa]) & set(v_to_subtree_partial_likelihoods[vb])
+            sb_weights = {}
+            for sb in fset:
+                a = P[sa][sb]['weight']
+                b = v_to_subtree_partial_likelihoods[vb][sb]
+                sb_weights[sb] = a * b
+            sb_distn = dict_distn(sb_weights)
+
+            # Add to the joint and marginal distribution.
+            for sb, pb in sb_distn.items():
+                p = pa * pb
+                distn[sb] += p
+                J.add_edge(sa, sb, weight=p)
+
+        v_to_posterior_distn[vb] = distn
+
+    return edge_to_J
 
 
 def _get_partial_likelihood(edge_to_P,
