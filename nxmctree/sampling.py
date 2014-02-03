@@ -4,6 +4,8 @@ Joint state sampling algorithm for a Markov chain on a NetworkX tree graph.
 """
 from __future__ import division, print_function, absolute_import
 
+import random
+
 import networkx as nx
 
 __all__ = [
@@ -49,7 +51,7 @@ def sample_states(T, edge_to_P, root, v_to_subtree_partial_likelihoods):
             sb_weights[sb] = a * b
 
         # Sample the state using the unnormalized dictionary of weights.
-        v_to_sampled_state[sb] = dict_random_choice(sb_weights)
+        v_to_sampled_state[vb] = dict_random_choice(sb_weights)
 
     return v_to_sampled_state
 

@@ -15,6 +15,7 @@ PROJECT_ROOT_FILES = ['nxmctree', 'setup.py']
 
 import sys
 import os
+import argparse
 
 # If we are run from the source directory
 # we do not want to import the project from there.
@@ -26,7 +27,7 @@ import subprocess
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 
 
-def main():
+def main(args):
 
     # Build the project.
     site_dir = build_project()
@@ -52,7 +53,7 @@ def main():
     cwd = os.getcwd()
     try:
         os.chdir(test_dir)
-        result = test()
+        result = test(args.mode)
     finally:
         os.chdir(cwd)
 
@@ -106,5 +107,9 @@ def build_project():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', '-m', default='fast',
+            help="'fast', 'full', or something that could be passed "
+                    "to nosetests -A [default: fast]")
+    main(parser.parse_args())
 
