@@ -78,6 +78,22 @@ def _gen_random_systems(pzero):
     Sample whole systems, where pzero indicates sparsity.
     Yield (T, edge_to_P, root, root_prior_distn, node_to_data_feasible_set).
     """
+    nsamples = 10
+
+    # Make some random systems with a single node.
+    for i in range(nsamples):
+        root = 42
+        nodes = {root}
+        states = set(['a', 'b', 'c'])
+        T = nx.DiGraph()
+        root_prior_distn = _random_dict_distn(states, pzero)
+        edge_to_P = {}
+        node_to_data_feasible_set = _random_data_feasible_sets(
+                nodes, states, pzero)
+        yield (T, edge_to_P, root,
+                root_prior_distn, node_to_data_feasible_set)
+
+    # Make some random systems with multiple nodes.
     nodes = set(range(4))
     states = set(['a', 'b', 'c'])
 
@@ -86,7 +102,6 @@ def _gen_random_systems(pzero):
     G.add_edge(0, 2)
     G.add_edge(0, 3)
 
-    nsamples = 10
     for i in range(nsamples):
 
         for root in nodes:
