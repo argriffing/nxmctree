@@ -92,9 +92,16 @@ def _backward(T, edge_to_P, root,
 
     """
     v_to_subtree_partial_likelihoods = {}
-    for v in reversed(nx.topological_sort(T, [root])):
-        cs = T[v]
+    if T:
+        postorder_nodes = reversed(nx.topological_sort(T, [root]))
+    else:
+        postorder_nodes = [root]
+    for v in postorder_nodes:
         fset_data = node_to_data_feasible_set[v]
+        if T and T[v]:
+            cs = T[v]
+        else:
+            cs = set()
         if cs:
             partial_likelihoods = {}
             for s in fset_data:
@@ -124,6 +131,8 @@ def _forward(T, edge_to_P, root,
     root_partial_likelihoods = v_to_subtree_partial_likelihoods[root]
     v_to_posterior_distn = {}
     v_to_posterior_distn[root] = dict_distn(root_partial_likelihoods)
+    if not T:
+        return v_to_posterior_distn
     for edge in nx.bfs_edges(T, root):
         va, vb = edge
         P = edge_to_P[edge]
@@ -161,6 +170,8 @@ def _forward_edges(T, edge_to_P, root,
     but do not return them.
 
     """
+    if not T:
+        return {}
     root_partial_likelihoods = v_to_subtree_partial_likelihoods[root]
     v_to_posterior_distn = {}
     v_to_posterior_distn[root] = dict_distn(root_partial_likelihoods)

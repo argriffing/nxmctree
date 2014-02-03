@@ -30,6 +30,8 @@ def get_history_likelihood(T, edge_to_P, root,
     if root_state not in root_prior_distn:
         return None
     lk = root_prior_distn[root_state]
+    if not T:
+        return lk
     for edge in nx.bfs_edges(T, root):
         va, vb = edge
         P = edge_to_P[edge]
