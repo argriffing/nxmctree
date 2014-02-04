@@ -17,7 +17,7 @@ from nxmctree.likelihood import (
         get_node_to_posterior_distn,
         get_edge_to_joint_posterior_distn,
         )
-from nxmctree.lkbrute import (
+from nxmctree.brute_likelihood import (
         get_likelihood_brute,
         get_node_to_posterior_distn_brute,
         get_edge_to_joint_posterior_distn_brute,

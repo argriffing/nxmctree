@@ -19,36 +19,7 @@ __all__ = [
         'get_root_posterior_feasible_set',
         'get_node_to_posterior_feasible_set',
         'get_edge_to_joint_posterior_feasibility',
-
-        # This function is for testing.
-        'get_feasibility_info_slow',
         ]
-
-def get_feasibility_info_slow(T, edge_to_adjacency, root,
-        root_prior_feasible_set, node_to_data_feasible_set):
-    """
-    Get all of the feasibility info.
-
-    This function is intended only for testing.
-    It is slow and calls each function separately instead of reusing code.
-    The meanings of the parameters are the same as for the other functions.
-
-    The four posterior outputs are in order of increasing complicatedness.
-    The first output is just the binary feasibility of the input combination.
-    The second output is a set of feasible states at the root.
-    The third output maps a node to a set of feasible states.
-    The fourth output maps edges to networkx digraphs whose edges represent
-    jointly feasible endpoint states.
-
-    """
-    args = (T, edge_to_adjacency, root,
-        root_prior_feasible_set, node_to_data_feasible_set)
-    return (
-        get_feasibility(*args),
-        get_root_posterior_feasible_set(*args),
-        get_node_to_posterior_feasible_set(*args),
-        get_edge_to_joint_posterior_feasibility(*args),
-        )
 
 
 def get_feasibility(T, edge_to_adjacency, root,
