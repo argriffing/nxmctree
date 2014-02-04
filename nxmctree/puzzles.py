@@ -98,5 +98,5 @@ def gen_random_systems(pzero):
     """
     for i in range(20):
         yield sample_single_node_system(pzero)
-        yield sample_single_node_system(pzero)
+        yield sample_four_node_system(pzero)
 
