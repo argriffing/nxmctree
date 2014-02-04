@@ -18,9 +18,7 @@ from nxmctree.likelihood import (
         get_edge_to_joint_posterior_distn,
         _backward,
         )
-from nxmctree.sampling import(
-        sample_states,
-        )
+from nxmctree.sampling import sample_states, _sample_states_preprocessed
 from nxmctree.puzzles import gen_random_systems
 
 
@@ -94,7 +92,7 @@ def _sampling_helper(sqrt_nsamples):
             edge_to_J_approx = dict(
                     (edge, nx.DiGraph()) for edge in T.edges())
             for i in range(nsamples):
-                node_to_state = sample_states(T, edge_to_P, root,
+                node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
                         v_to_subtree_partial_likelihoods)
                 for tree_edge in T.edges():
                     va, vb = tree_edge
@@ -158,11 +156,8 @@ def test_sampling_fast():
 def test_puzzles():
     # Check for raised exceptions but do not check the answers.
     pzero = 0.2
-    for T, e_to_P, r, r_prior, node_feas in gen_random_systems(pzero):
-        v_to_subtree_partial_likelihoods = _backward(
-                T, e_to_P, r, r_prior, node_feas)
-        node_to_state = sample_states(T, e_to_P, r,
-                v_to_subtree_partial_likelihoods)
+    for system in gen_random_systems(pzero):
+        node_to_state = sample_states(*system)
 
 
 if __name__ == '__main__':
