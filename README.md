@@ -36,7 +36,8 @@ Test:
  * `$ python runtests.py`
 
 Coverage:
- * `$ python-coverage run runtests.py`
+ * `$ python-coverage run --branch runtests.py`
  * `$ python-coverage html`
  * `$ chromium-browser htmlcov/index.html`
+ * `$ rm -r htmlcov`
 

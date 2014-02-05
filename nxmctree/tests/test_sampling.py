@@ -20,6 +20,8 @@ from nxmctree import (
         get_edge_to_joint_posterior_distn,
         )
 from nxmctree.puzzles import gen_random_systems
+from nxmctree._sampling import dict_random_choice
+
 
 
 def _sampling_helper(sqrt_nsamples):
@@ -155,6 +157,10 @@ def test_puzzles():
     pzero = 0.2
     for system in gen_random_systems(pzero):
         node_to_state = sample_history(*system)
+
+
+def test_empty_dict_random_choice():
+    assert_equal(dict_random_choice({}), None)
 
 
 if __name__ == '__main__':
