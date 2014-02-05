@@ -21,8 +21,8 @@ from nxmctree import (
 from nxmctree.puzzles import gen_random_systems
 
 
-def test_full_sparsity():
-    # Test a special case of full sparsity in the system.
+def test_complete_sparsity():
+    # Test the special case of a completely sparse system.
     pzero = 1
     for args in gen_random_systems(pzero):
         T, e_to_P, r, r_prior, node_feas = args
@@ -47,8 +47,8 @@ def test_full_sparsity():
                     assert_(not d[edge].edges())
 
 
-def test_zero_sparsity():
-    # Test a special case of no sparsity in the system.
+def test_complete_density():
+    # Test the special case of a completely dense system.
     pzero = 0
     for args in gen_random_systems(pzero):
         T, e_to_P, r, r_prior, node_feas = args
