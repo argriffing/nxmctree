@@ -168,9 +168,3 @@ class Test_LongPathFeasibility(TestCase):
                         T, edge_to_adjacency, root,
                         root_prior_feasible_set, node_to_data_feasible_set)
                 assert_equal(v_to_fset, node_to_implied_feasible_set)
-
-
-
-if __name__ == '__main__':
-    run_module_suite()
-

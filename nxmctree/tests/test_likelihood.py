@@ -68,8 +68,3 @@ def test_dynamic_history_likelihood():
 
     # Check that the likelihood is correct.
     assert_equal(actual_likelihood, desired_likelihood)
-
-
-if __name__ == '__main__':
-    run_module_suite()
-

@@ -12,7 +12,3 @@ def test_skip_me():
 @decorators.knownfailureif(True, 'known failing a dummy test')
 def test_known_fail_me():
     assert_equal(0, 1)
-
-if __name__ == '__main__':
-    run_module_suite()
-

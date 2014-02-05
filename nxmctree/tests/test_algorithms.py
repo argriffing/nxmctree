@@ -131,8 +131,3 @@ def test_dynamic_vs_brute():
             dynamic_edges = set(dynamic[edge].edges())
             brute_edges = set(brute[edge].edges())
             assert_equal(dynamic_edges, brute_edges)
-
-
-if __name__ == '__main__':
-    run_module_suite()
-

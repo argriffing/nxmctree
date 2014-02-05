@@ -161,8 +161,3 @@ def test_puzzles():
 
 def test_empty_dict_random_choice():
     assert_equal(dict_random_choice({}), None)
-
-
-if __name__ == '__main__':
-    run_module_suite()
-
