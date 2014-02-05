@@ -92,11 +92,23 @@ def sample_four_node_system(pzero):
 
 def gen_random_systems(pzero):
     """
-    Sample whole systems, where pzero indicates sparsity.
+    Sample whole systems for testing likelihood.
+    The pzero parameter indicates sparsity.
     Yield (T, edge_to_P, root, root_prior_distn, node_to_data_feasible_set).
 
     """
     for i in range(20):
         yield sample_single_node_system(pzero)
         yield sample_four_node_system(pzero)
+
+
+def gen_random_feas_systems(pzero):
+    """
+    Sample whole systems for testing feasibility.
+    The pzero parameter indicates sparsity.
+    Yield (T, edge_to_A, root, root_prior_feas, node_to_data_feas).
+
+    """
+    for T, e_to_P, r, r_prior, node_feas in gen_random_systems(pzero):
+        yield T, e_to_P, r, set(r_prior), node_feas
 

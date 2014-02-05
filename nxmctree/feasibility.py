@@ -67,7 +67,7 @@ def get_edge_to_joint_posterior_feasibility(T, edge_to_adjacency, root,
         va, vb = edge
         for sa in v_to_fset[va]:
             if sa in A:
-                sbs = set(A[sa]) & v_to_fset[va]
+                sbs = set(A[sa]) & v_to_fset[vb]
                 J.add_edges_from((sa, sb) for sb in sbs)
         edge_to_joint_fset[edge] = J
     return edge_to_joint_fset

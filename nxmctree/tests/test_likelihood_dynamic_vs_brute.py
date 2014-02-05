@@ -37,14 +37,6 @@ def test_likelihood_dynamic_vs_brute():
             assert_allclose(lk_dynamic, lk_brute)
 
 
-def test_unrestricted_likelihood():
-    # When there is no data restriction the likelihood should be 1.
-    pzero = 0
-    for T, e_to_P, r, r_prior, node_feas in gen_random_systems(pzero):
-        lk = get_likelihood(T, e_to_P, r, r_prior, node_feas)
-        assert_allclose(lk, 1)
-
-
 def test_node_posterior_distns_dynamic_vs_brute():
     # Check that both methods give the same posterior distributions.
     pzero = 0.2

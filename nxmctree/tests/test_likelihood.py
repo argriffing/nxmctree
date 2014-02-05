@@ -12,6 +12,15 @@ from numpy.testing import (run_module_suite, TestCase,
 
 import nxmctree
 from nxmctree.likelihood import get_likelihood
+from nxmctree.puzzles import gen_random_systems
+
+
+def test_unrestricted_likelihood():
+    # When there is no data restriction the likelihood should be 1.
+    pzero = 0
+    for T, e_to_P, r, r_prior, node_feas in gen_random_systems(pzero):
+        lk = get_likelihood(T, e_to_P, r, r_prior, node_feas)
+        assert_allclose(lk, 1)
 
 
 def test_dynamic_history_likelihood():
@@ -67,7 +76,6 @@ def test_dynamic_history_likelihood():
 
     # Check that the likelihood is correct.
     assert_equal(actual_likelihood, desired_likelihood)
-
 
 
 if __name__ == '__main__':

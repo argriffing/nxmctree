@@ -33,9 +33,9 @@ def get_history_feasibility(T, edge_to_A, root,
         A = edge_to_A[edge]
         sa = node_to_state[va]
         sb = node_to_state[vb]
-        if sa not in P:
+        if sa not in A:
             return False
-        if sb not in P[sa]:
+        if sb not in A[sa]:
             return False
     return True
 
@@ -49,12 +49,11 @@ def get_feasibility_brute(T, edge_to_A, root,
     The meanings of the parameters are the same as for the other functions.
 
     """
-    args = T, edge_to_P, root, root_prior_feasible_state, node_to_state
     for node_to_state in gen_plausible_histories(node_to_data_feasible_set):
-        if not get_history_feasibility(T, edge_to_P, root,
-                root_prior_feasible_state, node_to_state):
-            return False
-    return True
+        if get_history_feasibility(T, edge_to_A, root,
+                root_prior_feasible_set, node_to_state):
+            return True
+    return False
 
 
 def get_node_to_posterior_feasible_set_brute(T, edge_to_A, root,
@@ -69,7 +68,7 @@ def get_node_to_posterior_feasible_set_brute(T, edge_to_A, root,
     nodes = set(node_to_data_feasible_set)
     v_to_feas = dict((v, set()) for v in nodes)
     for node_to_state in gen_plausible_histories(node_to_data_feasible_set):
-        if get_history_likelihood(T, edge_to_A, root,
+        if get_history_feasibility(T, edge_to_A, root,
                 root_prior_feasible_set, node_to_state):
             for node, state in node_to_state.items():
                 v_to_feas[node].add(state)
