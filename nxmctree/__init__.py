@@ -15,6 +15,7 @@ if __NXMCTREE_SETUP__:
     _sys.stderr.write('Running from the nxmctree source directory.\n')
     del _sys
 else:
+    from ._wrappers import *
     from numpy.testing import Tester
     test = Tester().test
     bench = Tester().bench

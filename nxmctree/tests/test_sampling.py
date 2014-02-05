@@ -11,14 +11,13 @@ import numpy as np
 from numpy.testing import (run_module_suite, assert_equal,
         assert_array_less, decorators)
 
-from nxmctree.likelihood import (
+import nxmctree
+from nxmctree import (
         get_likelihood,
-        get_root_posterior_partial_likelihoods,
         get_node_to_posterior_distn,
         get_edge_to_joint_posterior_distn,
-        _backward,
         )
-from nxmctree.sampling import sample_states, _sample_states_preprocessed
+from nxmctree.sampling import sample_history, sample_histories
 from nxmctree.puzzles import gen_random_systems
 
 
@@ -87,13 +86,10 @@ def _sampling_helper(sqrt_nsamples):
 
             # Sample a bunch of joint states.
             nsamples = sqrt_nsamples * sqrt_nsamples
-            v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
             edge_to_J_approx = dict(
                     (edge, nx.DiGraph()) for edge in T.edges())
-            for i in range(nsamples):
-                node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
-                        v_to_subtree_partial_likelihoods)
+            for node_to_state in sample_histories(T, edge_to_P, root,
+                    root_prior_distn, node_to_data_feasible_set, nsamples):
                 for tree_edge in T.edges():
                     va, vb = tree_edge
                     sa = node_to_state[va]
@@ -157,7 +153,7 @@ def test_puzzles():
     # Check for raised exceptions but do not check the answers.
     pzero = 0.2
     for system in gen_random_systems(pzero):
-        node_to_state = sample_states(*system)
+        node_to_state = sample_history(*system)
 
 
 if __name__ == '__main__':

@@ -14,13 +14,6 @@ from __future__ import division, print_function, absolute_import
 
 import networkx as nx
 
-__all__ = [
-        'get_feasibility',
-        'get_root_posterior_feasible_set',
-        'get_node_to_posterior_feasible_set',
-        'get_edge_to_joint_posterior_feasibility',
-        ]
-
 
 def get_feasibility(T, edge_to_adjacency, root,
         root_prior_feasible_set, node_to_data_feasible_set):
@@ -143,7 +136,7 @@ def _backward(T, edge_to_adjacency, root,
         else:
             fset = set(fset_data)
         if v == root:
-            fset &= root_prior_feasible_set
+            fset &= set(root_prior_feasible_set)
         v_to_subtree_feasible_set[v] = fset
     return v_to_subtree_feasible_set
 

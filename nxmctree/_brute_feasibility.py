@@ -10,13 +10,6 @@ import networkx as nx
 import nxmctree
 from nxmctree.history import gen_plausible_histories
 
-__all__ = [
-        'get_history_feasibility',
-        'get_feasibility_brute',
-        'get_node_to_posterior_feasible_set_brute',
-        'get_edge_to_joint_posterior_feasibility_brute',
-        ]
-
 
 def get_history_feasibility(T, edge_to_A, root,
         root_prior_feasible_set, node_to_state):
@@ -40,7 +33,7 @@ def get_history_feasibility(T, edge_to_A, root,
     return True
 
 
-def get_feasibility_brute(T, edge_to_A, root,
+def get_feasibility(T, edge_to_A, root,
         root_prior_feasible_set, node_to_data_feasible_set):
     """
     Get the feasibility of this combination of parameters.
@@ -56,7 +49,7 @@ def get_feasibility_brute(T, edge_to_A, root,
     return False
 
 
-def get_node_to_posterior_feasible_set_brute(T, edge_to_A, root,
+def get_node_to_posterior_feasible_set(T, edge_to_A, root,
         root_prior_feasible_set, node_to_data_feasible_set):
     """
     Get the map from node to state feasibility.
@@ -75,7 +68,7 @@ def get_node_to_posterior_feasible_set_brute(T, edge_to_A, root,
     return v_to_feas
 
 
-def get_edge_to_joint_posterior_feasibility_brute(T, edge_to_A, root,
+def get_edge_to_joint_posterior_feasibility(T, edge_to_A, root,
         root_prior_feasible_set, node_to_data_feasible_set):
     """
     Use brute force enumeration over all histories.

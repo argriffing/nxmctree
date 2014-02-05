@@ -15,9 +15,9 @@ from nxmctree.history import gen_plausible_histories
 
 __all__ = [
         'get_history_likelihood',
-        'get_likelihood_brute',
-        'get_node_to_posterior_distn_brute',
-        'get_edge_to_joint_posterior_distn_brute',
+        'get_likelihood',
+        'get_node_to_posterior_distn',
+        'get_edge_to_joint_posterior_distn',
         ]
 
 
@@ -45,7 +45,7 @@ def get_history_likelihood(T, edge_to_P, root,
     return lk
 
 
-def get_likelihood_brute(T, edge_to_P, root,
+def get_likelihood(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     Get the likelihood of this combination of parameters.
@@ -66,7 +66,7 @@ def get_likelihood_brute(T, edge_to_P, root,
     return lk_total
 
 
-def get_node_to_posterior_distn_brute(T, edge_to_P, root,
+def get_node_to_posterior_distn(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     Get the map from node to state distribution.
@@ -88,7 +88,7 @@ def get_node_to_posterior_distn_brute(T, edge_to_P, root,
     return v_to_posterior_distn
 
 
-def get_edge_to_joint_posterior_distn_brute(T, edge_to_P, root,
+def get_edge_to_joint_posterior_distn(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     """

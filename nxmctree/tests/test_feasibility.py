@@ -11,13 +11,13 @@ from numpy.testing import (run_module_suite, TestCase,
         decorators, assert_, assert_equal)
 
 import nxmctree
-from nxmctree.feasibility import (
+from nxmctree._dynamic_feasibility import (
         get_feasibility,
         get_root_posterior_feasible_set,
         get_node_to_posterior_feasible_set,
         get_edge_to_joint_posterior_feasibility,
         )
-from nxmctree.puzzles import gen_random_feas_systems
+from nxmctree.puzzles import gen_random_systems
 
 
 class Test_ShortPathFeasibility(TestCase):
@@ -71,7 +71,7 @@ class Test_ShortPathFeasibility(TestCase):
 
             # Assert that the posterior feasibility is the same
             # as the feasibility imposed by the data.
-            v_to_fset = nxmctree.feasibility.get_node_to_posterior_feasible_set(
+            v_to_fset = get_node_to_posterior_feasible_set(
                     T, edge_to_adjacency, root,
                     root_prior_feasible_set, node_to_data_feasible_set)
             assert_equal(v_to_fset, node_to_data_feasible_set)
@@ -104,7 +104,7 @@ class Test_ShortPathFeasibility(TestCase):
         for root in self.nodes:
             T = nx.dfs_tree(self.G, root)
             edge_to_adjacency = dict((edge, self.A) for edge in T.edges())
-            v_to_fset = nxmctree.feasibility.get_node_to_posterior_feasible_set(
+            v_to_fset = get_node_to_posterior_feasible_set(
                     T, edge_to_adjacency, root,
                     root_prior_feasible_set, node_to_data_feasible_set)
             assert_equal(v_to_fset, node_to_implied_feasible_set)
@@ -169,26 +169,6 @@ class Test_LongPathFeasibility(TestCase):
                         root_prior_feasible_set, node_to_data_feasible_set)
                 assert_equal(v_to_fset, node_to_implied_feasible_set)
 
-
-def test_unrestricted_feasibility():
-    # When there is no data restriction the system should be feasible.
-    pzero = 0
-    for T, e_to_A, r, r_prior, node_feas in gen_random_feas_systems(pzero):
-        feas = get_feasibility(T, e_to_A, r, r_prior, node_feas)
-        assert_equal(feas, True)
-
-
-def test_puzzles():
-    # Check for raised exceptions but do not check the answers.
-    pzero = 0.2
-    for T, e_to_A, r, r_prior, node_feas in gen_random_feas_systems(pzero):
-        for func in (
-                get_feasibility,
-                get_root_posterior_feasible_set,
-                get_node_to_posterior_feasible_set,
-                get_edge_to_joint_posterior_feasibility,
-                ):
-            func(T, e_to_A, r, r_prior, node_feas)
 
 
 if __name__ == '__main__':
