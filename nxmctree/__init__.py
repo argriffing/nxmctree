@@ -16,6 +16,7 @@ if __NXMCTREE_SETUP__:
     del _sys
 else:
     from ._wrappers import *
+    from ._sampling import *
     from numpy.testing import Tester
     test = Tester().test
     bench = Tester().bench

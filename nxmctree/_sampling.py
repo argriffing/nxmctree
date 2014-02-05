@@ -11,7 +11,6 @@ import networkx as nx
 import nxmctree
 from nxmctree._dynamic_likelihood import _backward
 
-
 __all__ = [
         'sample_history',
         'sample_histories',

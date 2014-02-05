@@ -13,11 +13,12 @@ from numpy.testing import (run_module_suite, assert_equal,
 
 import nxmctree
 from nxmctree import (
+        sample_history,
+        sample_histories,
         get_likelihood,
         get_node_to_posterior_distn,
         get_edge_to_joint_posterior_distn,
         )
-from nxmctree.sampling import sample_history, sample_histories
 from nxmctree.puzzles import gen_random_systems
 
 
