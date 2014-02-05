@@ -69,7 +69,7 @@ def sample_single_node_system(pzero):
     return (T, edge_to_P, root,
             root_prior_distn, node_to_data_feasible_set)
 
-def sample_four_node_system(pzero):
+def sample_four_node_system(pzero_transition, pzero_other):
     nnodes = 4
     root = random.randrange(nnodes)
     nodes = set(range(nnodes))
@@ -79,13 +79,13 @@ def sample_four_node_system(pzero):
     G.add_edge(0, 2)
     G.add_edge(0, 3)
     T = nx.dfs_tree(G, root)
-    root_prior_distn = sample_dict_distn(states, pzero)
+    root_prior_distn = sample_dict_distn(states, pzero_other)
     edge_to_P = {}
     for edge in T.edges():
-        P = sample_transition_graph(states, pzero)
+        P = sample_transition_graph(states, pzero_transition)
         edge_to_P[edge] = P
     node_to_data_feasible_set = sample_data_feasible_sets(
-            nodes, states, pzero)
+            nodes, states, pzero_other)
     return (T, edge_to_P, root,
             root_prior_distn, node_to_data_feasible_set)
 
@@ -99,4 +99,15 @@ def gen_random_systems(pzero):
     """
     for i in range(20):
         yield sample_single_node_system(pzero)
-        yield sample_four_node_system(pzero)
+        yield sample_four_node_system(pzero, pzero)
+
+
+def gen_random_infeasible_systems():
+    pzero = 1
+    for system in gen_random_systems(pzero):
+        yield system
+    for i in range(20):
+        pzero_transition = 1
+        pzero_other = 0.2
+        yield sample_four_node_system(pzero_transition, pzero_other)
+

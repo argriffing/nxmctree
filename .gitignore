@@ -4,6 +4,10 @@
 # setup.py working directory
 build
 
+# directory and file created by a coverage script
+htmlcov
+*.coverage
+
 # log files
 *.log
 

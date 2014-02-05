@@ -18,8 +18,6 @@ __all__ = [
 
 
 def dict_random_choice(d):
-    if not d:
-        return None
     total = sum(d.values())
     x = random.uniform(0, total)
     for i, w in d.items():

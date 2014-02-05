@@ -9,20 +9,34 @@ Required dependencies:
 Optional dependencies:
  * [nose](https://nose.readthedocs.org/) (testing)
  * [numpy](http://www.numpy.org/) (more testing infrastructure and assertions)
+ * [coverage](http://nedbatchelder.com/code/coverage/) (test coverage)
+   - `$ apt-get install python-coverage`
 
-Install (user):
+
+User
+----
+
+Install:
  * `$ pip install --user git+https://github.com/argriffing/nxmctree`
 
-Install (development):
- * `$ git clone git@github.com:argriffing/nxmctree.git`
-
-Testing (user):
+Test:
  * `$ python -c "import nxmctree; nxmctree.test()"`
-
-Testing (development):
- * `$ python runtests.py`
 
 Uninstall:
  * `$ pip uninstall nxmctree`
 
+
+Developer
+---------
+
+Install:
+ * `$ git clone git@github.com:argriffing/nxmctree.git`
+
+Test:
+ * `$ python runtests.py`
+
+Coverage:
+ * `$ python-coverage run runtests.py`
+ * `$ python-coverage html`
+ * `$ chromium-browser htmlcov/index.html`
 

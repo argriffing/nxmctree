@@ -18,13 +18,12 @@ from nxmctree import (
         get_node_to_posterior_distn,
         get_edge_to_joint_posterior_distn,
         )
-from nxmctree.puzzles import gen_random_systems
+from nxmctree.puzzles import gen_random_systems, gen_random_infeasible_systems
 
 
-def test_complete_sparsity():
-    # Test the special case of a completely sparse system.
-    pzero = 1
-    for args in gen_random_systems(pzero):
+def test_infeasible_systems():
+    # Test systems that are structurally infeasible.
+    for args in gen_random_infeasible_systems():
         T, e_to_P, r, r_prior, node_feas = args
 
         for efficiency in 'dynamic', 'brute':
@@ -33,6 +32,10 @@ def test_complete_sparsity():
                 # likelihood or feasibility
                 likelihood = get_likelihood(*args,
                         efficiency=efficiency, variant=variant)
+                edge_info = [(e, P.edges()) for e, P in e_to_P.items()]
+                msg = str((T.edges(), edge_info, r, r_prior, node_feas))
+                if likelihood:
+                    raise Exception(msg)
                 assert_(not likelihood)
 
                 # state distributions or feasible sets at nodes
