@@ -1,4 +1,4 @@
-Markov chain algorithms on a Python NetworkX tree graph
+Markov chain algorithms on a Python NetworkX tree.
 
 Required dependencies:
  * [Python 2.7+](http://www.python.org/)
@@ -39,5 +39,12 @@ Coverage:
  * `$ python-coverage run --branch runtests.py`
  * `$ python-coverage html`
  * `$ chromium-browser htmlcov/index.html`
- * `$ rm -r htmlcov`
+
+
+Notes
+-----
+
+Documentation using a combination of sphinx and github pages hosting
+may soon be written and hosted following the strategy suggested
+on this blog [post](http://blog.transifex.com/post/31979487717).
 
