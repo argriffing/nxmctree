@@ -8,19 +8,19 @@ import math
 import networkx as nx
 
 import numpy as np
-from numpy.testing import (run_module_suite, assert_equal,
+from numpy.testing import (run_module_suite, assert_equal, assert_allclose,
         assert_array_less, decorators)
 
 import nxmctree
-from nxmctree import (
-        sample_history,
-        sample_histories,
+from nxmctree.sampling import (
+        dict_random_choice, sample_history, sample_histories)
+from nxmctree.wrappers import (
         get_likelihood,
         get_node_to_posterior_distn,
         get_edge_to_joint_posterior_distn,
         )
 from nxmctree.puzzles import gen_random_systems
-from nxmctree._sampling import dict_random_choice
+from nxmctree._brute_likelihood import get_history_likelihood
 
 
 
@@ -141,6 +141,10 @@ def _sampling_helper(sqrt_nsamples):
             assert_array_less(np.absolute(z), 4)
 
 
+def test_empty_dict_random_choice():
+    assert_equal(dict_random_choice({}), None)
+
+
 @decorators.slow
 def test_sampling_slow():
     sqrt_nsamples = 400
@@ -155,9 +159,26 @@ def test_sampling_fast():
 def test_puzzles():
     # Check for raised exceptions but do not check the answers.
     pzero = 0.2
-    for system in gen_random_systems(pzero):
-        node_to_state = sample_history(*system)
+    for args in gen_random_systems(pzero):
+        T, e_to_P, r, r_prior, feas_nodes = args
+        node_to_state = sample_history(*args)
+        feas = get_likelihood(*args, variant='feasibility')
+        if node_to_state:
+            if not feas:
+                raise Exception('sampled a node to state map '
+                        'for an infeasible problem')
+            else:
+                # sampled a node to state map for a feasible problem
+                constraint = dict((n, {s}) for n, s in node_to_state.items())
+                lk = get_likelihood(T, e_to_P, r, r_prior, constraint)
+                hlk = get_history_likelihood(
+                        T, e_to_P, r, r_prior, node_to_state)
+                assert_allclose(lk, hlk)
+        else:
+            if feas:
+                raise Exception('failed to sample a node to state map '
+                        'for a feasible problem')
+            else:
+                # failed to sample a node to state map for infeasible problem
+                pass
 
-
-def test_empty_dict_random_choice():
-    assert_equal(dict_random_choice({}), None)

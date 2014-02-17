@@ -13,6 +13,12 @@ FEASIBILITY = 'feasibility'
 DYNAMIC = 'dynamic'
 BRUTE = 'brute'
 
+__all__ = [
+        'get_likelihood',
+        'get_node_to_posterior_distn',
+        'get_edge_to_joint_posterior_distn',
+        ]
+
 
 #TODO add an informative docstring
 def get_likelihood(T, edge_to_P, root,

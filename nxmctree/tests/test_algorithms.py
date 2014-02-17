@@ -7,13 +7,13 @@ brute force implementations.
 """
 from __future__ import division, print_function, absolute_import
 
-from numpy.testing import (run_module_suite, assert_,
-        assert_equal, assert_allclose)
+from numpy.testing import (
+        run_module_suite, assert_, assert_equal, assert_allclose)
 
 import nxmctree
 from nxmctree.nputil import (
         assert_dict_distn_allclose, assert_nx_distn_allclose)
-from nxmctree import (
+from nxmctree.wrappers import (
         get_likelihood,
         get_node_to_posterior_distn,
         get_edge_to_joint_posterior_distn,
