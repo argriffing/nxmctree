@@ -1,0 +1,62 @@
+nxmctree package
+================
+
+Submodules
+----------
+
+nxmctree.history module
+-----------------------
+
+.. automodule:: nxmctree.history
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nxmctree.nputil module
+----------------------
+
+.. automodule:: nxmctree.nputil
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nxmctree.puzzles module
+-----------------------
+
+.. automodule:: nxmctree.puzzles
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nxmctree.sampling module
+------------------------
+
+.. automodule:: nxmctree.sampling
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nxmctree.util module
+--------------------
+
+.. automodule:: nxmctree.util
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+nxmctree.wrappers module
+------------------------
+
+.. automodule:: nxmctree.wrappers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: nxmctree
+    :members:
+    :undoc-members:
+    :show-inheritance:
