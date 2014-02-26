@@ -4,3 +4,6 @@ Sphinx functions
  * sphinx-autogen
  * sphinx-build
  * sphinx-quickstart
+
+
+`$ sphinx-build -b html source build`
