@@ -14,14 +14,10 @@ from numpy.testing import (run_module_suite, assert_equal, assert_allclose,
 import nxmctree
 from nxmctree.sampling import (
         dict_random_choice, sample_history, sample_histories)
-from nxmctree.wrappers import (
-        get_likelihood,
-        get_node_to_posterior_distn,
-        get_edge_to_joint_posterior_distn,
-        )
 from nxmctree.puzzles import gen_random_systems
-from nxmctree._brute_likelihood import get_history_likelihood
-
+from nxmctree.history import get_history_lhood
+from nxmctree.dynamic_feasibility import get_feas
+from nxmctree.dynamic_likelihood import get_lhood, get_edge_to_nxdistn
 
 
 def _sampling_helper(sqrt_nsamples):
@@ -83,7 +79,7 @@ def _sampling_helper(sqrt_nsamples):
             edge_to_P = dict((edge, P) for edge in T.edges())
 
             # Compute the exact joint distributions at edges.
-            edge_to_J_exact = get_edge_to_joint_posterior_distn(
+            edge_to_J_exact = get_edge_to_nxdistn(
                     T, edge_to_P, root,
                     root_prior_distn, node_to_data_feasible_set)
 
@@ -162,7 +158,7 @@ def test_puzzles():
     for args in gen_random_systems(pzero):
         T, e_to_P, r, r_prior, feas_nodes = args
         node_to_state = sample_history(*args)
-        feas = get_likelihood(*args, variant='feasibility')
+        feas = get_feas(*args)
         if node_to_state:
             if not feas:
                 raise Exception('sampled a node to state map '
@@ -170,9 +166,8 @@ def test_puzzles():
             else:
                 # sampled a node to state map for a feasible problem
                 constraint = dict((n, {s}) for n, s in node_to_state.items())
-                lk = get_likelihood(T, e_to_P, r, r_prior, constraint)
-                hlk = get_history_likelihood(
-                        T, e_to_P, r, r_prior, node_to_state)
+                lk = get_lhood(T, e_to_P, r, r_prior, constraint)
+                hlk = get_history_lhood(T, e_to_P, r, r_prior, node_to_state)
                 assert_allclose(lk, hlk)
         else:
             if feas:

@@ -11,7 +11,7 @@ from numpy.testing import (run_module_suite, TestCase,
         decorators, assert_, assert_equal, assert_allclose)
 
 import nxmctree
-from nxmctree._dynamic_likelihood import get_likelihood
+from nxmctree.dynamic_likelihood import get_lhood
 from nxmctree.puzzles import gen_random_systems
 
 
@@ -63,7 +63,7 @@ def test_dynamic_history_likelihood():
     desired_likelihood = 0.5 ** 4
 
     # Compute the likelhood.
-    actual_likelihood = get_likelihood(T, edge_to_P, root,
+    actual_likelihood = get_lhood(T, edge_to_P, root,
             root_prior_distn, node_to_data_feasible_set)
 
     # Check that the likelihood is correct.

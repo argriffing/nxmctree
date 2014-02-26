@@ -14,8 +14,15 @@ from __future__ import division, print_function, absolute_import
 
 import networkx as nx
 
+__all__ = [
+        'get_feas',
+        'get_root_fset',
+        'get_node_to_fset',
+        'get_edge_to_nxfset',
+        ]
 
-def get_feasibility(T, edge_to_adjacency, root,
+
+def get_feas(T, edge_to_adjacency, root,
         root_prior_feasible_set, node_to_data_feasible_set):
     """
     Get the feasibility of this combination of parameters.
@@ -23,12 +30,12 @@ def get_feasibility(T, edge_to_adjacency, root,
     The meanings of the parameters are the same as for the other functions.
 
     """
-    root_fset = get_root_posterior_feasible_set(T, edge_to_adjacency, root,
+    root_fset = get_root_fset(T, edge_to_adjacency, root,
             root_prior_feasible_set, node_to_data_feasible_set)
     return True if root_fset else False
 
 
-def get_root_posterior_feasible_set(T, edge_to_adjacency, root,
+def get_root_fset(T, edge_to_adjacency, root,
         root_prior_feasible_set, node_to_data_feasible_set):
     """
     Get the posterior set of feasible states at the root.
@@ -41,31 +48,7 @@ def get_root_posterior_feasible_set(T, edge_to_adjacency, root,
     return v_to_subtree_feasible_set[root]
 
 
-def get_edge_to_joint_posterior_feasibility(T, edge_to_adjacency, root,
-        root_prior_feasible_set, node_to_data_feasible_set):
-    """
-    For each edge, get the joint feasibility of states at edge endpoints.
-
-    The interpretation of the parameters is the same as elsewhere.
-
-    """
-    if not T:
-        return {}
-    v_to_fset = get_node_to_posterior_feasible_set(T, edge_to_adjacency, root,
-            root_prior_feasible_set, node_to_data_feasible_set)
-    edge_to_joint_fset = {}
-    for edge in nx.bfs_edges(T, root):
-        A = edge_to_adjacency[edge]
-        J = nx.DiGraph()
-        va, vb = edge
-        for sa in v_to_fset[va]:
-            sbs = set(A[sa]) & v_to_fset[vb]
-            J.add_edges_from((sa, sb) for sb in sbs)
-        edge_to_joint_fset[edge] = J
-    return edge_to_joint_fset
-
-
-def get_node_to_posterior_feasible_set(T, edge_to_adjacency, root,
+def get_node_to_fset(T, edge_to_adjacency, root,
         root_prior_feasible_set, node_to_data_feasible_set):
     """
     For each node get the marginal posterior set of feasible states.
@@ -106,6 +89,31 @@ def get_node_to_posterior_feasible_set(T, edge_to_adjacency, root,
     v_to_posterior_feasible_set = _forward(T, edge_to_adjacency, root,
             v_to_subtree_feasible_set)
     return v_to_posterior_feasible_set
+
+
+def get_edge_to_nxfset(T, edge_to_adjacency, root,
+        root_prior_feasible_set, node_to_data_feasible_set):
+    """
+    For each edge, get the joint feasibility of states at edge endpoints.
+
+    The interpretation of the parameters is the same as elsewhere.
+
+    """
+    if not T:
+        return {}
+    v_to_fset = get_node_to_fset(T, edge_to_adjacency, root,
+            root_prior_feasible_set, node_to_data_feasible_set)
+    edge_to_joint_fset = {}
+    for edge in nx.bfs_edges(T, root):
+        A = edge_to_adjacency[edge]
+        J = nx.DiGraph()
+        va, vb = edge
+        for sa in v_to_fset[va]:
+            sbs = set(A[sa]) & v_to_fset[vb]
+            J.add_edges_from((sa, sb) for sb in sbs)
+        edge_to_joint_fset[edge] = J
+    return edge_to_joint_fset
+
 
 
 def _backward(T, edge_to_adjacency, root,

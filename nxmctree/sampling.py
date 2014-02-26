@@ -9,7 +9,7 @@ import random
 import networkx as nx
 
 import nxmctree
-from nxmctree._dynamic_likelihood import _backward
+from nxmctree.dynamic_likelihood import _backward
 
 __all__ = [
         'sample_history',

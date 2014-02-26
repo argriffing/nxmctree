@@ -10,20 +10,3 @@ bench = Tester().bench
 
 __all__ = ['test', 'bench']
 
-
-"""
-# This idiom is used by scipy to check if it is running during the setup.
-try:
-    __NXMCTREE_SETUP__
-except NameError:
-    __NXMCTREE_SETUP__ = False
-"""
-
-
-"""
-if __NXMCTREE_SETUP__:
-    import sys as _sys
-    _sys.stderr.write('Running from the nxmctree source directory.\n')
-    del _sys
-else:
-"""

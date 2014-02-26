@@ -11,12 +11,8 @@ from numpy.testing import (run_module_suite, TestCase,
         decorators, assert_, assert_equal)
 
 import nxmctree
-from nxmctree._dynamic_feasibility import (
-        get_feasibility,
-        get_root_posterior_feasible_set,
-        get_node_to_posterior_feasible_set,
-        get_edge_to_joint_posterior_feasibility,
-        )
+from nxmctree.dynamic_feasibility import (
+        get_feas, get_root_fset, get_node_to_fset)
 from nxmctree.puzzles import gen_random_systems
 
 
@@ -64,14 +60,14 @@ class Test_ShortPathFeasibility(TestCase):
             edge_to_adjacency = dict((edge, self.A) for edge in T.edges())
 
             # Assert that the combination of input parameters is feasible.
-            feas = get_feasibility(
+            feas = get_feas(
                     T, edge_to_adjacency, root,
                     root_prior_feasible_set, node_to_data_feasible_set)
             assert_(feas)
 
             # Assert that the posterior feasibility is the same
             # as the feasibility imposed by the data.
-            v_to_fset = get_node_to_posterior_feasible_set(
+            v_to_fset = get_node_to_fset(
                     T, edge_to_adjacency, root,
                     root_prior_feasible_set, node_to_data_feasible_set)
             assert_equal(v_to_fset, node_to_data_feasible_set)
@@ -104,7 +100,7 @@ class Test_ShortPathFeasibility(TestCase):
         for root in self.nodes:
             T = nx.dfs_tree(self.G, root)
             edge_to_adjacency = dict((edge, self.A) for edge in T.edges())
-            v_to_fset = get_node_to_posterior_feasible_set(
+            v_to_fset = get_node_to_fset(
                     T, edge_to_adjacency, root,
                     root_prior_feasible_set, node_to_data_feasible_set)
             assert_equal(v_to_fset, node_to_implied_feasible_set)
@@ -164,7 +160,7 @@ class Test_LongPathFeasibility(TestCase):
 
                 T = nx.dfs_tree(self.G, root)
                 edge_to_adjacency = dict((edge, self.A) for edge in T.edges())
-                v_to_fset = get_node_to_posterior_feasible_set(
+                v_to_fset = get_node_to_fset(
                         T, edge_to_adjacency, root,
                         root_prior_feasible_set, node_to_data_feasible_set)
                 assert_equal(v_to_fset, node_to_implied_feasible_set)

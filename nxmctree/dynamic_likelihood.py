@@ -18,14 +18,14 @@ import nxmctree
 from nxmctree.util import dict_distn
 
 __all__ = [
-        'get_likelihood',
-        'get_root_posterior_partial_likelihoods',
-        'get_node_to_posterior_distn',
-        'get_edge_to_joint_posterior_distn',
+        'get_lhood',
+        'get_root_cond_lhoods',
+        'get_node_to_distn',
+        'get_edge_to_nxdistn',
         ]
 
 
-def get_likelihood(T, edge_to_P, root,
+def get_lhood(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     Get the likelihood of this combination of parameters.
@@ -33,7 +33,7 @@ def get_likelihood(T, edge_to_P, root,
     The meanings of the parameters are the same as for the other functions.
 
     """
-    root_post = get_root_posterior_partial_likelihoods(T, edge_to_P, root,
+    root_post = get_root_cond_lhoods(T, edge_to_P, root,
             root_prior_distn, node_to_data_feasible_set)
     if root_post:
         return sum(root_post.values())
@@ -41,11 +41,12 @@ def get_likelihood(T, edge_to_P, root,
         return None
 
 
-def get_root_posterior_partial_likelihoods(T, edge_to_P, root,
+def get_root_cond_lhoods(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
-    Get the posterior distribution at the root.
+    Get the posterior likelihoods at the root, conditional on root state.
 
+    These are also known as partial likelihoods.
     The meanings of the parameters are the same as for the other functions.
 
     """
@@ -54,7 +55,7 @@ def get_root_posterior_partial_likelihoods(T, edge_to_P, root,
     return v_to_subtree_partial_likelihoods[root]
 
 
-def get_node_to_posterior_distn(T, edge_to_P, root,
+def get_node_to_distn(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     Get the map from node to state distribution.
@@ -69,7 +70,7 @@ def get_node_to_posterior_distn(T, edge_to_P, root,
     return v_to_posterior_distn
 
 
-def get_edge_to_joint_posterior_distn(T, edge_to_P, root,
+def get_edge_to_nxdistn(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     Get the map from edge to joint state distribution at endpoint nodes.

@@ -7,3 +7,5 @@ Sphinx functions
 
 
 `$ sphinx-build -b html source build`
+or
+`$ sphinx-build -b html source ../../gh-pages`
