@@ -30,17 +30,20 @@ Developer
 ---------
 
 Install:
- * `$ git clone git@github.com:argriffing/nxmctree.git`
+
+`$ git clone git@github.com:argriffing/nxmctree.git`
 
 Test:
- * `$ python runtests.py`
+
+`$ python runtests.py`
 
 Coverage:
- * `$ python-coverage run --branch runtests.py`
- * `$ python-coverage html`
- * `$ chromium-browser htmlcov/index.html`
 
-Docs:
+    $ python-coverage run --branch runtests.py`
+    $ python-coverage html`
+    $ chromium-browser htmlcov/index.html`
+
+Build docs:
 
     $ cd docs
     $ sphinx-apidoc -o source ../nxmctree
