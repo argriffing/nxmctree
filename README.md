@@ -49,7 +49,6 @@ Coverage:
 Build docs:
 
     $ cd docs
-    $ sphinx-apidoc --separate -o source ../nxmctree
-    $ sphinx-build -b html source /tmp/nxdocs
+    $ sh make-docs.sh
     $ chromium-browser /tmp/nxdocs/index.html
 
