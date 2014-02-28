@@ -11,7 +11,8 @@ import networkx as nx
 
 import nxmctree
 from nxmctree.util import dict_distn
-from nxmctree.history import gen_plausible_histories
+from nxmctree.history import (
+        get_history_feas, get_history_lhood, gen_plausible_histories)
 
 __all__ = [
         'get_lhood_brute',
@@ -20,8 +21,7 @@ __all__ = [
         ]
 
 
-def get_lhood_brute(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+def get_lhood_brute(T, edge_to_P, root, root_prior_distn, node_to_data_fset):
     """
     Get the likelihood of this combination of parameters.
 
@@ -30,8 +30,8 @@ def get_lhood_brute(T, edge_to_P, root,
 
     """
     lk_total = None
-    for node_to_state in gen_plausible_histories(node_to_data_feasible_set):
-        lk = get_history_likelihood(T, edge_to_P, root,
+    for node_to_state in gen_plausible_histories(node_to_data_fset):
+        lk = get_history_lhood(T, edge_to_P, root,
                 root_prior_distn, node_to_state)
         if lk is not None:
             if lk_total is None:
@@ -42,7 +42,7 @@ def get_lhood_brute(T, edge_to_P, root,
 
 
 def get_node_to_distn_brute(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+        root_prior_distn, node_to_data_fset):
     """
     Get the map from node to state distribution.
 
@@ -50,16 +50,15 @@ def get_node_to_distn_brute(T, edge_to_P, root,
     The meanings of the parameters are the same as for the other functions.
 
     """
-    nodes = set(node_to_data_feasible_set)
+    nodes = set(node_to_data_fset)
     v_to_d = dict((v, defaultdict(float)) for v in nodes)
-    for node_to_state in gen_plausible_histories(node_to_data_feasible_set):
-        lk = get_history_likelihood(T, edge_to_P, root,
+    for node_to_state in gen_plausible_histories(node_to_data_fset):
+        lk = get_history_lhood(T, edge_to_P, root,
                 root_prior_distn, node_to_state)
         if lk is not None:
             for node, state in node_to_state.items():
                 v_to_d[node][state] += lk
-    v_to_posterior_distn = dict(
-            (v, dict_distn(d)) for v, d in v_to_d.items())
+    v_to_posterior_distn = dict((v, dict_distn(d)) for v, d in v_to_d.items())
     return v_to_posterior_distn
 
 
@@ -69,7 +68,7 @@ def get_edge_to_nxdistn_brute(T, edge_to_P, root,
     """
     edge_to_d = dict((edge, nx.DiGraph()) for edge in T.edges())
     for node_to_state in gen_plausible_histories(node_to_data_feasible_set):
-        lk = get_history_likelihood(T, edge_to_P, root,
+        lk = get_history_lhood(T, edge_to_P, root,
                 root_prior_distn, node_to_state)
         if lk is not None:
             for tree_edge in T.edges():
@@ -88,3 +87,5 @@ def get_edge_to_nxdistn_brute(T, edge_to_P, root,
             d[sa][sb]['weight'] /= total
     return edge_to_d
 
+# function suite for testing
+fnsuite = (get_lhood_brute, get_node_to_distn_brute, get_edge_to_nxdistn_brute)

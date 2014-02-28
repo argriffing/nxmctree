@@ -188,3 +188,6 @@ def _state_is_subtree_feasible(edge_to_adjacency,
             return False
     return True
 
+# function suite for testing
+fnsuite = (get_feas, get_node_to_fset, get_edge_to_nxfset)
+

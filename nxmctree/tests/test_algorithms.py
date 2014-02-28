@@ -13,12 +13,19 @@ from numpy.testing import (
 import nxmctree
 from nxmctree.nputil import (
         assert_dict_distn_allclose, assert_nx_distn_allclose)
-from nxmctree.wrappers import (
-        get_likelihood,
-        get_node_to_posterior_distn,
-        get_edge_to_joint_posterior_distn,
-        )
 from nxmctree.puzzles import gen_random_systems, gen_random_infeasible_systems
+from nxmctree.brute_feasibility import *
+from nxmctree.brute_likelihood import *
+from nxmctree.dynamic_feasibility import *
+from nxmctree.dynamic_likelihood import *
+
+
+# function suites for testing
+suites = (
+        nxmctree.brute_feasibility.fnsuite,
+        nxmctree.brute_likelihood.fnsuite,
+        nxmctree.dynamic_feasibility.fnsuite,
+        nxmctree.dynamic_feasibility.fnsuite)
 
 
 def test_infeasible_systems():
@@ -26,28 +33,24 @@ def test_infeasible_systems():
     for args in gen_random_infeasible_systems():
         T, e_to_P, r, r_prior, node_feas = args
 
-        for efficiency in 'dynamic', 'brute':
-            for variant in 'likelihood', 'feasibility':
+        for f_overall, f_node, f_edge in suites:
 
-                # likelihood or feasibility
-                likelihood = get_likelihood(*args,
-                        efficiency=efficiency, variant=variant)
-                edge_info = [(e, P.edges()) for e, P in e_to_P.items()]
-                msg = str((T.edges(), edge_info, r, r_prior, node_feas))
-                if likelihood:
-                    raise Exception(msg)
-                assert_(not likelihood)
+            # overall likelihood or feasibility
+            overall_info = f_overall(*args)
+            edge_info = [(e, P.edges()) for e, P in e_to_P.items()]
+            msg = str((T.edges(), edge_info, r, r_prior, node_feas))
+            if overall_info:
+                raise Exception(msg)
+            assert_(not overall_info)
 
-                # state distributions or feasible sets at nodes
-                d = get_node_to_posterior_distn(*args,
-                        efficiency=efficiency, variant=variant)
-                assert_(not any(d.values()))
+            # state distributions or feasible sets at nodes
+            node_info = f_node(*args)
+            assert_(not any(node_info.values()))
 
-                # joint state distributions at edge endpoints
-                d = get_edge_to_joint_posterior_distn(*args,
-                        efficiency=efficiency, variant=variant)
-                for edge in T.edges():
-                    assert_(not d[edge].edges())
+            # joint state distributions at edge endpoints
+            edge_info = f_edge(*args)
+            for edge in T.edges():
+                assert_(not edge_info[edge].edges())
 
 
 def test_complete_density():
@@ -56,28 +59,33 @@ def test_complete_density():
     for args in gen_random_systems(pzero):
         T, e_to_P, r, r_prior, node_feas = args
 
-        for efficiency in 'dynamic', 'brute':
+        for feas_suite, lhood_suite in (
+                (
+                    nxmctree.dynamic_feasibility.fnsuite,
+                    nxmctree.dynamic_likelihood.fnsuite),
+                (
+                    nxmctree.brute_feasibility.fnsuite,
+                    nxmctree.brute_likelihood.fnsuite),
+                ):
+            f_feas, f_node_to_fset, f_edge_to_nxfset = feas_suite
+            f_lhood, f_node_to_distn, f_edge_to_nxdistn = lhood_suite
 
-            # likelihood
-            likelihood = get_likelihood(*args, efficiency=efficiency)
-            assert_allclose(likelihood, 1)
+            # Check overall likelihood and feasibility.
+            assert_allclose(f_lhood(*args), 1)
+            assert_equal(f_feas(*args), True)
 
-            # feasibility
-            feasibility = get_likelihood(*args,
-                efficiency=efficiency, variant='feasibility')
-            assert_equal(feasibility, True)
+            # Check node and edge distributions and feasibility.
+            for f_node, f_edge in (
+                    (f_node_to_fset, f_edge_to_nxfset),
+                    (f_node_to_distn, f_edge_to_nxdistn)):
 
-            for variant in 'likelihood', 'feasibility':
-
-                # state distributions at nodes
-                d = get_node_to_posterior_distn(*args,
-                        efficiency=efficiency, variant=variant)
+                # node info
+                d = f_node(*args)
                 for v in set(node_feas):
                     assert_equal(set(d[v]), node_feas[v])
 
-                # joint state distributions at edge endpoints
-                d = get_edge_to_joint_posterior_distn(*args,
-                        efficiency=efficiency, variant=variant)
+                # edge info
+                d = f_edge(*args)
                 for edge in T.edges():
                     observed_edges = set(d[edge].edges())
                     desired_edges = set(e_to_P[edge].edges())
@@ -91,42 +99,39 @@ def test_dynamic_vs_brute():
         T, e_to_P, r, r_prior, node_feas = args
 
         # likelihood
-        dynamic = get_likelihood(*args)
-        brute = get_likelihood(*args, efficiency='brute')
+        dynamic = get_lhood(*args)
+        brute = get_lhood_brute(*args)
         if dynamic is None or brute is None:
             assert_equal(dynamic, brute)
         else:
             assert_allclose(dynamic, brute)
 
         # feasibility
-        dynamic = get_likelihood(*args, variant='feasibility')
-        brute = get_likelihood(*args, efficiency='brute', variant='feasibility')
+        dynamic = get_feas(*args)
+        brute = get_feas_brute(*args)
         assert_equal(dynamic, brute)
 
         # state distributions at nodes
-        dynamic = get_node_to_posterior_distn(*args)
-        brute = get_node_to_posterior_distn(*args, efficiency='brute')
+        dynamic = get_node_to_distn(*args)
+        brute = get_node_to_distn_brute(*args)
         for v in set(node_feas):
             assert_dict_distn_allclose(dynamic[v], brute[v])
 
         # state feasibility at nodes
-        dynamic = get_node_to_posterior_distn(*args, variant='feasibility')
-        brute = get_node_to_posterior_distn(*args, efficiency='brute',
-                variant='feasibility')
+        dynamic = get_node_to_fset(*args)
+        brute = get_node_to_fset_brute(*args)
         for v in set(node_feas):
             assert_equal(dynamic[v], brute[v])
 
         # joint state distributions at edge endpoints
-        dynamic = get_edge_to_joint_posterior_distn(*args)
-        brute = get_edge_to_joint_posterior_distn(*args, efficiency='brute')
+        dynamic = get_edge_to_nxdistn(*args)
+        brute = get_edge_to_nxdistn_brute(*args)
         for edge in T.edges():
             assert_nx_distn_allclose(dynamic[edge], brute[edge])
 
         # joint state feasibility at edge endpoints
-        dynamic = get_edge_to_joint_posterior_distn(*args,
-                variant='feasibility')
-        brute = get_edge_to_joint_posterior_distn(*args, efficiency='brute',
-                variant='feasibility')
+        dynamic = get_edge_to_nxfset(*args)
+        brute = get_edge_to_nxfset_brute(*args)
         for edge in T.edges():
             dynamic_edges = set(dynamic[edge].edges())
             brute_edges = set(brute[edge].edges())

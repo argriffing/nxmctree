@@ -235,3 +235,5 @@ def _get_partial_likelihood(edge_to_P,
         prob *= p
     return prob
 
+# function suite for testing
+fnsuite = (get_lhood, get_node_to_distn, get_edge_to_nxdistn)
