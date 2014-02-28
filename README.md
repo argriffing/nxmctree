@@ -46,8 +46,15 @@ Coverage:
     $ python-coverage html
     $ chromium-browser htmlcov/index.html
 
-Build docs:
+Build docs locally:
 
     $ sh make-docs.sh
     $ chromium-browser /tmp/nxdocs/index.html
+
+Subsequently update online docs:
+
+    $ git checkout gh-pages
+    $ cp /tmp/nxdocs/. ./ -R
+    $ git add .
+    $ git push
 
