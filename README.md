@@ -48,7 +48,6 @@ Coverage:
 
 Build docs:
 
-    $ cd docs
     $ sh make-docs.sh
     $ chromium-browser /tmp/nxdocs/index.html
 
