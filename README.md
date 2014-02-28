@@ -3,6 +3,7 @@ Markov chain algorithms on a Python NetworkX tree.
 Required dependencies:
  * [Python 2.7+](http://www.python.org/)
  * [pip](https://pip.readthedocs.org/) (installation)
+ * [git](http://git-scm.com/) (installation)
  * [NetworkX](http:/networkx.lanl.gov/) (graph data types and algorithms)
    - `$ pip install --user git+https://github.com/networkx/networkx`
 
