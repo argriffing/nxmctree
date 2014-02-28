@@ -1,0 +1,7 @@
+nxmctree.brute_likelihood module
+================================
+
+.. automodule:: nxmctree.brute_likelihood
+    :members:
+    :undoc-members:
+    :show-inheritance:

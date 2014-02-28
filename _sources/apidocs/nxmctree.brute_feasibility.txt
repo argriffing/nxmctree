@@ -1,0 +1,7 @@
+nxmctree.brute_feasibility module
+=================================
+
+.. automodule:: nxmctree.brute_feasibility
+    :members:
+    :undoc-members:
+    :show-inheritance:

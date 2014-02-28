@@ -1,0 +1,25 @@
+nxmctree package
+================
+
+Submodules
+----------
+
+.. toctree::
+
+   nxmctree.brute_feasibility
+   nxmctree.brute_likelihood
+   nxmctree.dynamic_feasibility
+   nxmctree.dynamic_likelihood
+   nxmctree.history
+   nxmctree.nputil
+   nxmctree.puzzles
+   nxmctree.sampling
+   nxmctree.util
+
+Module contents
+---------------
+
+.. automodule:: nxmctree
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,7 @@
+nxmctree.dynamic_likelihood module
+==================================
+
+.. automodule:: nxmctree.dynamic_likelihood
+    :members:
+    :undoc-members:
+    :show-inheritance:

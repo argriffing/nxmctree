@@ -1,0 +1,212 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nxmctree package &mdash; nxmctree 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nxmctree 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="nxmctree" href="modules.html" />
+    <link rel="next" title="nxmctree.brute_feasibility module" href="nxmctree.brute_feasibility.html" />
+    <link rel="prev" title="nxmctree" href="modules.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.brute_feasibility.html" title="nxmctree.brute_feasibility module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="nxmctree"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" accesskey="U">nxmctree</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="nxmctree-package">
+<h1>nxmctree package<a class="headerlink" href="#nxmctree-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.brute_feasibility.html">nxmctree.brute_feasibility module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.brute_likelihood.html">nxmctree.brute_likelihood module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.dynamic_feasibility.html">nxmctree.dynamic_feasibility module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.dynamic_likelihood.html">nxmctree.dynamic_likelihood module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.history.html">nxmctree.history module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.nputil.html">nxmctree.nputil module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.puzzles.html">nxmctree.puzzles module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.sampling.html">nxmctree.sampling module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.util.html">nxmctree.util module</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="module-nxmctree">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-nxmctree" title="Permalink to this headline">¶</a></h2>
+<p>nxmctree module short description first line</p>
+<dl class="function">
+<dt id="nxmctree.get_lhood">
+<tt class="descclassname">nxmctree.</tt><tt class="descname">get_lhood</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="headerlink" href="#nxmctree.get_lhood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the likelihood of this combination of parameters.</p>
+<p>The meanings of the parameters are the same as for the other functions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.get_node_to_distn">
+<tt class="descclassname">nxmctree.</tt><tt class="descname">get_node_to_distn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="headerlink" href="#nxmctree.get_node_to_distn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the map from node to state distribution.</p>
+<p>The meanings of the parameters are the same as for the other functions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.get_edge_to_nxdistn">
+<tt class="descclassname">nxmctree.</tt><tt class="descname">get_edge_to_nxdistn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="headerlink" href="#nxmctree.get_edge_to_nxdistn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the map from edge to joint state distribution at endpoint nodes.</p>
+<p>The meanings of the parameters are the same as for the other functions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.sample_history">
+<tt class="descclassname">nxmctree.</tt><tt class="descname">sample_history</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="headerlink" href="#nxmctree.sample_history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jointly sample states on a tree.
+This is called a history.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.sample_histories">
+<tt class="descclassname">nxmctree.</tt><tt class="descname">sample_histories</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em>, <em>nhistories</em><big>)</big><a class="headerlink" href="#nxmctree.sample_histories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample multiple history.
+Each history is a joint sample of states on the tree.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.get_history_lhood">
+<tt class="descclassname">nxmctree.</tt><tt class="descname">get_history_lhood</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_state</em><big>)</big><a class="headerlink" href="#nxmctree.get_history_lhood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the probability of a single specific history.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.get_history_feas">
+<tt class="descclassname">nxmctree.</tt><tt class="descname">get_history_feas</tt><big>(</big><em>T</em>, <em>edge_to_A</em>, <em>root</em>, <em>root_prior_fset</em>, <em>node_to_state</em><big>)</big><a class="headerlink" href="#nxmctree.get_history_feas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the feasibility of a single specific history.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.gen_plausible_histories">
+<tt class="descclassname">nxmctree.</tt><tt class="descname">gen_plausible_histories</tt><big>(</big><em>node_to_data_fset</em><big>)</big><a class="headerlink" href="#nxmctree.gen_plausible_histories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Yield histories compatible with directly observed data.</p>
+<p>Each history is a map from node to state.
+Some of these histories may have zero probability when the
+shape of the tree and the structure of the transition matrices
+is taken into account.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">nxmctree package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-nxmctree">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="previous chapter">nxmctree</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nxmctree.brute_feasibility.html"
+                        title="next chapter">nxmctree.brute_feasibility module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/apidocs/nxmctree.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.brute_feasibility.html" title="nxmctree.brute_feasibility module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="nxmctree"
+             >previous</a> |</li>
+        <li><a href="../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >nxmctree</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, alex.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

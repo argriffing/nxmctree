@@ -1,0 +1,7 @@
+nxmctree.dynamic_feasibility module
+===================================
+
+.. automodule:: nxmctree.dynamic_feasibility
+    :members:
+    :undoc-members:
+    :show-inheritance:

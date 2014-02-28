@@ -1,0 +1,178 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nxmctree.puzzles module &mdash; nxmctree 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nxmctree 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="nxmctree package" href="nxmctree.html" />
+    <link rel="next" title="nxmctree.sampling module" href="nxmctree.sampling.html" />
+    <link rel="prev" title="nxmctree.nputil module" href="nxmctree.nputil.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.sampling.html" title="nxmctree.sampling module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.nputil.html" title="nxmctree.nputil module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >nxmctree</a> &raquo;</li>
+          <li><a href="nxmctree.html" accesskey="U">nxmctree package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-nxmctree.puzzles">
+<span id="nxmctree-puzzles-module"></span><h1>nxmctree.puzzles module<a class="headerlink" href="#module-nxmctree.puzzles" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="nxmctree.puzzles.gen_random_infeasible_systems">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">gen_random_infeasible_systems</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#gen_random_infeasible_systems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.gen_random_infeasible_systems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.gen_random_systems">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">gen_random_systems</tt><big>(</big><em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#gen_random_systems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.gen_random_systems" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample whole systems for testing likelihood.
+The pzero parameter indicates sparsity.
+Yield (T, edge_to_P, root, root_prior_distn, node_to_data_feasible_set).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.sample_data_feasible_sets">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_data_feasible_sets</tt><big>(</big><em>nodes</em>, <em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_data_feasible_sets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_data_feasible_sets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a map from node to feasible state set.
+states : set of states
+pzero : probability that any given state is infeasible</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.sample_dict_distn">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_dict_distn</tt><big>(</big><em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_dict_distn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_dict_distn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random state distribution as a dict.
+Some entries may be zero.
+states : set of states
+pzero : probability that any given state has nonzero probability</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.sample_four_node_system">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_four_node_system</tt><big>(</big><em>pzero_transition</em>, <em>pzero_other</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_four_node_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_four_node_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.sample_single_node_system">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_single_node_system</tt><big>(</big><em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_single_node_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_single_node_system" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample a system with a single node.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.sample_transition_graph">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_transition_graph</tt><big>(</big><em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_transition_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_transition_graph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a random transition matrix as a networkx digraph.
+Some entries may be zero.
+states : set of states
+pzero : probability that any given transition has nonzero probability</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nxmctree.nputil.html"
+                        title="previous chapter">nxmctree.nputil module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nxmctree.sampling.html"
+                        title="next chapter">nxmctree.sampling module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/apidocs/nxmctree.puzzles.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.sampling.html" title="nxmctree.sampling module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.nputil.html" title="nxmctree.nputil module"
+             >previous</a> |</li>
+        <li><a href="../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >nxmctree</a> &raquo;</li>
+          <li><a href="nxmctree.html" >nxmctree package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, alex.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

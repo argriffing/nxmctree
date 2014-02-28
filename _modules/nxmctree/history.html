@@ -1,0 +1,179 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nxmctree.history &mdash; nxmctree 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nxmctree 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="nxmctree" href="../nxmctree.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../nxmctree.html" accesskey="U">nxmctree</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for nxmctree.history</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Functions related to histories on trees.</span>
+
+<span class="sd">Every node in a Markov chain tree history has a known state.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s">&#39;get_history_lhood&#39;</span><span class="p">,</span>
+        <span class="s">&#39;get_history_feas&#39;</span><span class="p">,</span>
+        <span class="s">&#39;gen_plausible_histories&#39;</span><span class="p">,</span>
+        <span class="p">]</span>
+
+
+<div class="viewcode-block" id="get_history_feas"><a class="viewcode-back" href="../../apidocs/nxmctree.history.html#nxmctree.history.get_history_feas">[docs]</a><span class="k">def</span> <span class="nf">get_history_feas</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_A</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_state</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the feasibility of a single specific history.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">root_state</span> <span class="o">=</span> <span class="n">node_to_state</span><span class="p">[</span><span class="n">root</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">root_state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">root_prior_fset</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">bfs_edges</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="n">va</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">edge</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">edge_to_A</span><span class="p">[</span><span class="n">edge</span><span class="p">]</span>
+        <span class="n">sa</span> <span class="o">=</span> <span class="n">node_to_state</span><span class="p">[</span><span class="n">va</span><span class="p">]</span>
+        <span class="n">sb</span> <span class="o">=</span> <span class="n">node_to_state</span><span class="p">[</span><span class="n">vb</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sa</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">A</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">sb</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">A</span><span class="p">[</span><span class="n">sa</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="get_history_lhood"><a class="viewcode-back" href="../../apidocs/nxmctree.history.html#nxmctree.history.get_history_lhood">[docs]</a><span class="k">def</span> <span class="nf">get_history_lhood</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_state</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the probability of a single specific history.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">root_state</span> <span class="o">=</span> <span class="n">node_to_state</span><span class="p">[</span><span class="n">root</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">root_state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">root_prior_distn</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="n">lk</span> <span class="o">=</span> <span class="n">root_prior_distn</span><span class="p">[</span><span class="n">root_state</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">lk</span>
+    <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">bfs_edges</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
+        <span class="n">va</span><span class="p">,</span> <span class="n">vb</span> <span class="o">=</span> <span class="n">edge</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">edge_to_P</span><span class="p">[</span><span class="n">edge</span><span class="p">]</span>
+        <span class="n">sa</span> <span class="o">=</span> <span class="n">node_to_state</span><span class="p">[</span><span class="n">va</span><span class="p">]</span>
+        <span class="n">sb</span> <span class="o">=</span> <span class="n">node_to_state</span><span class="p">[</span><span class="n">vb</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sa</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">P</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">sb</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">P</span><span class="p">[</span><span class="n">sa</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="n">lk</span> <span class="o">*=</span> <span class="n">P</span><span class="p">[</span><span class="n">sa</span><span class="p">][</span><span class="n">sb</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">lk</span>
+
+</div>
+<div class="viewcode-block" id="gen_plausible_histories"><a class="viewcode-back" href="../../apidocs/nxmctree.history.html#nxmctree.history.gen_plausible_histories">[docs]</a><span class="k">def</span> <span class="nf">gen_plausible_histories</span><span class="p">(</span><span class="n">node_to_data_fset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Yield histories compatible with directly observed data.</span>
+
+<span class="sd">    Each history is a map from node to state.</span>
+<span class="sd">    Some of these histories may have zero probability when the</span>
+<span class="sd">    shape of the tree and the structure of the transition matrices</span>
+<span class="sd">    is taken into account.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">node_to_data_fset</span><span class="p">)</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="n">node_to_data_fset</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="n">nodes</span><span class="p">,</span> <span class="n">sets</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">pairs</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">assignment</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">sets</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">assignment</span><span class="p">))</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../nxmctree.html" >nxmctree</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, alex.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

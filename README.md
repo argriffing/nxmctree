@@ -1,0 +1,3 @@
+
+`$ cp /tmp/nxdocs/. ./ -R`
+
