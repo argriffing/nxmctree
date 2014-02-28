@@ -12,7 +12,7 @@ Contents:
 .. toctree::
    :maxdepth: 4
 
-   nxmctree
+   apidocs/nxmctree
    glossary
 
 
