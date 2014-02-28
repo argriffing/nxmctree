@@ -40,6 +40,12 @@ Coverage:
  * `$ python-coverage html`
  * `$ chromium-browser htmlcov/index.html`
 
+Docs:
+    $ cd docs
+    $ sphinx-apidoc -o source ../nxmctree
+    $ sphinx-build -b html source /tmp/nxdocs
+    $ chromium-browser /tmp/nxdocs/index.html
+
 
 Notes
 -----
