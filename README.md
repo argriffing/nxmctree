@@ -41,6 +41,7 @@ Coverage:
  * `$ chromium-browser htmlcov/index.html`
 
 Docs:
+
     $ cd docs
     $ sphinx-apidoc -o source ../nxmctree
     $ sphinx-build -b html source /tmp/nxdocs
