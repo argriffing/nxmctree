@@ -11,8 +11,7 @@ from numpy.testing import (run_module_suite, TestCase,
         decorators, assert_, assert_equal)
 
 import nxmctree
-from nxmctree.dynamic_feasibility import (
-        get_feas, get_root_fset, get_node_to_fset)
+from nxmctree.dynamic_feasibility import get_feas, get_node_to_fset
 from nxmctree.puzzles import gen_random_systems
 
 

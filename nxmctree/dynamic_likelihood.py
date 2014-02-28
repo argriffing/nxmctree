@@ -19,7 +19,6 @@ from nxmctree.util import dict_distn
 
 __all__ = [
         'get_lhood',
-        'get_root_cond_lhoods',
         'get_node_to_distn',
         'get_edge_to_nxdistn',
         ]
@@ -33,26 +32,12 @@ def get_lhood(T, edge_to_P, root,
     The meanings of the parameters are the same as for the other functions.
 
     """
-    root_post = get_root_cond_lhoods(T, edge_to_P, root,
+    root_post = _get_root_lhoods(T, edge_to_P, root,
             root_prior_distn, node_to_data_feasible_set)
     if root_post:
         return sum(root_post.values())
     else:
         return None
-
-
-def get_root_cond_lhoods(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
-    """
-    Get the posterior likelihoods at the root, conditional on root state.
-
-    These are also known as partial likelihoods.
-    The meanings of the parameters are the same as for the other functions.
-
-    """
-    v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_feasible_set)
-    return v_to_subtree_partial_likelihoods[root]
 
 
 def get_node_to_distn(T, edge_to_P, root,
@@ -83,6 +68,20 @@ def get_edge_to_nxdistn(T, edge_to_P, root,
     edge_to_J = _forward_edges(T, edge_to_P, root,
             v_to_subtree_partial_likelihoods)
     return edge_to_J
+
+
+def _get_root_lhoods(T, edge_to_P, root,
+        root_prior_distn, node_to_data_feasible_set):
+    """
+    Get the posterior likelihoods at the root, conditional on root state.
+
+    These are also known as partial likelihoods.
+    The meanings of the parameters are the same as for the other functions.
+
+    """
+    v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
+            root_prior_distn, node_to_data_feasible_set)
+    return v_to_subtree_partial_likelihoods[root]
 
 
 def _backward(T, edge_to_P, root,

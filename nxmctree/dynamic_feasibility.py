@@ -16,36 +16,21 @@ import networkx as nx
 
 __all__ = [
         'get_feas',
-        'get_root_fset',
         'get_node_to_fset',
         'get_edge_to_nxfset',
         ]
 
 
-def get_feas(T, edge_to_adjacency, root,
-        root_prior_feasible_set, node_to_data_feasible_set):
+def get_feas(T, edge_to_adjacency, root, root_prior_fset, node_to_data_fset):
     """
     Get the feasibility of this combination of parameters.
 
     The meanings of the parameters are the same as for the other functions.
 
     """
-    root_fset = get_root_fset(T, edge_to_adjacency, root,
-            root_prior_feasible_set, node_to_data_feasible_set)
+    root_fset = _get_root_fset(T, edge_to_adjacency, root,
+            root_prior_fset, node_to_data_fset)
     return True if root_fset else False
-
-
-def get_root_fset(T, edge_to_adjacency, root,
-        root_prior_feasible_set, node_to_data_feasible_set):
-    """
-    Get the posterior set of feasible states at the root.
-
-    The meanings of the parameters are the same as for the other functions.
-
-    """
-    v_to_subtree_feasible_set = _backward(T, edge_to_adjacency, root,
-            root_prior_feasible_set, node_to_data_feasible_set)
-    return v_to_subtree_feasible_set[root]
 
 
 def get_node_to_fset(T, edge_to_adjacency, root,
@@ -114,6 +99,18 @@ def get_edge_to_nxfset(T, edge_to_adjacency, root,
         edge_to_joint_fset[edge] = J
     return edge_to_joint_fset
 
+
+def _get_root_fset(T, edge_to_adjacency, root,
+        root_prior_fset, node_to_data_fset):
+    """
+    Get the posterior set of feasible states at the root.
+
+    The meanings of the parameters are the same as for the other functions.
+
+    """
+    v_to_subtree_feasible_set = _backward(T, edge_to_adjacency, root,
+            root_prior_fset, node_to_data_fset)
+    return v_to_subtree_feasible_set[root]
 
 
 def _backward(T, edge_to_adjacency, root,
