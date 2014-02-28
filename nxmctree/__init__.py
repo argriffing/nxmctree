@@ -14,7 +14,11 @@ from .dynamic_likelihood import *
 from . import sampling
 from .sampling import *
 
+from . import history
+from .history import *
+
 __all__ = ['test', 'bench']
 __all__ += dynamic_likelihood.__all__
 __all__ += sampling.__all__
+__all__ += history.__all__
 
