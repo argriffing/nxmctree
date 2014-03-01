@@ -6,11 +6,16 @@ from __future__ import division, print_function, absolute_import
 
 import itertools
 
+import networkx as nx
+import numpy as np
+import scipy.linalg
+
 from nxmctree import get_edge_to_nxdistn
 
 
-def get_Q_primary(rate):
+def get_Q_primary():
     # this is like a symmetric codon rate matrix
+    rate = 1
     Q_primary = nx.DiGraph()
     Q_primary.add_weighted_edges_from((
         (0, 1, rate),
@@ -47,7 +52,8 @@ def get_primary_to_tol():
 def get_node_to_data_fset(compound_states):
     # this accounts for both the alignment data and the disease data
     node_to_data_fset = {
-            'N0' : {(0, (1, 0, 1))},
+            'N0' : {
+                (0, (1, 0, 1))},
             'N1' : set(compound_states),
             'N2' : set(compound_states),
             'N3' : {
@@ -104,14 +110,20 @@ def get_compound_states():
     return compound_states
 
 
-def get_Q_compound(
-        compound_states, primary_to_tol, primary_rate, rate_on, rate_off):
+def define_compound_process(compound_states, primary_to_tol):
     """
-    Compute the compound rate matrix.
+    Compute indicator matrices for the compound process.
 
     """
-    Q_compound = nx.DiGraph()
-    for sa in itertools.product(compound_states):
+    n = len(compound_states)
+
+    # define some dense indicator matrices
+    I_syn = np.zeros((n, n), dtype=float)
+    I_non = np.zeros((n, n), dtype=float)
+    I_on = np.zeros((n, n), dtype=float)
+    I_off = np.zeros((n, n), dtype=float)
+
+    for i, sa in enumerate(compound_states):
 
         # skip compound states that have zero probability
         prim_a, tols_a = sa
@@ -119,7 +131,7 @@ def get_Q_compound(
         if not tols_a[tclass_a]:
             continue
 
-        for sb in itertools.product(compound_states):
+        for j, sb in enumerate(compound_states):
 
             # skip compound states that have zero probability
             prim_b, tols_b = sb
@@ -135,23 +147,63 @@ def get_Q_compound(
             if hamming_distance(tols_a, tols_b) > 1:
                 continue
 
-            # use a rate that depends on the transition type
-            if prim_a != prim_b:
-                rate = primary_rate
+            # set the indicator according to the transition type
+            if prim_a != prim_b and tclass_a == tclass_b:
+                I_syn[i, j] = 1
+            elif prim_a != prim_b and tclass_a != tclass_b:
+                I_non[i, j] = 1
             elif sum(tols_b) - sum(tols_a) == 1:
-                rate = rate_on
+                I_on[i, j] = 1
             elif sum(tols_b) - sum(tols_a) == -1:
-                rate = rate_off
+                I_off[i, j] = 1
             else:
                 raise Exception
 
-            # set the compound process transition rate
-            Q_compound.add_edge((sa, sb, weight=rate))
+    return I_syn, I_non, I_on, I_off
 
-    # return the rate matrix of the compound process
-    return Q_compound
+
+def get_expected_rate(Q_dense, dense_distn):
+    return -np.dot(np.diag(Q_dense), dense_distn)
+
+
+def nx_to_np_rate_matrix(Q_nx, ordered_states):
+    state_to_idx = dict((s, i) for i, s in enumerate(ordered_states))
+    nstates = len(ordered_states)
+    Q_np = np.zeros((nstates, nstates))
+    for sa, sb in Q_nx.edges():
+        i = state_to_idx[sa]
+        j = state_to_idx[sb]
+        Q_np[i, j] = Q_nx[i][j]['weight']
+
+    # set negative diagonal entries so that rows sum to zero
+    row_sums = np.sum(Q_np, axis=1)
+    Q_np = Q_np - np.diag(row_sums)
+
+    # return the dense rate matrix
+    return Q_np
 
 
 def main():
-    pass
 
+    # Get the primary rate matrix and convert it to a dense ndarray.
+    nprimary = 6
+    Q_primary_nx = get_Q_primary()
+    Q_primary_dense = nx_to_np_rate_matrix(Q_primary_nx, range(nprimary))
+    primary_distn_dense = np.ones(nprimary, dtype=float) / nprimary
+    expected_rate = get_expected_rate(Q_primary_dense, primary_distn_dense)
+    print('pure primary process expected rate:')
+    print(expected_rate)
+    print
+
+    # The expected rate of the pure primary process
+    # will be used for normalization.
+
+    # Get the rooted directed tree shape.
+    T, root = get_T_and_root()
+
+    # Get the analog of the genetic code.
+    primary_to_tol = get_primary_to_tol()
+
+
+
+main()
