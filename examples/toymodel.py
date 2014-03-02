@@ -49,48 +49,6 @@ def get_primary_to_tol():
     return primary_to_tol
 
 
-def get_node_to_data_fset(compound_states):
-    # this accounts for both the alignment data and the disease data
-    """
-    node_to_data_fset = {
-            'N0' : set(compound_states),
-            'N1' : set(compound_states),
-            'N2' : set(compound_states),
-            'N3' : set(compound_states),
-            'N4' : set(compound_states),
-            'N5' : set(compound_states),
-            }
-    """
-    node_to_data_fset = {
-            'N0' : {
-                (0, (1, 0, 1))},
-            #'N0' : {
-                #(0, (1, 0, 0)),
-                #(0, (1, 0, 1)),
-                #(0, (1, 1, 0)),
-                #(0, (1, 1, 1))},
-
-            'N1' : set(compound_states),
-            'N2' : set(compound_states),
-            'N3' : {
-                (4, (0, 0, 1)),
-                (4, (0, 1, 1)),
-                (4, (1, 0, 1)),
-                (4, (1, 1, 1))},
-            'N4' : {
-                (5, (0, 0, 1)),
-                (5, (0, 1, 1)),
-                (5, (1, 0, 1)),
-                (5, (1, 1, 1))},
-            'N5' : {
-                (1, (1, 0, 0)),
-                (1, (1, 0, 1)),
-                (1, (1, 1, 0)),
-                (1, (1, 1, 1))},
-            }
-    return node_to_data_fset
-
-
 def get_T_and_root():
     # rooted tree, deliberately without branch lengths
     T = nx.DiGraph()
@@ -235,7 +193,7 @@ def compute_edge_expectation(Q, P, J, indicator, t):
     return total
 
 
-def main():
+def run(primary_to_tol, compound_states, node_to_data_fset):
 
     # Get the primary rate matrix and convert it to a dense ndarray.
     nprimary = 6
@@ -247,23 +205,12 @@ def main():
     # will be used for normalization.
     expected_primary_rate = get_expected_rate(
             Q_primary_dense, primary_distn_dense)
-    print('pure primary process expected rate:')
-    print(expected_primary_rate)
-    print
+    #print('pure primary process expected rate:')
+    #print(expected_primary_rate)
+    #print
 
     # Get the rooted directed tree shape.
     T, root = get_T_and_root()
-
-    # Get the analog of the genetic code.
-    primary_to_tol = get_primary_to_tol()
-
-    # Define the ordering of the compound states.
-    compound_states = get_compound_states(primary_to_tol)
-    ncompound = len(compound_states)
-
-    # Get the observed data that we will use to compute
-    # our posterior expectations of labeled event counts.
-    node_to_data_fset = get_node_to_data_fset(compound_states)
 
     # Get the map from ordered tree edge to branch length.
     # The branch length has complicated units.
@@ -368,6 +315,87 @@ def main():
 
     print('blink expectation:')
     print(blink_expectation)
+    print()
+
+
+
+def main():
+
+    # Get the analog of the genetic code.
+    primary_to_tol = get_primary_to_tol()
+
+    # Define the ordering of the compound states.
+    compound_states = get_compound_states(primary_to_tol)
+
+    # No data.
+    print ('expectations given no alignment or disease data')
+    print()
+    node_to_data_fset = {
+            'N0' : set(compound_states),
+            'N1' : set(compound_states),
+            'N2' : set(compound_states),
+            'N3' : set(compound_states),
+            'N4' : set(compound_states),
+            'N5' : set(compound_states),
+            }
+    run(primary_to_tol, compound_states, node_to_data_fset)
+    print()
+
+    # Alignment data only.
+    print ('expectations given only alignment data but not disease data')
+    print()
+    node_to_data_fset = {
+            'N0' : {
+                (0, (1, 0, 0)),
+                (0, (1, 0, 1)),
+                (0, (1, 1, 0)),
+                (0, (1, 1, 1))},
+            'N1' : set(compound_states),
+            'N2' : set(compound_states),
+            'N3' : {
+                (4, (0, 0, 1)),
+                (4, (0, 1, 1)),
+                (4, (1, 0, 1)),
+                (4, (1, 1, 1))},
+            'N4' : {
+                (5, (0, 0, 1)),
+                (5, (0, 1, 1)),
+                (5, (1, 0, 1)),
+                (5, (1, 1, 1))},
+            'N5' : {
+                (1, (1, 0, 0)),
+                (1, (1, 0, 1)),
+                (1, (1, 1, 0)),
+                (1, (1, 1, 1))},
+            }
+    run(primary_to_tol, compound_states, node_to_data_fset)
+    print()
+
+    # Alignment and disease data.
+    print ('expectations given alignment and disease data')
+    print()
+    node_to_data_fset = {
+            'N0' : {
+                (0, (1, 0, 1))},
+            'N1' : set(compound_states),
+            'N2' : set(compound_states),
+            'N3' : {
+                (4, (0, 0, 1)),
+                (4, (0, 1, 1)),
+                (4, (1, 0, 1)),
+                (4, (1, 1, 1))},
+            'N4' : {
+                (5, (0, 0, 1)),
+                (5, (0, 1, 1)),
+                (5, (1, 0, 1)),
+                (5, (1, 1, 1))},
+            'N5' : {
+                (1, (1, 0, 0)),
+                (1, (1, 0, 1)),
+                (1, (1, 1, 0)),
+                (1, (1, 1, 1))},
+            }
+    run(primary_to_tol, compound_states, node_to_data_fset)
     print()
 
 
