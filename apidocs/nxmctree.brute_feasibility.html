@@ -67,13 +67,40 @@
 <dt id="nxmctree.brute_feasibility.get_feas_brute">
 <tt class="descclassname">nxmctree.brute_feasibility.</tt><tt class="descname">get_feas_brute</tt><big>(</big><em>T</em>, <em>edge_to_A</em>, <em>root</em>, <em>root_prior_fset</em>, <em>node_to_data_fset</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/brute_feasibility.html#get_feas_brute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.brute_feasibility.get_feas_brute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the feasibility of this combination of parameters.</p>
-<p>Use brute force enumeration over all possible states.
-The meanings of the parameters are the same as for the other functions.</p>
+<p>Use brute force enumeration over all possible states.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>feas</strong> : bool</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_fset</strong> : set</p>
+<blockquote>
+<div><p>The set of feasible prior root states.
+This may be interpreted as the support of the prior state
+distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote>
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>feas</strong> : bool</p>
 <blockquote class="last">
 <div><p>True if the data is structurally supported by the model,
 otherwise False.</p>
@@ -88,13 +115,40 @@ otherwise False.</p>
 <dt id="nxmctree.brute_feasibility.get_node_to_fset_brute">
 <tt class="descclassname">nxmctree.brute_feasibility.</tt><tt class="descname">get_node_to_fset_brute</tt><big>(</big><em>T</em>, <em>edge_to_A</em>, <em>root</em>, <em>root_prior_fset</em>, <em>node_to_data_fset</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/brute_feasibility.html#get_node_to_fset_brute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.brute_feasibility.get_node_to_fset_brute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the map from node to state feasibility.</p>
-<p>Use brute force enumeration over all histories.
-The meanings of the parameters are the same as for the other functions.</p>
+<p>Use brute force enumeration over all histories.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>node_to_posterior_fset</strong> : dict</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_fset</strong> : set</p>
+<blockquote>
+<div><p>The set of feasible prior root states.
+This may be interpreted as the support of the prior state
+distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote>
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>node_to_posterior_fset</strong> : dict</p>
 <blockquote class="last">
 <div><p>Map from node to set of posterior feasible states.</p>
 </div></blockquote>
@@ -107,13 +161,40 @@ The meanings of the parameters are the same as for the other functions.</p>
 <dl class="function">
 <dt id="nxmctree.brute_feasibility.get_edge_to_nxfset_brute">
 <tt class="descclassname">nxmctree.brute_feasibility.</tt><tt class="descname">get_edge_to_nxfset_brute</tt><big>(</big><em>T</em>, <em>edge_to_A</em>, <em>root</em>, <em>root_prior_fset</em>, <em>node_to_data_fset</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/brute_feasibility.html#get_edge_to_nxfset_brute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.brute_feasibility.get_edge_to_nxfset_brute" title="Permalink to this definition">¶</a></dt>
-<dd><p>Use brute force enumeration over all histories.
-The meanings of the parameters are the same as for the other functions.</p>
+<dd><p>Use brute force enumeration over all histories.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>edge_to_nxfset</strong> : map from directed edge to networkx DiGraph</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_fset</strong> : set</p>
+<blockquote>
+<div><p>The set of feasible prior root states.
+This may be interpreted as the support of the prior state
+distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote>
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>edge_to_nxfset</strong> : map from directed edge to networkx DiGraph</p>
 <blockquote class="last">
 <div><p>For each directed edge in the rooted tree report the networkx DiGraph
 among states, for which presence/absence of an edge defines the

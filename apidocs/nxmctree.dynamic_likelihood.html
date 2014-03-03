@@ -68,14 +68,41 @@ State distributions are represented by sparse dicts.
 Joint endpoint state distributions are represented by networkx graphs.</p>
 <dl class="function">
 <dt id="nxmctree.dynamic_likelihood.get_lhood">
-<tt class="descclassname">nxmctree.dynamic_likelihood.</tt><tt class="descname">get_lhood</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/dynamic_likelihood.html#get_lhood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.dynamic_likelihood.get_lhood" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">nxmctree.dynamic_likelihood.</tt><tt class="descname">get_lhood</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_fset</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/dynamic_likelihood.html#get_lhood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.dynamic_likelihood.get_lhood" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the likelihood of this combination of parameters.</p>
-<p>The meanings of the parameters are the same as for the other functions.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>lhood</strong> : float or None</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_fset</strong> : set</p>
+<blockquote>
+<div><p>The set of feasible prior root states.
+This may be interpreted as the support of the prior state
+distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote>
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>lhood</strong> : float or None</p>
 <blockquote class="last">
 <div><p>If the data is structurally supported by the model then
 return the likelihood, otherwise None.</p>
@@ -88,16 +115,82 @@ return the likelihood, otherwise None.</p>
 
 <dl class="function">
 <dt id="nxmctree.dynamic_likelihood.get_node_to_distn">
-<tt class="descclassname">nxmctree.dynamic_likelihood.</tt><tt class="descname">get_node_to_distn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/dynamic_likelihood.html#get_node_to_distn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.dynamic_likelihood.get_node_to_distn" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">nxmctree.dynamic_likelihood.</tt><tt class="descname">get_node_to_distn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_fset</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/dynamic_likelihood.html#get_node_to_distn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.dynamic_likelihood.get_node_to_distn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the map from node to state distribution.</p>
-<p>The meanings of the parameters are the same as for the other functions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_fset</strong> : set</p>
+<blockquote>
+<div><p>The set of feasible prior root states.
+This may be interpreted as the support of the prior state
+distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote class="last">
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="nxmctree.dynamic_likelihood.get_edge_to_nxdistn">
-<tt class="descclassname">nxmctree.dynamic_likelihood.</tt><tt class="descname">get_edge_to_nxdistn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/dynamic_likelihood.html#get_edge_to_nxdistn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.dynamic_likelihood.get_edge_to_nxdistn" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">nxmctree.dynamic_likelihood.</tt><tt class="descname">get_edge_to_nxdistn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_fset</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/dynamic_likelihood.html#get_edge_to_nxdistn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.dynamic_likelihood.get_edge_to_nxdistn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the map from edge to joint state distribution at endpoint nodes.</p>
-<p>The meanings of the parameters are the same as for the other functions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_fset</strong> : set</p>
+<blockquote>
+<div><p>The set of feasible prior root states.
+This may be interpreted as the support of the prior state
+distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote class="last">
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

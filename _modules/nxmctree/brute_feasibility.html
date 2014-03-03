@@ -62,6 +62,7 @@
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
 
 <span class="kn">import</span> <span class="nn">nxmctree</span>
+<span class="kn">from</span> <span class="nn">nxmctree.docspam</span> <span class="kn">import</span> <span class="n">ddec</span><span class="p">,</span> <span class="n">common_params</span>
 <span class="kn">from</span> <span class="nn">nxmctree.history</span> <span class="kn">import</span> <span class="n">get_history_feas</span><span class="p">,</span> <span class="n">gen_plausible_histories</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -71,12 +72,16 @@
         <span class="p">]</span>
 
 
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">common_params</span><span class="p">)</span>
 <div class="viewcode-block" id="get_feas_brute"><a class="viewcode-back" href="../../apidocs/nxmctree.brute_feasibility.html#nxmctree.brute_feasibility.get_feas_brute">[docs]</a><span class="k">def</span> <span class="nf">get_feas_brute</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_A</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the feasibility of this combination of parameters.</span>
 
 <span class="sd">    Use brute force enumeration over all possible states.</span>
-<span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -92,13 +97,17 @@
     <span class="k">return</span> <span class="bp">False</span>
 
 </div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">common_params</span><span class="p">)</span>
 <div class="viewcode-block" id="get_node_to_fset_brute"><a class="viewcode-back" href="../../apidocs/nxmctree.brute_feasibility.html#nxmctree.brute_feasibility.get_node_to_fset_brute">[docs]</a><span class="k">def</span> <span class="nf">get_node_to_fset_brute</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_A</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
         <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the map from node to state feasibility.</span>
 
 <span class="sd">    Use brute force enumeration over all histories.</span>
-<span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -115,11 +124,15 @@
     <span class="k">return</span> <span class="n">v_to_feas</span>
 
 </div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">common_params</span><span class="p">)</span>
 <div class="viewcode-block" id="get_edge_to_nxfset_brute"><a class="viewcode-back" href="../../apidocs/nxmctree.brute_feasibility.html#nxmctree.brute_feasibility.get_edge_to_nxfset_brute">[docs]</a><span class="k">def</span> <span class="nf">get_edge_to_nxfset_brute</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_A</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
         <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Use brute force enumeration over all histories.</span>
-<span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>

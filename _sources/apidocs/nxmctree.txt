@@ -8,6 +8,7 @@ Submodules
 
    nxmctree.brute_feasibility
    nxmctree.brute_likelihood
+   nxmctree.docspam
    nxmctree.dynamic_feasibility
    nxmctree.dynamic_likelihood
    nxmctree.history

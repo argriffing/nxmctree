@@ -69,6 +69,7 @@
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
 
 <span class="kn">import</span> <span class="nn">nxmctree</span>
+<span class="kn">from</span> <span class="nn">nxmctree.docspam</span> <span class="kn">import</span> <span class="n">ddec</span><span class="p">,</span> <span class="n">common_params</span>
 <span class="kn">from</span> <span class="nn">nxmctree.util</span> <span class="kn">import</span> <span class="n">dict_distn</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
@@ -78,12 +79,15 @@
         <span class="p">]</span>
 
 
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">common_params</span><span class="p">)</span>
 <div class="viewcode-block" id="get_lhood"><a class="viewcode-back" href="../../apidocs/nxmctree.dynamic_likelihood.html#nxmctree.dynamic_likelihood.get_lhood">[docs]</a><span class="k">def</span> <span class="nf">get_lhood</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">):</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the likelihood of this combination of parameters.</span>
 
-<span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -93,59 +97,75 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">root_lhoods</span> <span class="o">=</span> <span class="n">_get_root_lhoods</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">)</span>
+            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">root_lhoods</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">if</span> <span class="n">root_lhoods</span> <span class="k">else</span> <span class="bp">None</span>
 
 </div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">common_params</span><span class="p">)</span>
 <div class="viewcode-block" id="get_node_to_distn"><a class="viewcode-back" href="../../apidocs/nxmctree.dynamic_likelihood.html#nxmctree.dynamic_likelihood.get_node_to_distn">[docs]</a><span class="k">def</span> <span class="nf">get_node_to_distn</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">):</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the map from node to state distribution.</span>
 
-<span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">_backward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">)</span>
+            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
     <span class="n">v_to_posterior_distn</span> <span class="o">=</span> <span class="n">_forward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
             <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">v_to_posterior_distn</span>
 
 </div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">common_params</span><span class="p">)</span>
 <div class="viewcode-block" id="get_edge_to_nxdistn"><a class="viewcode-back" href="../../apidocs/nxmctree.dynamic_likelihood.html#nxmctree.dynamic_likelihood.get_edge_to_nxdistn">[docs]</a><span class="k">def</span> <span class="nf">get_edge_to_nxdistn</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">):</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the map from edge to joint state distribution at endpoint nodes.</span>
 
-<span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">_backward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">)</span>
+            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
     <span class="n">edge_to_J</span> <span class="o">=</span> <span class="n">_forward_edges</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
             <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">edge_to_J</span>
 
 </div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">common_params</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">_get_root_lhoods</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">):</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the posterior likelihoods at the root, conditional on root state.</span>
 
 <span class="sd">    These are also known as partial likelihoods.</span>
-<span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">_backward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">)</span>
+            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">[</span><span class="n">root</span><span class="p">]</span>
 
 
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">common_params</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">_backward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">):</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Determine the subtree feasible state set of each node.</span>
+
 <span class="sd">    This is the backward pass of a backward-forward algorithm.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="p">{}</span>
@@ -154,7 +174,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">postorder_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">postorder_nodes</span><span class="p">:</span>
-        <span class="n">fset_data</span> <span class="o">=</span> <span class="n">node_to_data_feasible_set</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="n">fset_data</span> <span class="o">=</span> <span class="n">node_to_data_fset</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">T</span> <span class="ow">and</span> <span class="n">T</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
             <span class="n">cs</span> <span class="o">=</span> <span class="n">T</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -177,8 +197,7 @@
     <span class="k">return</span> <span class="n">v_to_subtree_partial_likelihoods</span>
 
 
-<span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_forward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Forward pass.</span>
 
@@ -290,6 +309,7 @@
             <span class="n">p</span> <span class="o">+=</span> <span class="n">p_trans</span> <span class="o">*</span> <span class="n">p_subtree</span>
         <span class="n">prob</span> <span class="o">*=</span> <span class="n">p</span>
     <span class="k">return</span> <span class="n">prob</span>
+
 
 <span class="c"># function suite for testing</span>
 <span class="n">fnsuite</span> <span class="o">=</span> <span class="p">(</span><span class="n">get_lhood</span><span class="p">,</span> <span class="n">get_node_to_distn</span><span class="p">,</span> <span class="n">get_edge_to_nxdistn</span><span class="p">)</span>
