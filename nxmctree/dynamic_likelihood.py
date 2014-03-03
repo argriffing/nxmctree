@@ -15,6 +15,7 @@ from collections import defaultdict
 import networkx as nx
 
 import nxmctree
+from nxmctree.docspam import ddec, common_params
 from nxmctree.util import dict_distn
 
 __all__ = [
@@ -24,12 +25,15 @@ __all__ = [
         ]
 
 
+@ddec(params=common_params)
 def get_lhood(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     Get the likelihood of this combination of parameters.
 
-    The meanings of the parameters are the same as for the other functions.
+    Parameters
+    ----------
+    {params}
 
     Returns
     -------
@@ -43,12 +47,15 @@ def get_lhood(T, edge_to_P, root,
     return sum(root_lhoods.values()) if root_lhoods else None
 
 
+@ddec(params=common_params)
 def get_node_to_distn(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     Get the map from node to state distribution.
 
-    The meanings of the parameters are the same as for the other functions.
+    Parameters
+    ----------
+    {params}
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
@@ -58,12 +65,15 @@ def get_node_to_distn(T, edge_to_P, root,
     return v_to_posterior_distn
 
 
+@ddec(params=common_params)
 def get_edge_to_nxdistn(T, edge_to_P, root,
         root_prior_distn, node_to_data_feasible_set):
     """
     Get the map from edge to joint state distribution at endpoint nodes.
 
-    The meanings of the parameters are the same as for the other functions.
+    Parameters
+    ----------
+    {params}
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
