@@ -8,6 +8,7 @@ This module is only for testing.
 import networkx as nx
 
 import nxmctree
+from nxmctree.docspam import ddec, common_params
 from nxmctree.history import get_history_feas, gen_plausible_histories
 
 __all__ = [
@@ -17,12 +18,16 @@ __all__ = [
         ]
 
 
+@ddec(params=common_params)
 def get_feas_brute(T, edge_to_A, root, root_prior_fset, node_to_data_fset):
     """
     Get the feasibility of this combination of parameters.
 
     Use brute force enumeration over all possible states.
-    The meanings of the parameters are the same as for the other functions.
+
+    Parameters
+    ----------
+    {params}
 
     Returns
     -------
@@ -38,13 +43,17 @@ def get_feas_brute(T, edge_to_A, root, root_prior_fset, node_to_data_fset):
     return False
 
 
+@ddec(params=common_params)
 def get_node_to_fset_brute(T, edge_to_A, root,
         root_prior_fset, node_to_data_fset):
     """
     Get the map from node to state feasibility.
 
     Use brute force enumeration over all histories.
-    The meanings of the parameters are the same as for the other functions.
+
+    Parameters
+    ----------
+    {params}
 
     Returns
     -------
@@ -61,11 +70,15 @@ def get_node_to_fset_brute(T, edge_to_A, root,
     return v_to_feas
 
 
+@ddec(params=common_params)
 def get_edge_to_nxfset_brute(T, edge_to_A, root,
         root_prior_fset, node_to_data_fset):
     """
     Use brute force enumeration over all histories.
-    The meanings of the parameters are the same as for the other functions.
+
+    Parameters
+    ----------
+    {params}
 
     Returns
     -------

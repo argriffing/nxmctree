@@ -27,7 +27,7 @@ __all__ = [
 
 @ddec(params=common_params)
 def get_lhood(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+        root_prior_distn, node_to_data_fset):
     """
     Get the likelihood of this combination of parameters.
 
@@ -43,13 +43,13 @@ def get_lhood(T, edge_to_P, root,
 
     """
     root_lhoods = _get_root_lhoods(T, edge_to_P, root,
-            root_prior_distn, node_to_data_feasible_set)
+            root_prior_distn, node_to_data_fset)
     return sum(root_lhoods.values()) if root_lhoods else None
 
 
 @ddec(params=common_params)
 def get_node_to_distn(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+        root_prior_distn, node_to_data_fset):
     """
     Get the map from node to state distribution.
 
@@ -59,7 +59,7 @@ def get_node_to_distn(T, edge_to_P, root,
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_feasible_set)
+            root_prior_distn, node_to_data_fset)
     v_to_posterior_distn = _forward(T, edge_to_P, root,
             v_to_subtree_partial_likelihoods)
     return v_to_posterior_distn
@@ -67,7 +67,7 @@ def get_node_to_distn(T, edge_to_P, root,
 
 @ddec(params=common_params)
 def get_edge_to_nxdistn(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+        root_prior_distn, node_to_data_fset):
     """
     Get the map from edge to joint state distribution at endpoint nodes.
 
@@ -77,31 +77,41 @@ def get_edge_to_nxdistn(T, edge_to_P, root,
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_feasible_set)
+            root_prior_distn, node_to_data_fset)
     edge_to_J = _forward_edges(T, edge_to_P, root,
             v_to_subtree_partial_likelihoods)
     return edge_to_J
 
 
+@ddec(params=common_params)
 def _get_root_lhoods(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+        root_prior_distn, node_to_data_fset):
     """
     Get the posterior likelihoods at the root, conditional on root state.
 
     These are also known as partial likelihoods.
-    The meanings of the parameters are the same as for the other functions.
+
+    Parameters
+    ----------
+    {params}
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_feasible_set)
+            root_prior_distn, node_to_data_fset)
     return v_to_subtree_partial_likelihoods[root]
 
 
+@ddec(params=common_params)
 def _backward(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+        root_prior_distn, node_to_data_fset):
     """
     Determine the subtree feasible state set of each node.
+
     This is the backward pass of a backward-forward algorithm.
+
+    Parameters
+    ----------
+    {params}
 
     """
     v_to_subtree_partial_likelihoods = {}
@@ -110,7 +120,7 @@ def _backward(T, edge_to_P, root,
     else:
         postorder_nodes = [root]
     for v in postorder_nodes:
-        fset_data = node_to_data_feasible_set[v]
+        fset_data = node_to_data_fset[v]
         if T and T[v]:
             cs = T[v]
         else:
@@ -133,8 +143,7 @@ def _backward(T, edge_to_P, root,
     return v_to_subtree_partial_likelihoods
 
 
-def _forward(T, edge_to_P, root,
-        v_to_subtree_partial_likelihoods):
+def _forward(T, edge_to_P, root, v_to_subtree_partial_likelihoods):
     """
     Forward pass.
 
@@ -247,5 +256,7 @@ def _get_partial_likelihood(edge_to_P,
         prob *= p
     return prob
 
+
 # function suite for testing
 fnsuite = (get_lhood, get_node_to_distn, get_edge_to_nxdistn)
+
