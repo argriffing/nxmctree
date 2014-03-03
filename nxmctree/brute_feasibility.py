@@ -24,6 +24,12 @@ def get_feas_brute(T, edge_to_A, root, root_prior_fset, node_to_data_fset):
     Use brute force enumeration over all possible states.
     The meanings of the parameters are the same as for the other functions.
 
+    Returns
+    -------
+    feas : bool
+        True if the data is structurally supported by the model,
+        otherwise False.
+
     """
     for node_to_state in gen_plausible_histories(node_to_data_fset):
         if get_history_feas(T, edge_to_A, root,
@@ -40,6 +46,11 @@ def get_node_to_fset_brute(T, edge_to_A, root,
     Use brute force enumeration over all histories.
     The meanings of the parameters are the same as for the other functions.
 
+    Returns
+    -------
+    node_to_posterior_fset : dict
+        Map from node to set of posterior feasible states.
+
     """
     nodes = set(node_to_data_fset)
     v_to_feas = dict((v, set()) for v in nodes)
@@ -55,6 +66,15 @@ def get_edge_to_nxfset_brute(T, edge_to_A, root,
     """
     Use brute force enumeration over all histories.
     The meanings of the parameters are the same as for the other functions.
+
+    Returns
+    -------
+    edge_to_nxfset : map from directed edge to networkx DiGraph
+        For each directed edge in the rooted tree report the networkx DiGraph
+        among states, for which presence/absence of an edge defines the
+        posterior feasibility of the corresponding state transition
+        along the edge.
+
     """
     edge_to_d = dict((edge, nx.DiGraph()) for edge in T.edges())
     for node_to_state in gen_plausible_histories(node_to_data_fset):
@@ -66,6 +86,7 @@ def get_edge_to_nxfset_brute(T, edge_to_A, root,
                 sb = node_to_state[vb]
                 edge_to_d[tree_edge].add_edge(sa, sb)
     return edge_to_d
+
 
 # function suite for testing
 fnsuite = (get_feas_brute, get_node_to_fset_brute, get_edge_to_nxfset_brute)

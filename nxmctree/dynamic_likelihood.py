@@ -31,13 +31,16 @@ def get_lhood(T, edge_to_P, root,
 
     The meanings of the parameters are the same as for the other functions.
 
+    Returns
+    -------
+    lhood : float or None
+        If the data is structurally supported by the model then
+        return the likelihood, otherwise None.
+
     """
-    root_post = _get_root_lhoods(T, edge_to_P, root,
+    root_lhoods = _get_root_lhoods(T, edge_to_P, root,
             root_prior_distn, node_to_data_feasible_set)
-    if root_post:
-        return sum(root_post.values())
-    else:
-        return None
+    return sum(root_lhoods.values()) if root_lhoods else None
 
 
 def get_node_to_distn(T, edge_to_P, root,
