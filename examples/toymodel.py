@@ -398,5 +398,26 @@ def main():
     run(primary_to_tol, compound_states, node_to_data_fset)
     print()
 
+    # Alignment and fully observed disease data.
+    print ('expectations given alignment and fully observed disease data')
+    print ('(all leaf disease states which were previously considered to be')
+    print ('unobserved are now considered to be tolerated (blinked on))')
+    print()
+    node_to_data_fset = {
+            'N0' : {
+                (0, (1, 0, 1))},
+            'N1' : set(compound_states),
+            'N2' : set(compound_states),
+            'N3' : {
+                (4, (1, 1, 1))},
+            'N4' : {
+                (5, (1, 1, 1))},
+            'N5' : {
+                (1, (1, 1, 1))},
+            }
+    run(primary_to_tol, compound_states, node_to_data_fset)
+    print()
+
 
 main()
+
