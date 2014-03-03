@@ -71,6 +71,19 @@ Joint endpoint state distributions are represented by networkx graphs.</p>
 <tt class="descclassname">nxmctree.dynamic_likelihood.</tt><tt class="descname">get_lhood</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/dynamic_likelihood.html#get_lhood"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.dynamic_likelihood.get_lhood" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the likelihood of this combination of parameters.</p>
 <p>The meanings of the parameters are the same as for the other functions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>lhood</strong> : float or None</p>
+<blockquote class="last">
+<div><p>If the data is structurally supported by the model then
+return the likelihood, otherwise None.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">

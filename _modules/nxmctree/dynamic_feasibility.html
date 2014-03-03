@@ -81,6 +81,12 @@
 
 <span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
 
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    feas : bool</span>
+<span class="sd">        True if the data is structurally supported by the model,</span>
+<span class="sd">        otherwise False.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">root_fset</span> <span class="o">=</span> <span class="n">_get_root_fset</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
             <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
@@ -88,7 +94,7 @@
 
 </div>
 <div class="viewcode-block" id="get_node_to_fset"><a class="viewcode-back" href="../../apidocs/nxmctree.dynamic_feasibility.html#nxmctree.dynamic_feasibility.get_node_to_fset">[docs]</a><span class="k">def</span> <span class="nf">get_node_to_fset</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_feasible_set</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">):</span>
+        <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    For each node get the marginal posterior set of feasible states.</span>
 
@@ -108,41 +114,49 @@
 <span class="sd">    root : hashable</span>
 <span class="sd">        This is the root node.</span>
 <span class="sd">        Following networkx convention, this may be anything hashable.</span>
-<span class="sd">    root_prior_feasible_set : set</span>
+<span class="sd">    root_prior_fset : set</span>
 <span class="sd">        The set of feasible prior root states.</span>
 <span class="sd">        This may be interpreted as the support of the prior state</span>
 <span class="sd">        distribution at the root.</span>
-<span class="sd">    node_to_data_feasible_set : dict</span>
+<span class="sd">    node_to_data_fset : dict</span>
 <span class="sd">        Map from node to set of feasible states.</span>
 <span class="sd">        The feasibility could be interpreted as due to restrictions</span>
 <span class="sd">        caused by observed data.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    node_to_posterior_feasible_set : dict</span>
+<span class="sd">    node_to_posterior_fset : dict</span>
 <span class="sd">        Map from node to set of posterior feasible states.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">v_to_subtree_feasible_set</span> <span class="o">=</span> <span class="n">_backward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-            <span class="n">root_prior_feasible_set</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">)</span>
-    <span class="n">v_to_posterior_feasible_set</span> <span class="o">=</span> <span class="n">_forward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-            <span class="n">v_to_subtree_feasible_set</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">v_to_posterior_feasible_set</span>
+    <span class="n">v_to_subtree_fset</span> <span class="o">=</span> <span class="n">_backward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
+            <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
+    <span class="n">v_to_posterior_fset</span> <span class="o">=</span> <span class="n">_forward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
+            <span class="n">v_to_subtree_fset</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">v_to_posterior_fset</span>
 
 </div>
 <div class="viewcode-block" id="get_edge_to_nxfset"><a class="viewcode-back" href="../../apidocs/nxmctree.dynamic_feasibility.html#nxmctree.dynamic_feasibility.get_edge_to_nxfset">[docs]</a><span class="k">def</span> <span class="nf">get_edge_to_nxfset</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_feasible_set</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">):</span>
+        <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    For each edge, get the joint feasibility of states at edge endpoints.</span>
 
 <span class="sd">    The interpretation of the parameters is the same as elsewhere.</span>
 
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    edge_to_nxfset : map from directed edge to networkx DiGraph</span>
+<span class="sd">        For each directed edge in the rooted tree report the networkx DiGraph</span>
+<span class="sd">        among states, for which presence/absence of an edge defines the</span>
+<span class="sd">        posterior feasibility of the corresponding state transition</span>
+<span class="sd">        along the edge.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">T</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{}</span>
     <span class="n">v_to_fset</span> <span class="o">=</span> <span class="n">get_node_to_fset</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-            <span class="n">root_prior_feasible_set</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">)</span>
-    <span class="n">edge_to_joint_fset</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">root_prior_fset</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
+    <span class="n">edge_to_nxfset</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">nx</span><span class="o">.</span><span class="n">bfs_edges</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">root</span><span class="p">):</span>
         <span class="n">A</span> <span class="o">=</span> <span class="n">edge_to_adjacency</span><span class="p">[</span><span class="n">edge</span><span class="p">]</span>
         <span class="n">J</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">()</span>
@@ -150,8 +164,8 @@
         <span class="k">for</span> <span class="n">sa</span> <span class="ow">in</span> <span class="n">v_to_fset</span><span class="p">[</span><span class="n">va</span><span class="p">]:</span>
             <span class="n">sbs</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">sa</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">v_to_fset</span><span class="p">[</span><span class="n">vb</span><span class="p">]</span>
             <span class="n">J</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">((</span><span class="n">sa</span><span class="p">,</span> <span class="n">sb</span><span class="p">)</span> <span class="k">for</span> <span class="n">sb</span> <span class="ow">in</span> <span class="n">sbs</span><span class="p">)</span>
-        <span class="n">edge_to_joint_fset</span><span class="p">[</span><span class="n">edge</span><span class="p">]</span> <span class="o">=</span> <span class="n">J</span>
-    <span class="k">return</span> <span class="n">edge_to_joint_fset</span>
+        <span class="n">edge_to_nxfset</span><span class="p">[</span><span class="n">edge</span><span class="p">]</span> <span class="o">=</span> <span class="n">J</span>
+    <span class="k">return</span> <span class="n">edge_to_nxfset</span>
 
 </div>
 <span class="k">def</span> <span class="nf">_get_root_fset</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_adjacency</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
@@ -238,6 +252,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">s</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">v_to_subtree_feasible_set</span><span class="p">[</span><span class="n">c</span><span class="p">]:</span>
             <span class="k">return</span> <span class="bp">False</span>
     <span class="k">return</span> <span class="bp">True</span>
+
 
 <span class="c"># function suite for testing</span>
 <span class="n">fnsuite</span> <span class="o">=</span> <span class="p">(</span><span class="n">get_feas</span><span class="p">,</span> <span class="n">get_node_to_fset</span><span class="p">,</span> <span class="n">get_edge_to_nxfset</span><span class="p">)</span>

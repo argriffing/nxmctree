@@ -78,6 +78,12 @@
 <span class="sd">    Use brute force enumeration over all possible states.</span>
 <span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
 
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    feas : bool</span>
+<span class="sd">        True if the data is structurally supported by the model,</span>
+<span class="sd">        otherwise False.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">node_to_state</span> <span class="ow">in</span> <span class="n">gen_plausible_histories</span><span class="p">(</span><span class="n">node_to_data_fset</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">get_history_feas</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_A</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
@@ -94,6 +100,11 @@
 <span class="sd">    Use brute force enumeration over all histories.</span>
 <span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
 
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    node_to_posterior_fset : dict</span>
+<span class="sd">        Map from node to set of posterior feasible states.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">node_to_data_fset</span><span class="p">)</span>
     <span class="n">v_to_feas</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">v</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">)</span>
@@ -109,6 +120,15 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Use brute force enumeration over all histories.</span>
 <span class="sd">    The meanings of the parameters are the same as for the other functions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    edge_to_nxfset : map from directed edge to networkx DiGraph</span>
+<span class="sd">        For each directed edge in the rooted tree report the networkx DiGraph</span>
+<span class="sd">        among states, for which presence/absence of an edge defines the</span>
+<span class="sd">        posterior feasibility of the corresponding state transition</span>
+<span class="sd">        along the edge.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">edge_to_d</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">edge</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span><span class="p">())</span> <span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">T</span><span class="o">.</span><span class="n">edges</span><span class="p">())</span>
     <span class="k">for</span> <span class="n">node_to_state</span> <span class="ow">in</span> <span class="n">gen_plausible_histories</span><span class="p">(</span><span class="n">node_to_data_fset</span><span class="p">):</span>
@@ -120,6 +140,7 @@
                 <span class="n">sb</span> <span class="o">=</span> <span class="n">node_to_state</span><span class="p">[</span><span class="n">vb</span><span class="p">]</span>
                 <span class="n">edge_to_d</span><span class="p">[</span><span class="n">tree_edge</span><span class="p">]</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">sa</span><span class="p">,</span> <span class="n">sb</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">edge_to_d</span>
+
 
 <span class="c"># function suite for testing</span></div>
 <span class="n">fnsuite</span> <span class="o">=</span> <span class="p">(</span><span class="n">get_feas_brute</span><span class="p">,</span> <span class="n">get_node_to_fset_brute</span><span class="p">,</span> <span class="n">get_edge_to_nxfset_brute</span><span class="p">)</span>

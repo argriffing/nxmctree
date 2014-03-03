@@ -27,3 +27,8 @@ glossary
 
    history
       a map from node to state, as a python dict
+
+   support
+      in the jargon of probability and statistics and mathematics,
+      the set of points where a function (for example a probability
+      density function) is nonzero
