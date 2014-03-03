@@ -57,5 +57,6 @@ Subsequently update online docs:
     $ git checkout gh-pages
     $ cp /tmp/nxdocs/. ./ -R
     $ git add .
+    $ git commit -am "update gh-pages"
     $ git push
 
