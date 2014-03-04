@@ -1,6 +1,16 @@
 """
 This toy model is described in raoteh/examples/codon2x3.
 
+mini glossary
+tol -- tolerance
+traj -- trajectory
+
+The tree is rooted and edges are directed.
+For each substate track, each permanent node maps to a list of events.
+Each event is a handle mapping to some event info giving the
+time of the event along the branch and the nature of the transition,
+if any, associated with the event.
+
 """
 from __future__ import division, print_function, absolute_import
 
@@ -11,6 +21,7 @@ import numpy as np
 import scipy.linalg
 
 from nxmctree import get_lhood, get_edge_to_nxdistn, sample_history
+from util import get_total_rates, get_uniformized_P_nx
 
 
 def get_edge_tree(T, root):
@@ -31,6 +42,70 @@ def get_edge_tree(T, root):
             for g in T[c]:
                 T.dual.add_edge((v, c), (c, g))
     return T
+
+
+def gen_poisson_events(ephemeral_edges):
+    """
+    Yield event times.
+
+    Parameters
+    ----------
+    ephemeral_edges : tuples (edge, rate, offset, blen)
+        Information about the ephemeral edges.
+        The enclosing permanent edge, the poisson rate of the ephemeral edge,
+        the offset of the beginning of the ephemeral edge from the
+        enclosing permanent edge, and the length of the ephemeral edge.
+
+    """
+    for edge, rate, offset, blen in ephemeral_edges:
+        n = np.random.poisson(rate * blen)
+        times = np.random.uniform(low=offset, high=offset+blen, size=n)
+        for tm in times:
+            yield edge, tm
+
+
+def sample_primary_trajectory(T, root, edge_to_blen, node_to_fset, Q_nx):
+    pass
+
+
+def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
+        rate_on, rate_off, track_to_data, uniformization_factor):
+    """
+
+    Parameters
+    ----------
+    T : x
+        x
+    root : x
+        x
+    edge_to_blen : x
+        x
+    primary_to_tol : x
+        x
+    Q_primary : x
+        x
+    rate_on : float
+        x
+    rate_off : float
+        x
+    track_to_data : x
+        x
+    uniformization_factor : float
+        Somewhat arbitrary constant greater than 1.  Two is good.
+
+    """
+    
+    # Initialize the tolerance trajectories to all tolerated
+    # with no events on the trajectory.
+
+    # Find a feasible initial primary trajectory.
+
+    pass
+
+
+
+def get_initial_tol_traj(T, root):
+    pass
 
 #TODO copypaste after here...
 
