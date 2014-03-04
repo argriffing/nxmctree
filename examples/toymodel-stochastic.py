@@ -11,6 +11,16 @@ Each event is a handle mapping to some event info giving the
 time of the event along the branch and the nature of the transition,
 if any, associated with the event.
 
+We can use the jargon that 'events' are associated with
+locations in the tree defined by a directed edge
+and a distance along that edge.
+Events will usually be associated with a state transition,
+but 'incomplete events' will not have such an association.
+
+The process is separated into multiple 'tracks' -- a primary process
+track and one track for each of the tolerance processes.
+The track trajectories are not independent of each other.
+
 """
 from __future__ import division, print_function, absolute_import
 
@@ -22,6 +32,27 @@ import scipy.linalg
 
 from nxmctree import get_lhood, get_edge_to_nxdistn, sample_history
 from util import get_total_rates, get_uniformized_P_nx
+
+class Event(object):
+    def __init__(self, trans=None, track=None, edge=None, tm=None):
+        """
+
+        Parameters
+        ----------
+        trans : ordered pair of states, optional
+            state transition
+        track : hashable track label, optional
+            label of the track on which the event occurs
+        edge : ordered pair of nodes, optional
+            structural edge on which the event occurs
+        tm : float
+            time along the edge at which the event occurs
+
+        """
+        self.trans = None
+        self.track = None
+        self.edge = None
+        self.tm = None
 
 
 def get_edge_tree(T, root):
@@ -64,8 +95,8 @@ def gen_poisson_events(ephemeral_edges):
             yield edge, tm
 
 
-def sample_primary_trajectory(T, root, edge_to_blen, node_to_fset, Q_nx):
-    pass
+#def sample_primary_trajectory(T, root, edge_to_blen, node_to_fset, Q_nx):
+    #pass
 
 
 def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
@@ -94,11 +125,18 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
         Somewhat arbitrary constant greater than 1.  Two is good.
 
     """
-    
+
+    next_event = 1001
+
+    event_to_track = {}
+    event_to_trans = {}
+    event_to_tm = {}
+    event_to_edge = {}
+
     # Initialize the tolerance trajectories to all tolerated
     # with no events on the trajectory.
 
-    # Find a feasible initial primary trajectory.
+    # Define 'incomplete events' associated with the primary track.
 
     pass
 
