@@ -25,6 +25,7 @@ The track trajectories are not independent of each other.
 from __future__ import division, print_function, absolute_import
 
 import itertools
+import warnings
 
 import networkx as nx
 import numpy as np
@@ -33,26 +34,62 @@ import scipy.linalg
 from nxmctree import get_lhood, get_edge_to_nxdistn, sample_history
 from util import get_total_rates, get_uniformized_P_nx
 
-class Event(object):
-    def __init__(self, trans=None, track=None, edge=None, tm=None):
+
+class TrackInfo(object):
+    def __init__(self, track=None, data=None, history=None, events=None):
         """
 
         Parameters
         ----------
-        trans : ordered pair of states, optional
-            state transition
+        track : hashable, optional
+            track label
+        data : dict, optional
+            map from permanent node to set of states compatible with data
+        history : dict, optional
+            Map from permanent node to current state.
+            Note that this is not the same as a trajectory.
+        events : dict, optional
+            map from permanent edge to list of events
+
+        """
+        self.track = track
+        self.data = data
+        self.history = history
+        self.events = events
+
+
+class Event(object):
+    def __init__(self, track=None, edge=None, tm=None, trans=None):
+        """
+
+        Parameters
+        ----------
         track : hashable track label, optional
             label of the track on which the event occurs
         edge : ordered pair of nodes, optional
             structural edge on which the event occurs
         tm : float
             time along the edge at which the event occurs
+        trans : ordered pair of states, optional
+            state transition
 
         """
-        self.trans = None
-        self.track = None
-        self.edge = None
-        self.tm = None
+        self.track = track
+        self.edge = edge
+        self.tm = tm
+        self.trans = trans
+
+    def __lt__(self, other):
+        """
+        Give events a partial order.
+
+        """
+        if self.edge != other.edge:
+            raise Exception('cannot compare events on different edges')
+        if self.tm == other.tm:
+            warnings.warn('found two events with identical times, '
+                    'but this should rarely occur with double precision')
+        return self.tm < other.tm
 
 
 def get_edge_tree(T, root):
@@ -95,12 +132,14 @@ def gen_poisson_events(ephemeral_edges):
             yield edge, tm
 
 
+
 #def sample_primary_trajectory(T, root, edge_to_blen, node_to_fset, Q_nx):
     #pass
 
 
 def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
-        rate_on, rate_off, track_to_data, uniformization_factor):
+        rate_on, rate_off, uniformization_factor, event_map,
+        primary_track, tolerance_tracks, track_to_data):
     """
 
     Parameters
@@ -119,26 +158,63 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
         x
     rate_off : float
         x
-    track_to_data : x
-        x
     uniformization_factor : float
         Somewhat arbitrary constant greater than 1.  Two is good.
+    event_registry : dict
+        map from event id to event object
+    primary_track : hashable
+        label of the primary track
+    tolerance_tracks : collection of hashables
+        labels of tolerance tracks
+    track_to_data : x
+        x
 
     """
+    # Partially initialize track info.
+    # This does not intialize a history or a trajectory.
+    track_to_info = dict((t, TrackInfo(t, d)) for t, d in track_to_data.items())
 
-    next_event = 1001
+    # Initialize the tolerance trajectories.
+    # Add incomplete events to the first and last thirds of the branch
+    # with the eventual goal to force the middle third of each branch
+    # to be in the True tolerance state regardless of the endpoint data.
+    for track in tolerance_tracks:
+        for edge in T.edges():
+            blen = edge_to_blen[edge]
+            for low, high in ((0, 1/3), (2/3, 1)):
+                tm = random.uniform(low, high) * blen
+                ev = Event(track=track, edge=edge, tm=tm, trans=None)
+                track.events[edge].append(ev)
+                event_registry[id(ev)] = ev
 
-    event_to_track = {}
-    event_to_trans = {}
-    event_to_tm = {}
-    event_to_edge = {}
-
-    # Initialize the tolerance trajectories to all tolerated
-    # with no events on the trajectory.
+    # Initialize the primary trajectory.
+    #
 
     # Define 'incomplete events' associated with the primary track.
 
-    pass
+    for i in range(nsamples):
+        for foreground_track in tracks:
+
+            # TODO
+            # Add poisson events as incomplete events, using the ephemeral
+            # edges defined by the foreground track.
+
+            # TODO
+            # Remove the transitions associated with foreground events
+            # and remove the foreground history.
+
+            # TODO
+            # Use the background and foreground events and node states and data
+            # to define state restrictions on ephemeral edges and to define the
+            # transitions between the states at these ephemeral edges.
+            # Then use this construction to sample transitions associated
+            # with foreground events and to assign a corresponding foreground
+            # history to the structural nodes.
+
+            # TODO
+            # Remove all foreground events that correspond to self-transitions.
+
+            pass
 
 
 
