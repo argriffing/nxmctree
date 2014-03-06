@@ -112,29 +112,109 @@ def get_edge_tree(T, root):
     return T
 
 
-def gen_poisson_events(ephemeral_edges):
+def init_blink_history(T, edge_to_blen, track_info):
     """
-    Yield event times.
+    Initial blink history is True where consistent with the data.
+
+    """
+    for v in T:
+        track_info.history[v] = (True in track_info.data[v])
+
+
+def init_complete_blink_events(T, edge_to_blen, track_info):
+    """
+    Init blink track.
+
+    """
+    track_label = track_info.track
+    for edge in T:
+        va, vb = edge
+        sa = track_info.history[va]
+        sb = track_info.history[vb]
+        blen = edge_to_blen[edge]
+        tma = np.random.uniform(0, 1/3)
+        tmb = np.random.uniform(2/3, 1)
+        eva = Event(track=track_label, edge=edge, tm=tma, trans=(sa, True))
+        evb = Event(track=track_label, edge=edge, tm=tmb, trans=(True, sb))
+        track_info.events[edge] = [eva, evb]
+
+
+def init_incomplete_primary_events(T, edge_to_blen, track_info, diameter):
+    """
+    Parameters
+    ----------
+    T : nx tree
+        tree
+    edge_to_blen : dict
+        maps edges to branch lengths
+    track_info : TrackInfo
+        current state of the track
+    diameter : int
+        directed unweighted diameter of the primary transition rate matrix
+
+    """
+    track_label = track_info.track
+    for edge in T:
+        va, vb = edge
+        times = np.random.uniform(low=1/3, high=2/3, size=diameter-1)
+        events = [Event(track=track_label, edge=edge, tm=tm) for tm in times]
+        track_info.events[edge] = events
+
+
+def add_poisson_events(T, edge_to_blen, poisson_rates, track_info):
+    """
+    Add incomplete events to all edges of a single track.
 
     Parameters
     ----------
-    ephemeral_edges : tuples (edge, rate, offset, blen)
-        Information about the ephemeral edges.
-        The enclosing permanent edge, the poisson rate of the ephemeral edge,
-        the offset of the beginning of the ephemeral edge from the
-        enclosing permanent edge, and the length of the ephemeral edge.
+    T : directed nx tree
+        tree
+    edge_to_blen : dict
+        maps structural edges to branch lengths
+    poisson_rates : dict
+        maps foreground states to poisson sampling rates
+    track_info : TrackInfo
+        The current state of the track, including events on edges of T
+        and a state history giving the current state of the track at nodes of T.
 
     """
-    for edge, rate, offset, blen in ephemeral_edges:
-        n = np.random.poisson(rate * blen)
-        times = np.random.uniform(low=offset, high=offset+blen, size=n)
-        for tm in times:
-            yield edge, tm
+    track_label = track_info.track
+    for edge in T.edges():
+        va, vb = edge
 
+        # build triples defining the foreground trajectory along the branch
+        triples = []
+        for ev in track_info.events[edge]:
+            triple = (ev.tm, ev.trans[0], ev.trans[1])
+            triples.append(triple)
+        initial_triple = (0, None, track_info.history[va])
+        final_triple = (edge_to_blen[edge], track_info.history[vb], None)
+        triples = sorted([initial_triple] + triples + [final_triple])
 
+        # sample new poisson events along the branch
+        poisson_events = []
+        for ta, tb in zip(triples[:-1], triples[1:]):
+            ta_tm, ta_initial, ta_final = ta
+            tb_tm, tb_initial, tb_final = tb
+            if ta_tm == tb_tm:
+                warnings.warn('multiple events occur simultaneously')
+            if tb_tm < ta_tm:
+                raise Exception('times are not monotonically increasing')
+            if None in (ta_final, tb_initial):
+                raise Exception('trajectory has incomplete events')
+            if ta_final != tb_initial:
+                raise Exception('trajectory has incompatible transitions')
+            state = ta_final
+            rate = poisson_rates[state]
+            blen = tb_tm - ta_tm
+            n = np.random.poisson(rate * blen)
+            times = np.random.uniform(low=ta_tm, high=tb_tm, size=n)
+            for tm in times:
+                ev = Event(track=track_label, edge=edge, tm=tm)
+                poisson_events.append(ev)
 
-#def sample_primary_trajectory(T, root, edge_to_blen, node_to_fset, Q_nx):
-    #pass
+        # add the sampled poisson events to the track info for the branch
+        track_info.events[edge].extend(poisson_events)
 
 
 def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
@@ -198,6 +278,8 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
             # TODO
             # Add poisson events as incomplete events, using the ephemeral
             # edges defined by the foreground track.
+            poisson_rates = x
+            add_poisson_events(T, edge_to_blen, poisson_rates, track_info)
 
             # TODO
             # Remove the transitions associated with foreground events
