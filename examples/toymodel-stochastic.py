@@ -24,7 +24,9 @@ The track trajectories are not independent of each other.
 """
 from __future__ import division, print_function, absolute_import
 
-import itertools
+from collections import defaultdict
+from functools import partial
+from itertools import product
 import warnings
 
 import networkx as nx
@@ -57,9 +59,74 @@ class TrackInfo(object):
         self.history = history
         self.events = events
 
+    def clear_state_labels(self):
+        """
+        Clear the state labels but not the event times.
+
+        """
+        nodes = set(self.history)
+        edges = set(self.events)
+        for v in nodes:
+            self.history[v] = None
+        for edge in edges:
+            for ev in self.events[edge]:
+                ev.sa = None
+                ev.sb = None
+
+    def add_poisson_events(self, T, edge_to_blen, poisson_rates):
+        """
+        Add incomplete events to all edges.
+
+        Parameters
+        ----------
+        T : directed nx tree
+            tree
+        edge_to_blen : dict
+            maps structural edges to branch lengths
+        poisson_rates : dict
+            maps foreground states to poisson sampling rates
+
+        """
+        for edge in T.edges():
+            va, vb = edge
+
+            # build triples defining the foreground trajectory along the branch
+            triples = []
+            for ev in self.events[edge]:
+                triple = (ev.tm, ev.sa, ev.sb)
+                triples.append(triple)
+            initial_triple = (0, None, self.history[va])
+            final_triple = (edge_to_blen[edge], self.history[vb], None)
+            triples = sorted([initial_triple] + triples + [final_triple])
+
+            # sample new poisson events along the branch
+            poisson_events = []
+            for ta, tb in zip(triples[:-1], triples[1:]):
+                ta_tm, ta_initial, ta_final = ta
+                tb_tm, tb_initial, tb_final = tb
+                if ta_tm == tb_tm:
+                    warnings.warn('multiple events occur simultaneously')
+                if tb_tm < ta_tm:
+                    raise Exception('times are not monotonically increasing')
+                if None in (ta_final, tb_initial):
+                    raise Exception('trajectory has incomplete events')
+                if ta_final != tb_initial:
+                    raise Exception('trajectory has incompatible transitions')
+                state = ta_final
+                rate = poisson_rates[state]
+                blen = tb_tm - ta_tm
+                n = np.random.poisson(rate * blen)
+                times = np.random.uniform(low=ta_tm, high=tb_tm, size=n)
+                for tm in times:
+                    ev = Event(track=track_label, edge=edge, tm=tm)
+                    poisson_events.append(ev)
+
+            # add the sampled poisson events to the track info for the branch
+            self.events[edge].extend(poisson_events)
+
 
 class Event(object):
-    def __init__(self, track=None, edge=None, tm=None, trans=None):
+    def __init__(self, track=None, edge=None, tm=None, sa=None, sb=None):
         """
 
         Parameters
@@ -68,16 +135,29 @@ class Event(object):
             label of the track on which the event occurs
         edge : ordered pair of nodes, optional
             structural edge on which the event occurs
-        tm : float
+        tm : float, optional
             time along the edge at which the event occurs
-        trans : ordered pair of states, optional
-            state transition
+        sa : hashable, optional
+            initial state of the transition
+        sb : hashable, optional
+            final state of the transition
 
         """
         self.track = track
         self.edge = edge
         self.tm = tm
-        self.trans = trans
+        self.sa = sa
+        self.sb = sb
+
+    def init_sa(self, state):
+        if self.sa is not None:
+            raise Exception('the initial state is already set')
+        self.sa = state
+
+    def init_sb(self, state):
+        if self.sb is not None:
+            raise Exception('the final state is already set')
+        self.sb = state
 
     def __lt__(self, other):
         """
@@ -92,24 +172,29 @@ class Event(object):
         return self.tm < other.tm
 
 
-def get_edge_tree(T, root):
+class MetaNode(object):
     """
-    Nodes in the edge tree are edges in the original tree.
-
-    The new tree will have a node (None, root) which does not correspond
-    to any edge in the original tree.
+    This is hashable so it can be a node in a networkx graph.
 
     """
-    T_dual = nx.DiGraph()
-    if not T:
-        return T_dual
-    for c in T[root]:
-        T_dual.add_edge((None, root), (root, c))
-    for v in T:
-        for c in T[v]:
-            for g in T[c]:
-                T.dual.add_edge((v, c), (c, g))
-    return T
+    def __init__(self, P_nx=None,
+            initial_data_fset=None, final_data_fset=None,
+            set_sa=None, set_sb=None):
+        self.P_nx = P_nx
+        self.initial_data_fset = initial_data_fset
+        self.final_data_fset = final_data_fset
+        self.set_sa = set_sa
+        self.set_sb = set_sb
+    def __eq__(self, other):
+        return id(self) == id(other)
+    def __hash__(self):
+        return id(self)
+
+
+
+###############################################################################
+# Primary track and blink track initialization.
+
 
 
 def init_blink_history(T, edge_to_blen, track_info):
@@ -134,8 +219,8 @@ def init_complete_blink_events(T, edge_to_blen, track_info):
         blen = edge_to_blen[edge]
         tma = np.random.uniform(0, 1/3)
         tmb = np.random.uniform(2/3, 1)
-        eva = Event(track=track_label, edge=edge, tm=tma, trans=(sa, True))
-        evb = Event(track=track_label, edge=edge, tm=tmb, trans=(True, sb))
+        eva = Event(track=track_label, edge=edge, tm=tma, sa=sa, sb=True)
+        evb = Event(track=track_label, edge=edge, tm=tmb, sa=True, sb=sb)
         track_info.events[edge] = [eva, evb]
 
 
@@ -161,60 +246,150 @@ def init_incomplete_primary_events(T, edge_to_blen, track_info, diameter):
         track_info.events[edge] = events
 
 
-def add_poisson_events(T, edge_to_blen, poisson_rates, track_info):
-    """
-    Add incomplete events to all edges of a single track.
+###############################################################################
+# Functions implementing steps of Rao Teh iteration.
 
-    Parameters
-    ----------
-    T : directed nx tree
-        tree
-    edge_to_blen : dict
-        maps structural edges to branch lengths
-    poisson_rates : dict
-        maps foreground states to poisson sampling rates
-    track_info : TrackInfo
-        The current state of the track, including events on edges of T
-        and a state history giving the current state of the track at nodes of T.
+
+def do_nothing():
+    """
+    Helper function as a placeholder callback.
 
     """
-    track_label = track_info.track
+    pass
+
+
+def set_or_confirm_history_state(node_to_state, node, state):
+    """
+    Helper function for updating history within a trajectory.
+
+    """
+    if node_to_state.get(node, None) not in (state, None):
+        raise Exception('found a history incompatibility')
+    node_to_state[node] = state
+
+
+def get_edge_tree(T, root):
+    """
+    Nodes in the edge tree are edges in the original tree.
+
+    The new tree will have a node (None, root) which does not correspond
+    to any edge in the original tree.
+
+    """
+    dual_root = (None, root)
+    T_dual = nx.DiGraph()
+    if not T:
+        return T_dual, dual_root
+    for c in T[root]:
+        T_dual.add_edge(dual_root, (root, c))
+    for v in T:
+        for c in T[v]:
+            for g in T[c]:
+                T.dual.add_edge((v, c), (c, g))
+    return T_dual, dual_root
+
+
+def sample_primary(T, root, primary_to_tol, primary_distn,
+        P_primary, primary_info, blink_infos):
+    """
+    Sample the history (nodes to states) and the events (edge to event list).
+
+    Note that the event transitions are sampled,
+    but the event times are not sampled.
+
+    """
+    primary_state_set = set(primary_distn)
+
+    # Define the map from blink track to set of primary states.
+    tol_to_primary_states = defaultdict(set)
+    for primary, tol in primary_to_tol.items():
+        tol_to_primary_states[tol].add(primary)
+
+    # Construct a primary process identity transition matrix.
+    primary_states = set(primary_to_tol)
+    P_identity = nx.DiGraph()
+    for s in primary_states:
+        P_identity.add_edge(s, s, weight=1)
+
+    # Construct a meta node for each structural node.
+    node_to_meta = {}
+    for v in T:
+        f = partial(set_or_confirm_history_state, primary_info.history, v)
+        fset = primary_info.data[v]
+        m = MetaNode(P_nx=P_identity,
+                initial_data_fset=fset, final_data_fset=fset,
+                set_sa=f, set_sb=f)
+        node_to_meta[v] = m
+        if v == root:
+            mroot = m
+
+    # Build the tree whose vertices are meta nodes.
+    meta_node_tree = nx.DiGraph()
     for edge in T.edges():
-        va, vb = edge
 
-        # build triples defining the foreground trajectory along the branch
-        triples = []
-        for ev in track_info.events[edge]:
-            triple = (ev.tm, ev.trans[0], ev.trans[1])
-            triples.append(triple)
-        initial_triple = (0, None, track_info.history[va])
-        final_triple = (edge_to_blen[edge], track_info.history[vb], None)
-        triples = sorted([initial_triple] + triples + [final_triple])
+        # Sequence meta nodes from three sources:
+        # the two structural endpoint nodes,
+        # the nodes representing transitions in background blinking tracks,
+        # and nodes representing transitions in the foreground primary track.
+        seq = []
+        for v in edge:
+            m = node_to_meta[v]
+            seq.append(m)
+        for blink_info in blink_infos:
+            for ev in blink_info.events[edge]:
+                m = MetaNode(P_nx=P_identity,
+                        initial_data_fset=tol_to_primary_states[ev.sa],
+                        final_data_fset=tol_to_primary_states[ev.sb],
+                        set_sa=do_nothing, set_sb=do_nothing)
+                seq.append(m)
+        for ev in primary_info.events[edge]:
+            m = MetaNode(P_nx=P_primary,
+                    initial_data_fset=primary_state_set,
+                    final_data_fset=primary_state_set,
+                    set_sa=ev.init_sa, set_sb=ev.init_sb)
+            seq.append(m)
+        seq = sorted([ma] + seq + [mb])
 
-        # sample new poisson events along the branch
-        poisson_events = []
-        for ta, tb in zip(triples[:-1], triples[1:]):
-            ta_tm, ta_initial, ta_final = ta
-            tb_tm, tb_initial, tb_final = tb
-            if ta_tm == tb_tm:
-                warnings.warn('multiple events occur simultaneously')
-            if tb_tm < ta_tm:
-                raise Exception('times are not monotonically increasing')
-            if None in (ta_final, tb_initial):
-                raise Exception('trajectory has incomplete events')
-            if ta_final != tb_initial:
-                raise Exception('trajectory has incompatible transitions')
-            state = ta_final
-            rate = poisson_rates[state]
-            blen = tb_tm - ta_tm
-            n = np.random.poisson(rate * blen)
-            times = np.random.uniform(low=ta_tm, high=tb_tm, size=n)
-            for tm in times:
-                ev = Event(track=track_label, edge=edge, tm=tm)
-                poisson_events.append(ev)
+        # Add edges to the meta node tree.
+        for ma, mb in zip(seq[:-1], seq[1:]):
+            meta_node_tree.add_edge(ma, mb)
 
-        # add the sampled poisson events to the track info for the branch
-        track_info.events[edge].extend(poisson_events)
+    # Build the tree whose vertices are edges of the meta node tree.
+    meta_edge_tree, meta_edge_root = get_edge_tree(meta_node_tree, mroot)
+
+    # Create the map from nodes of the meta edge tree
+    # to sets of primary states not directly contradicted by data or context.
+    node_to_data_fset = {}
+    for meta_edge in meta_edge_tree:
+        ma, mb = meta_edge
+        fset = ma.final_data_fset & mb.initial_data_fset
+        node_to_data_fset[meta_edge] = fset
+
+    # Create the map from edges of the meta edge tree
+    # to primary state transition matrices.
+    edge_to_P = {}
+    for pair in meta_edge_tree.edges():
+        (ma, mb), (mb2, mc) = pair
+        if mb != mb2:
+            raise Exception('incompatibly constructed meta edge tree')
+        edge_to_P[pair] = mb.P_nx
+
+    # Use nxmctree to sample a history on the meta edge tree.
+    h = sample_history(meta_edge_tree, edge_to_P, meta_edge_root,
+            primary_distn, node_to_data_fset)
+
+    # Use the sampled history to update the primary history at structural nodes
+    # and to update the primary event transitions.
+    for meta_edge in meta_edge_tree:
+        ma, mb = meta_edge
+        state = h[meta_edge]
+        ma.set_sb(state)
+        mb.set_sa(state)
+
+
+
+###############################################################################
+# Main Rao-Teh-Gibbs sampling function.
 
 
 def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
@@ -250,6 +425,10 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
         x
 
     """
+    Q_blink = nx.DiGraph()
+    Q_blink.add_edge(False, True, weight=rate_on)
+    Q_blink.add_edge(True, False, weight=rate_off)
+
     # Partially initialize track info.
     # This does not intialize a history or a trajectory.
     track_to_info = dict((t, TrackInfo(t, d)) for t, d in track_to_data.items())
@@ -292,6 +471,8 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
             # Then use this construction to sample transitions associated
             # with foreground events and to assign a corresponding foreground
             # history to the structural nodes.
+            sample_primary(T, root, primary_to_tol, primary_distn,
+                    P_primary, primary_info, blink_infos):
 
             # TODO
             # Remove all foreground events that correspond to self-transitions.
@@ -300,14 +481,8 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
 
 
 
-def get_initial_tol_traj(T, root):
-    pass
-
-#TODO copypaste after here...
-
-
-def foo():
-    pass
+###############################################################################
+# Copypasted model specification code etc.
 
 
 def get_Q_primary():
@@ -376,8 +551,8 @@ def hamming_distance(va, vb):
 
 def get_compound_states(primary_to_tol):
     nprimary = len(primary_to_tol)
-    all_tols = list(itertools.product((0, 1), repeat=3))
-    compound_states = list(itertools.product(range(nprimary), all_tols))
+    all_tols = list(product((0, 1), repeat=3))
+    compound_states = list(product(range(nprimary), all_tols))
     return compound_states
 
 
@@ -385,62 +560,6 @@ def compound_state_is_ok(primary_to_tol, state):
     primary, tols = state
     tclass = primary_to_tol[primary]
     return True if tols[tclass] else False
-
-
-def define_compound_process(Q_primary, compound_states, primary_to_tol):
-    """
-    Compute indicator matrices for the compound process.
-
-    """
-    n = len(compound_states)
-
-    # define some dense indicator matrices
-    I_syn = np.zeros((n, n), dtype=float)
-    I_non = np.zeros((n, n), dtype=float)
-    I_on = np.zeros((n, n), dtype=float)
-    I_off = np.zeros((n, n), dtype=float)
-
-    for i, sa in enumerate(compound_states):
-
-        # skip compound states that have zero probability
-        prim_a, tols_a = sa
-        tclass_a = primary_to_tol[prim_a]
-        if not tols_a[tclass_a]:
-            continue
-
-        for j, sb in enumerate(compound_states):
-
-            # skip compound states that have zero probability
-            prim_b, tols_b = sb
-            tclass_b = primary_to_tol[prim_b]
-            if not tols_b[tclass_b]:
-                continue
-
-            # if neither or both primary state and tolerance change then skip
-            if hamming_distance(sa, sb) != 1:
-                continue
-
-            # if the tolerances change at more than one position then skip
-            if hamming_distance(tols_a, tols_b) > 1:
-                continue
-
-            # if a primary transition is not allowed then skip
-            if prim_a != prim_b and not Q_primary.has_edge(prim_a, prim_b):
-                continue
-
-            # set the indicator according to the transition type
-            if prim_a != prim_b and tclass_a == tclass_b:
-                I_syn[i, j] = 1
-            elif prim_a != prim_b and tclass_a != tclass_b:
-                I_non[i, j] = 1
-            elif sum(tols_b) - sum(tols_a) == 1:
-                I_on[i, j] = 1
-            elif sum(tols_b) - sum(tols_a) == -1:
-                I_off[i, j] = 1
-            else:
-                raise Exception
-
-    return I_syn, I_non, I_on, I_off
 
 
 def get_expected_rate(Q_dense, dense_distn):
