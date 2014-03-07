@@ -2,11 +2,17 @@
 Helper functions related to transition matrices and uniformization.
 
 """
+from __future__ import division, print_function, absolute_import
+
 #TODO move this to a more appropriate python package
 
 
 def get_omega(total_rates, uniformization_factor):
     return uniformization_factor * max(total_rates.values())
+
+
+def get_poisson_rates(total_rates, omega):
+    return dict((s, omega - r) for s, r in total_rates.items())
 
 
 def get_total_rates(Q_nx):
@@ -56,11 +62,16 @@ def get_uniformized_P_nx(Q_nx, omega):
     P_nx = nx.DiGraph()
     for sa in Q_nx:
         total_rate = total_rates.get(sa, 0)
+
+        # define the self-transition probability
         weight = 1.0 - total_rate / omega
         P_nx.add_edge(sa, sa, weight=weight)
+
+        # define probabilities of transitions to other states
         for sb in Q_nx[sa]:
             weight = Q[sa][sb]['weight'] / omega
             P_nx.add_edge(sa, sb, weight=weight)
+
     return P_nx
 
 
