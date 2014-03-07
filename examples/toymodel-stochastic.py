@@ -4,6 +4,8 @@ This toy model is described in raoteh/examples/codon2x3.
 mini glossary
 tol -- tolerance
 traj -- trajectory
+fg -- foreground track
+bg -- background track
 
 The tree is rooted and edges are directed.
 For each substate track, each permanent node maps to a list of events.
@@ -38,12 +40,13 @@ from util import get_total_rates, get_uniformized_P_nx
 
 
 class TrackInfo(object):
-    def __init__(self, track=None, data=None, history=None, events=None):
+    def __init__(self, name=None, data=None, history=None, events=None,
+            Q_nx=None):
         """
 
         Parameters
         ----------
-        track : hashable, optional
+        name : hashable, optional
             track label
         data : dict, optional
             map from permanent node to set of states compatible with data
@@ -54,10 +57,11 @@ class TrackInfo(object):
             map from permanent edge to list of events
 
         """
-        self.track = track
+        self.name = name
         self.data = data
         self.history = history
         self.events = events
+        self.Q_nx = Q_nx
 
     def clear_state_labels(self):
         """
@@ -289,13 +293,15 @@ def get_edge_tree(T, root):
     return T_dual, dual_root
 
 
-def sample_primary(T, root, primary_to_tol, primary_distn,
-        P_primary, primary_info, blink_infos):
+
+
+def sample_transitions(T, root, fg_distn, P_fg, P_fg_identity,
+        fg_info, bg_infos, bg_to_fg_fset):
     """
     Sample the history (nodes to states) and the events (edge to event list).
 
-    Note that the event transitions are sampled,
-    but the event times are not sampled.
+    This function depends on a foreground track
+    and a collection of contextual background tracks.
 
     """
     primary_state_set = set(primary_distn)
@@ -323,9 +329,16 @@ def sample_primary(T, root, primary_to_tol, primary_distn,
         if v == root:
             mroot = m
 
-    # Build the tree whose vertices are meta nodes.
+    # Build the tree whose vertices are meta nodes,
+    # and map edges of this tree to sets of feasible foreground states,
+    # accounting for data at structural nodes and background context
+    # along edge segments.
     meta_node_tree = nx.DiGraph()
     for edge in T.edges():
+        va, vb = edge
+
+        # Initialize the background states.
+        for 
 
         # Sequence meta nodes from three sources:
         # the two structural endpoint nodes,

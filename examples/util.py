@@ -64,3 +64,9 @@ def get_uniformized_P_nx(Q_nx, omega):
     return P_nx
 
 
+def get_identity_P_nx(states):
+    P_nx = nx.DiGraph()
+    for s in states:
+        P_nx.add_edge(s, s, weight=1)
+    return P_nx
+
