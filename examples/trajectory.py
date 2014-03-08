@@ -18,7 +18,7 @@ class Trajectory(object):
 
     """
     def __init__(self, name=None, data=None, history=None, events=None,
-            Q_nx=None, uniformization_factor=None):
+            prior_root_distn=None, Q_nx=None, uniformization_factor=None):
         """
 
         Parameters
@@ -32,6 +32,8 @@ class Trajectory(object):
             Note that this is not the same as a trajectory.
         events : dict, optional
             map from permanent edge to list of events
+        prior_root_distn : dict, optional
+            x
         Q_nx : x
             x
         uniformization_factor : x
@@ -42,6 +44,7 @@ class Trajectory(object):
         self.data = data
         self.history = history
         self.events = events
+        self.prior_root_distn = prior_root_distn
         self.Q_nx = Q_nx
         self.uniformization_factor = uniformization_factor
 
@@ -159,6 +162,12 @@ class Event(object):
         if self.sb is not None:
             raise Exception('the final state is already set')
         self.sb = state
+
+    def init_or_confirm_sb(self, state):
+        if self.sb is None:
+            self.sb = state
+        if self.sb != state:
+            raise Exception('final state incompatibility')
 
     def __lt__(self, other):
         """

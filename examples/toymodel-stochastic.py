@@ -36,29 +36,9 @@ import numpy as np
 import scipy.linalg
 
 from nxmctree import get_lhood, get_edge_to_nxdistn, sample_history
-from util import get_total_rates, get_uniformized_P_nx
 
-
-
-
-class MetaNode(object):
-    """
-    This is hashable so it can be a node in a networkx graph.
-
-    """
-    def __init__(self, P_nx=None,
-            initial_data_fset=None, final_data_fset=None,
-            set_sa=None, set_sb=None):
-        self.P_nx = P_nx
-        self.initial_data_fset = initial_data_fset
-        self.final_data_fset = final_data_fset
-        self.set_sa = set_sa
-        self.set_sb = set_sb
-    def __eq__(self, other):
-        return id(self) == id(other)
-    def __hash__(self):
-        return id(self)
-
+from util import get_total_rates
+from trajectory import Trajectory, Event
 
 
 ###############################################################################
@@ -86,14 +66,14 @@ def init_complete_blink_events(T, edge_to_blen, track_info):
         sa = track_info.history[va]
         sb = track_info.history[vb]
         blen = edge_to_blen[edge]
-        tma = np.random.uniform(0, 1/3)
-        tmb = np.random.uniform(2/3, 1)
+        tma = blen * np.random.uniform(0, 1/3)
+        tmb = blen * np.random.uniform(2/3, 1)
         eva = Event(track=track_label, edge=edge, tm=tma, sa=sa, sb=True)
         evb = Event(track=track_label, edge=edge, tm=tmb, sa=True, sb=sb)
         track_info.events[edge] = [eva, evb]
 
 
-def init_incomplete_primary_events(T, edge_to_blen, track_info, diameter):
+def init_incomplete_primary_events(T, edge_to_blen, traj, diameter):
     """
     Parameters
     ----------
@@ -101,22 +81,59 @@ def init_incomplete_primary_events(T, edge_to_blen, track_info, diameter):
         tree
     edge_to_blen : dict
         maps edges to branch lengths
-    track_info : TrackInfo
+    traj : Trajectory
         current state of the track
     diameter : int
         directed unweighted diameter of the primary transition rate matrix
 
     """
-    track_label = track_info.track
     for edge in T:
-        va, vb = edge
-        times = np.random.uniform(low=1/3, high=2/3, size=diameter-1)
-        events = [Event(track=track_label, edge=edge, tm=tm) for tm in times]
+        blen = edge_to_len(edge)
+        times = blen * np.random.uniform(low=1/3, high=2/3, size=diameter-1)
+        events = [Event(traj=traj, tm=tm) for tm in times]
         track_info.events[edge] = events
 
 
 ###############################################################################
-# Functions implementing steps of Rao Teh iteration.
+# Classes and functions for steps of Rao Teh iteration.
+
+
+class MetaNode(object):
+    """
+    This is hashable so it can be a node in a networkx graph.
+
+    """
+    def __init__(self, P_nx=None,
+            set_sa=None, set_sb=None, fset=None, transitions=()):
+        """
+
+        Parameters
+        ----------
+        P_nx : nx transition matrix, optional
+            the node is associated with this transition matrix
+        set_sa : callback, optional
+            report the sampled initial state
+        set_sb : callback, optional
+            report the sampled final state
+        fset : set, optional
+            Set of foreground state restrictions if not None.
+            None is interpreted as no restriction rather than
+            lack of feasible states.
+        transitions : triples, optional
+            transitions are each (trajectory_name, sa, sb)
+
+        """
+        self.P_nx = P_nx
+        self.set_sa = set_sa
+        self.set_sb = set_sb
+        self.fset = fset
+        self.transitions = transitions
+
+    def __eq__(self, other):
+        return id(self) == id(other)
+
+    def __hash__(self):
+        return id(self)
 
 
 def do_nothing():
@@ -158,10 +175,7 @@ def get_edge_tree(T, root):
     return T_dual, dual_root
 
 
-
-
-def sample_transitions(T, root, fg_distn, P_fg, P_fg_identity,
-        fg_info, bg_infos, bg_to_fg_fset):
+def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
     """
     Sample the history (nodes to states) and the events (edge to event list).
 
@@ -169,41 +183,39 @@ def sample_transitions(T, root, fg_distn, P_fg, P_fg_identity,
     and a collection of contextual background tracks.
 
     """
-    primary_state_set = set(primary_distn)
-
-    # Define the map from blink track to set of primary states.
-    tol_to_primary_states = defaultdict(set)
-    for primary, tol in primary_to_tol.items():
-        tol_to_primary_states[tol].add(primary)
-
-    # Construct a primary process identity transition matrix.
-    primary_states = set(primary_to_tol)
-    P_identity = nx.DiGraph()
-    for s in primary_states:
-        P_identity.add_edge(s, s, weight=1)
+    P_nx = fg_track.P_nx
+    P_nx_identity = fg_track.P_nx_identity
 
     # Construct a meta node for each structural node.
     node_to_meta = {}
     for v in T:
         f = partial(set_or_confirm_history_state, primary_info.history, v)
-        fset = primary_info.data[v]
-        m = MetaNode(P_nx=P_identity,
-                initial_data_fset=fset, final_data_fset=fset,
-                set_sa=f, set_sb=f)
+        fset = fg_track.data[v]
+        transitions = []
+        for bg_track in bg_tracks:
+            name = bg_track.name
+            state = bg_track.data[v]
+            transitions.append((name, state, state))
+        m = MetaNode(P_nx=P_nx_identity,
+                set_sa=f, set_sb=f,
+                fset=fset, transitions=transitions)
         node_to_meta[v] = m
-        if v == root:
-            mroot = m
+
+    # Define the meta node corresponding to the root.
+    mroot = node_to_meta[root]
 
     # Build the tree whose vertices are meta nodes,
     # and map edges of this tree to sets of feasible foreground states,
     # accounting for data at structural nodes and background context
     # along edge segments.
+    #
+    # Also create the map from edges of this tree
+    # to sets of primary states not directly contradicted by data or context.
+    #
     meta_node_tree = nx.DiGraph()
+    node_to_data_fset = {}
     for edge in T.edges():
         va, vb = edge
-
-        # Initialize the background states.
-        for 
 
         # Sequence meta nodes from three sources:
         # the two structural endpoint nodes,
@@ -213,24 +225,29 @@ def sample_transitions(T, root, fg_distn, P_fg, P_fg_identity,
         for v in edge:
             m = node_to_meta[v]
             seq.append(m)
-        for blink_info in blink_infos:
-            for ev in blink_info.events[edge]:
-                m = MetaNode(P_nx=P_identity,
-                        initial_data_fset=tol_to_primary_states[ev.sa],
-                        final_data_fset=tol_to_primary_states[ev.sb],
-                        set_sa=do_nothing, set_sb=do_nothing)
+        for bg_track in bg_tracks:
+            for ev in bg_track.events[edge]:
+                m = MetaNode(P_nx=P_nx_identity,
+                        set_sa=do_nothing, set_sb=do_nothing,
+                        transitions=[(bg_track.name, ev.sa, ev.sb)])
                 seq.append(m)
         for ev in primary_info.events[edge]:
-            m = MetaNode(P_nx=P_primary,
-                    initial_data_fset=primary_state_set,
-                    final_data_fset=primary_state_set,
+            m = MetaNode(P_nx=P_nx,
                     set_sa=ev.init_sa, set_sb=ev.init_sb)
             seq.append(m)
         seq = sorted([ma] + seq + [mb])
 
+        # TODO Initialize states.
+        #TODO remove the possibility of meta nodes to have more than
+        # one transition per node
+
         # Add edges to the meta node tree.
         for ma, mb in zip(seq[:-1], seq[1:]):
+            #TODO track all background states
+            # through each segment of the edge
             meta_node_tree.add_edge(ma, mb)
+
+    #TODO work in progress after here...
 
     # Build the tree whose vertices are edges of the meta node tree.
     meta_edge_tree, meta_edge_root = get_edge_tree(meta_node_tree, mroot)
@@ -307,22 +324,14 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
     Q_blink.add_edge(False, True, weight=rate_on)
     Q_blink.add_edge(True, False, weight=rate_off)
 
+    # Define the map from blink track to set of primary states.
+    tol_to_primary_states = defaultdict(set)
+    for primary, tol in primary_to_tol.items():
+        tol_to_primary_states[tol].add(primary)
+
     # Partially initialize track info.
     # This does not intialize a history or a trajectory.
     track_to_info = dict((t, TrackInfo(t, d)) for t, d in track_to_data.items())
-
-    # Initialize the tolerance trajectories.
-    # Add incomplete events to the first and last thirds of the branch
-    # with the eventual goal to force the middle third of each branch
-    # to be in the True tolerance state regardless of the endpoint data.
-    for track in tolerance_tracks:
-        for edge in T.edges():
-            blen = edge_to_blen[edge]
-            for low, high in ((0, 1/3), (2/3, 1)):
-                tm = random.uniform(low, high) * blen
-                ev = Event(track=track, edge=edge, tm=tm, trans=None)
-                track.events[edge].append(ev)
-                event_registry[id(ev)] = ev
 
     # Initialize the primary trajectory.
     #
