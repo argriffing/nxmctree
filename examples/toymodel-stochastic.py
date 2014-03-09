@@ -40,6 +40,8 @@ from nxmctree import get_lhood, get_edge_to_nxdistn, sample_history
 from util import get_total_rates
 from trajectory import Trajectory, Event
 
+#TODO use 'segment' vs. 'edge' jargon
+
 
 ###############################################################################
 # Primary track and blink track initialization.
@@ -104,7 +106,7 @@ class MetaNode(object):
 
     """
     def __init__(self, P_nx=None,
-            set_sa=None, set_sb=None, fset=None, transitions=()):
+            set_sa=None, set_sb=None, fset=None, transition=None):
         """
 
         Parameters
@@ -116,18 +118,19 @@ class MetaNode(object):
         set_sb : callback, optional
             report the sampled final state
         fset : set, optional
-            Set of foreground state restrictions if not None.
+            Set of foreground state restrictions or None.
             None is interpreted as no restriction rather than
             lack of feasible states.
-        transitions : triples, optional
-            transitions are each (trajectory_name, sa, sb)
+        transition : triple, optional
+            A transition like (trajectory_name, sa, sb) or None.
+            None is interpreted as absence of background transition.
 
         """
         self.P_nx = P_nx
         self.set_sa = set_sa
         self.set_sb = set_sb
         self.fset = fset
-        self.transitions = transitions
+        self.transition = transition
 
     def __eq__(self, other):
         return id(self) == id(other)
@@ -191,14 +194,8 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
     for v in T:
         f = partial(set_or_confirm_history_state, primary_info.history, v)
         fset = fg_track.data[v]
-        transitions = []
-        for bg_track in bg_tracks:
-            name = bg_track.name
-            state = bg_track.data[v]
-            transitions.append((name, state, state))
         m = MetaNode(P_nx=P_nx_identity,
-                set_sa=f, set_sb=f,
-                fset=fset, transitions=transitions)
+                set_sa=f, set_sb=f, fset=fset)
         node_to_meta[v] = m
 
     # Define the meta node corresponding to the root.
@@ -229,7 +226,7 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
             for ev in bg_track.events[edge]:
                 m = MetaNode(P_nx=P_nx_identity,
                         set_sa=do_nothing, set_sb=do_nothing,
-                        transitions=[(bg_track.name, ev.sa, ev.sb)])
+                        transition=(bg_track.name, ev.sa, ev.sb))
                 seq.append(m)
         for ev in primary_info.events[edge]:
             m = MetaNode(P_nx=P_nx,
@@ -237,28 +234,43 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
             seq.append(m)
         seq = sorted([ma] + seq + [mb])
 
-        # TODO Initialize states.
-        #TODO remove the possibility of meta nodes to have more than
-        # one transition per node
+        # Initialize background states at the beginning of the edge.
+        bg_track_to_state = {}
+        for bg_track in bg_tracks:
+            bg_track_to_state[bg_track.name] = bg_track.history[va]
 
-        # Add edges to the meta node tree.
-        for ma, mb in zip(seq[:-1], seq[1:]):
-            #TODO track all background states
-            # through each segment of the edge
+        # Add segments of the edge as edges of the meta node tree.
+        # Track the state of each background track at each segment.
+        for segment in zip(seq[:-1], seq[1:]):
+            ma, mb = segment
+
+            # Keep the state of each background track up to date.
+            if ma.transition is not None:
+                track_name, sa, sb = ma.transition
+                if bg_track_to_state[name] != sa:
+                    raise Exception('incompatible transition')
+                bg_track_to_state[track_name] = sb
+
+            # Use the states of the background tracks,
+            # together with fsets of the two meta nodes if applicable,
+            # to define the set of feasible foreground states at this segment.
+            fsets = []
+            for m in segment:
+                if m.fset is not None:
+                    fsets.append(m.fset)
+            for name, state in bg_track_to_state.items():
+                fsets.append(bg_to_fg_fset[name][state])
+            fset = set.intersection(*fsets)
+
+            # Map the segment to the fset.
+            # Segments will be nodes of the tree whose history will be sampled.
+            node_to_data_fset[segment] = fset
+
+            # Add the meta node to the meta node tree.
             meta_node_tree.add_edge(ma, mb)
-
-    #TODO work in progress after here...
 
     # Build the tree whose vertices are edges of the meta node tree.
     meta_edge_tree, meta_edge_root = get_edge_tree(meta_node_tree, mroot)
-
-    # Create the map from nodes of the meta edge tree
-    # to sets of primary states not directly contradicted by data or context.
-    node_to_data_fset = {}
-    for meta_edge in meta_edge_tree:
-        ma, mb = meta_edge
-        fset = ma.final_data_fset & mb.initial_data_fset
-        node_to_data_fset[meta_edge] = fset
 
     # Create the map from edges of the meta edge tree
     # to primary state transition matrices.
@@ -287,9 +299,9 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
 # Main Rao-Teh-Gibbs sampling function.
 
 
-def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
-        rate_on, rate_off, uniformization_factor, event_map,
-        primary_track, tolerance_tracks, track_to_data):
+def blinking_model_rao_teh(
+        T, root, edge_to_blen, primary_to_tol, Q_primary, Q_blink,
+        event_map, primary_track, tolerance_tracks, track_to_data):
     """
 
     Parameters
@@ -320,9 +332,8 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
         x
 
     """
-    Q_blink = nx.DiGraph()
-    Q_blink.add_edge(False, True, weight=rate_on)
-    Q_blink.add_edge(True, False, weight=rate_off)
+
+    init_blink_history(T, edge_to_blen, track_info)
 
     # Define the map from blink track to set of primary states.
     tol_to_primary_states = defaultdict(set)
@@ -359,7 +370,7 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
             # with foreground events and to assign a corresponding foreground
             # history to the structural nodes.
             sample_primary(T, root, primary_to_tol, primary_distn,
-                    P_primary, primary_info, blink_infos):
+                    P_primary, primary_info, blink_infos)
 
             # TODO
             # Remove all foreground events that correspond to self-transitions.
@@ -369,7 +380,7 @@ def blinking_model_rao_teh(T, root, edge_to_blen, primary_to_tol, Q_primary,
 
 
 ###############################################################################
-# Copypasted model specification code etc.
+# Model specification code etc.
 
 
 def get_Q_primary():
@@ -395,15 +406,27 @@ def get_Q_primary():
     return Q_primary
 
 
+def get_Q_blink():
+    rate_on = 1
+    rate_off = 1
+    Q_blink = nx.DiGraph()
+    Q_blink.add_weighted_edges_from((
+        (False, True, rate_on),
+        (True, False, rate_off),
+        ))
+    return Q_blink
+
+
 def get_primary_to_tol():
-    # this is like a genetic code mapping codons to amino acids
+    # This is like a genetic code mapping codons to amino acids.
+    # It is a map from primary state to tolerance track name.
     primary_to_tol = {
-            0 : 0,
-            1 : 0,
-            2 : 1,
-            3 : 1,
-            4 : 2,
-            5 : 2,
+            0 : 'T0',
+            1 : 'T0',
+            2 : 'T1',
+            3 : 'T1',
+            4 : 'T2',
+            5 : 'T2',
             }
     return primary_to_tol
 
@@ -436,81 +459,46 @@ def hamming_distance(va, vb):
     return sum(1 for a, b in zip(va, vb) if a != b)
 
 
-def get_compound_states(primary_to_tol):
-    nprimary = len(primary_to_tol)
-    all_tols = list(product((0, 1), repeat=3))
-    compound_states = list(product(range(nprimary), all_tols))
-    return compound_states
-
-
 def compound_state_is_ok(primary_to_tol, state):
     primary, tols = state
     tclass = primary_to_tol[primary]
     return True if tols[tclass] else False
 
 
-def get_expected_rate(Q_dense, dense_distn):
-    return -np.dot(np.diag(Q_dense), dense_distn)
-
-
-def nx_to_np(M_nx, ordered_states):
-    state_to_idx = dict((s, i) for i, s in enumerate(ordered_states))
-    nstates = len(ordered_states)
-    M_np = np.zeros((nstates, nstates))
-    for sa, sb in M_nx.edges():
-        i = state_to_idx[sa]
-        j = state_to_idx[sb]
-        M_np[i, j] = M_nx[sa][sb]['weight']
-    return M_np
-
-
-def nx_to_np_rate_matrix(Q_nx, ordered_states):
-    Q_np = nx_to_np(Q_nx, ordered_states)
-    row_sums = np.sum(Q_np, axis=1)
-    Q_np = Q_np - np.diag(row_sums)
-    return Q_np
-
-
-def np_to_nx_transition_matrix(P_np, ordered_states):
-    P_nx = nx.DiGraph()
-    for i, sa in enumerate(ordered_states):
-        for j, sb in enumerate(ordered_states):
-            p = P_np[i, j]
-            if p:
-                P_nx.add_edge(sa, sb, weight=p)
-    return P_nx
-
-
-def compute_edge_expectation(Q, P, J, indicator, t):
-    # Q is the rate matrix
-    # P is the conditional transition matrix
-    # J is the joint distribution matrix
-    ncompound = Q.shape[0]
-    E = Q * indicator
-    interact = scipy.linalg.expm_frechet(Q*t, E*t, compute_expm=False)
-    total = 0
-    for i in range(ncompound):
-        for j in range(ncompound):
-            if J[i, j]:
-                total += J[i, j] * interact[i, j] / P[i, j]
-    return total
-
-
 def run(primary_to_tol, compound_states, node_to_data_fset):
 
-    # Get the primary rate matrix and convert it to a dense ndarray.
-    nprimary = 6
+    # Define the primary rate matrix.
     Q_primary_nx = get_Q_primary()
-    Q_primary_dense = nx_to_np_rate_matrix(Q_primary_nx, range(nprimary))
-    primary_distn_dense = np.ones(nprimary, dtype=float) / nprimary
 
-    # The expected rate of the pure primary process
-    # will be used for normalization.
-    expected_primary_rate = get_expected_rate(
-            Q_primary_dense, primary_distn_dense)
-    #print('pure primary process expected rate:')
-    #print(expected_primary_rate)
-    #print
+    # Define the prior primary state distribution.
+    #TODO do not use hardcoded uniform distribution
+    nprimary = 6
+    primary_distn = dict((s, 1/nprimary) for s in range(nprimary))
+
+    # Normalize the primary rate matrix to have expected rate 1.
+    expected_primary_rate = 0
+    for sa, sb in Q_primary_nx.edges():
+        p = primary_distn[sa]
+        rate = Q_primary_nx[sa][sb]['weight']
+        expected_primary_rate += p * rate
+    #
+    print('pure primary process expected rate:')
+    print(expected_primary_rate)
+    print()
+    #
+    for sa, sb in Q_primary_nx.edges():
+        Q_primary_nx[sa][sb]['weight'] /= expected_rate
+
+    # Define the rate matrix for a single blinking trajectory.
+    rate_on = 1.0
+    rate_off = 1.0
+    Q_blink = nx.DiGraph()
+    Q_blink.add_edge(False, True, weight=rate_on)
+    Q_blink.add_edge(True, False, weight=rate_off)
+
+    # Define the prior blink state distribution.
+    #TODO do not use hardcoded uniform distribution
+    blink_distn = {False : 0.5, True : 0.5}
 
     # Get the rooted directed tree shape.
     T, root = get_T_and_root()
@@ -521,114 +509,39 @@ def run(primary_to_tol, compound_states, node_to_data_fset):
     # along the branch conditional on all tolerance classes being tolerated.
     edge_to_blen = get_edge_to_blen()
 
-    # Define the compound process through some indicators.
-    indicators = define_compound_process(
-            Q_primary_nx, compound_states, primary_to_tol)
-    I_syn, I_non, I_on, I_off = indicators
+    # TODO ...
+    uniformization_factor = 2
 
-    # Define the dense compound transition rate matrix through the indicators.
-    syn_rate = 1.0
-    non_rate = 1.0
-    on_rate = 1.0
-    off_rate = 1.0
-    Q_compound = (
-            syn_rate * I_syn / expected_primary_rate +
-            non_rate * I_non / expected_primary_rate +
-            #syn_rate * I_syn +
-            #non_rate * I_non +
-            on_rate * I_on +
-            off_rate * I_off)
-    #Q_compound = Q_compound / expected_primary_rate
-    row_sums = np.sum(Q_compound, axis=1)
-    Q_compound = Q_compound - np.diag(row_sums)
-    
-    # Define a sparse stationary distribution over compound states.
-    # This should use the rates but for now it will just be
-    # uniform over the ok compound states because of symmetry.
-    compound_distn = {}
-    for state in compound_states:
-        if compound_state_is_ok(primary_to_tol, state):
-            compound_distn[state] = 1.0
-    total = sum(compound_distn.values())
-    compound_distn = dict((k, v/total) for k, v in compound_distn.items())
-    #print('compound distn:')
-    #print(compound_distn)
-    #print()
-
-    # Make the np and nx transition probability matrices.
-    # Map each branch to the transition matrix.
-    edge_to_P_np = {}
-    edge_to_P_nx = {}
-    for edge in T.edges():
-        t = edge_to_blen[edge]
-        P_np = scipy.linalg.expm(Q_compound * t)
-        P_nx = np_to_nx_transition_matrix(P_np, compound_states)
-        edge_to_P_np[edge] = P_np
-        edge_to_P_nx[edge] = P_nx
-
-    # Compute the likelihood
-    lhood = get_lhood(T, edge_to_P_nx, root, compound_distn, node_to_data_fset)
-    print('likelihood:')
-    print(lhood)
-    print()
-
-    # Compute the map from edge to posterior joint state distribution.
-    # Convert the nx transition probability matrices back into dense ndarrays.
-    edge_to_nxdistn = get_edge_to_nxdistn(
-            T, edge_to_P_nx, root, compound_distn, node_to_data_fset)
-    edge_to_J = {}
-    for edge, J_nx in edge_to_nxdistn.items():
-        J_np = nx_to_np(J_nx, compound_states)
-        edge_to_J[edge] = J_np
-
-    # Compute labeled transition count expectations
-    # using the rate matrix, the joint posterior state distribution matrices,
-    # the indicator matrices, and the conditional transition probability
-    # distribution matrix.
-    primary_expectation = 0
-    blink_expectation = 0
-    for edge in T.edges():
-        va, vb = edge
-        Q = Q_compound
-        J = edge_to_J[edge]
-        P = edge_to_P_np[edge]
-        t = edge_to_blen[edge]
-
-        # primary transition event count expectations
-        syn_total = compute_edge_expectation(Q, P, J, I_syn, t)
-        non_total = compute_edge_expectation(Q, P, J, I_non, t)
-        primary_expectation += syn_total
-        primary_expectation += non_total
-        print('edge %s -> %s syn expectation %s' % (va, vb, syn_total))
-        print('edge %s -> %s non expectation %s' % (va, vb, non_total))
-
-        # blink transition event count expectations
-        on_total = compute_edge_expectation(Q, P, J, I_on, t)
-        off_total = compute_edge_expectation(Q, P, J, I_off, t)
-        blink_expectation += on_total
-        blink_expectation += off_total
-        print('edge %s -> %s on expectation %s' % (va, vb, on_total))
-        print('edge %s -> %s off expectation %s' % (va, vb, off_total))
-        
-        print()
-
-    print('primary expectation:')
-    print(primary_expectation)
-    print()
-
-    print('blink expectation:')
-    print(blink_expectation)
-    print()
-
+    # sample correlated trajectories using rao teh on the blinking model
+    for foo in blinking_model_rao_teh(
+            T, root, edge_to_blen, primary_to_tol, Q_primary, Q_blink,
+            event_map, primary_track, tolerance_tracks, track_to_data):
+        print(foo)
 
 
 def main():
 
+    #TODO work in progress, no compound states
+
     # Get the analog of the genetic code.
     primary_to_tol = get_primary_to_tol()
 
-    # Define the ordering of the compound states.
-    compound_states = get_compound_states(primary_to_tol)
+    # Define track interactions.
+    # This is analogous to the creation of the compound rate matrices.
+    d = {
+            'P' : {
+                'T0' : {
+                    True : {
+            'T1' : {wat},
+            'T1' : {wat},
+            'T1' : {wat},
+
+    # Define primary and blinking trajectories.
+
+
+
+    t = Trajectory(name=None, data=None, history=None, events=None,
+            prior_root_distn=None, Q_nx=None, uniformization_factor=None)
 
     # No data.
     print ('expectations given no alignment or disease data')
@@ -641,7 +554,7 @@ def main():
             'N4' : set(compound_states),
             'N5' : set(compound_states),
             }
-    run(primary_to_tol, compound_states, node_to_data_fset)
+    run(primary_to_tol, node_to_data_fset)
     print()
 
     # Alignment data only.
