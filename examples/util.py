@@ -6,6 +6,8 @@ from __future__ import division, print_function, absolute_import
 
 #TODO move this to a more appropriate python package
 
+import networkx as nx
+
 
 def get_omega(total_rates, uniformization_factor):
     return uniformization_factor * max(total_rates.values())
@@ -33,7 +35,7 @@ def get_total_rates(Q_nx):
     for sa in Q_nx:
         total_rate = None
         for sb in Q_nx[sa]:
-            rate = Q_nx[sa][sb]
+            rate = Q_nx[sa][sb]['weight']
             if total_rate is None:
                 total_rate = 0
             total_rate += rate
@@ -69,7 +71,7 @@ def get_uniformized_P_nx(Q_nx, omega):
 
         # define probabilities of transitions to other states
         for sb in Q_nx[sa]:
-            weight = Q[sa][sb]['weight'] / omega
+            weight = Q_nx[sa][sb]['weight'] / omega
             P_nx.add_edge(sa, sb, weight=weight)
 
     return P_nx

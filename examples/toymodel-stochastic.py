@@ -301,7 +301,7 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
 
 def blinking_model_rao_teh(
         T, root, edge_to_blen, primary_to_tol, Q_primary, Q_blink,
-        event_map, primary_track, tolerance_tracks, track_to_data):
+        primary_track, tolerance_tracks, track_to_data):
     """
 
     Parameters
@@ -316,14 +316,8 @@ def blinking_model_rao_teh(
         x
     Q_primary : x
         x
-    rate_on : float
+    Q_blink : x
         x
-    rate_off : float
-        x
-    uniformization_factor : float
-        Somewhat arbitrary constant greater than 1.  Two is good.
-    event_registry : dict
-        map from event id to event object
     primary_track : hashable
         label of the primary track
     tolerance_tracks : collection of hashables
@@ -332,6 +326,8 @@ def blinking_model_rao_teh(
         x
 
     """
+
+    #TODO properly initialize the track states
 
     init_blink_history(T, edge_to_blen, track_info)
 
@@ -465,7 +461,19 @@ def compound_state_is_ok(primary_to_tol, state):
     return True if tols[tclass] else False
 
 
-def run(primary_to_tol, compound_states, node_to_data_fset):
+def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
+
+    # Get the rooted directed tree shape.
+    T, root = get_T_and_root()
+
+    # Get the map from ordered tree edge to branch length.
+    # The branch length has complicated units.
+    # It is the expected number of primary process transitions
+    # along the branch conditional on all tolerance classes being tolerated.
+    edge_to_blen = get_edge_to_blen()
+
+    # Define the uniformization factor.
+    uniformization_factor = 2
 
     # Define the primary rate matrix.
     Q_primary_nx = get_Q_primary()
@@ -487,7 +495,14 @@ def run(primary_to_tol, compound_states, node_to_data_fset):
     print()
     #
     for sa, sb in Q_primary_nx.edges():
-        Q_primary_nx[sa][sb]['weight'] /= expected_rate
+        Q_primary_nx[sa][sb]['weight'] /= expected_primary_rate
+
+    # Define primary trajectory.
+    primary_track = Trajectory(
+            name='P', data=track_to_node_to_data_fset['P'],
+            history=None, events=None,
+            prior_root_distn=primary_distn, Q_nx=Q_primary_nx,
+            uniformization_factor=uniformization_factor)
 
     # Define the rate matrix for a single blinking trajectory.
     rate_on = 1.0
@@ -500,22 +515,21 @@ def run(primary_to_tol, compound_states, node_to_data_fset):
     #TODO do not use hardcoded uniform distribution
     blink_distn = {False : 0.5, True : 0.5}
 
-    # Get the rooted directed tree shape.
-    T, root = get_T_and_root()
-
-    # Get the map from ordered tree edge to branch length.
-    # The branch length has complicated units.
-    # It is the expected number of primary process transitions
-    # along the branch conditional on all tolerance classes being tolerated.
-    edge_to_blen = get_edge_to_blen()
-
-    # TODO ...
-    uniformization_factor = 2
+    # Define tolerance process trajectories.
+    name_to_blink_track = dict()
+    for name in ('T0', 'T1', 'T2'):
+        track = Trajectory(
+                name=name, data=track_to_node_to_data_fset[name],
+                history=None, events=None,
+                prior_root_distn=blink_distn, Q_nx=Q_blink,
+                uniformization_factor=uniformization_factor)
+        name_to_blink_track[name] = track
+    tolerance_tracks = list(name_to_blink_track.values())
 
     # sample correlated trajectories using rao teh on the blinking model
     for foo in blinking_model_rao_teh(
-            T, root, edge_to_blen, primary_to_tol, Q_primary, Q_blink,
-            event_map, primary_track, tolerance_tracks, track_to_data):
+            T, root, edge_to_blen, primary_to_tol, Q_primary_nx, Q_blink,
+            primary_track, tolerance_tracks, track_to_node_to_data_fset):
         print(foo)
 
 
@@ -535,12 +549,12 @@ def main():
                 'T1' : {
                     True : {0, 1, 2, 3, 4, 5},
                     False : {0, 1, 4, 5},
-                    }
+                    },
                 'T2' : {
                     True : {0, 1, 2, 3, 4, 5},
                     False : {0, 1, 2, 3},
                     }
-                }
+                },
             'T0' : {
                 'P' : {
                     0 : {True},
@@ -550,7 +564,7 @@ def main():
                     4 : {False, True},
                     5 : {False, True},
                     }
-                }
+                },
             'T1' : {
                 'P' : {
                     0 : {False, True},
@@ -560,7 +574,7 @@ def main():
                     4 : {False, True},
                     5 : {False, True},
                     }
-                }
+                },
             'T2' : {
                 'P' : {
                     0 : {False, True},
@@ -573,27 +587,53 @@ def main():
                 }
             }
 
-    # Define primary and blinking trajectories.
-
-
-
-    t = Trajectory(name=None, data=None, history=None, events=None,
-            prior_root_distn=None, Q_nx=None, uniformization_factor=None)
 
     # No data.
     print ('expectations given no alignment or disease data')
     print()
-    node_to_data_fset = {
-            'N0' : set(compound_states),
-            'N1' : set(compound_states),
-            'N2' : set(compound_states),
-            'N3' : set(compound_states),
-            'N4' : set(compound_states),
-            'N5' : set(compound_states),
+    data = {
+            'P' : {
+                'N0' : {0, 1, 2, 3, 4, 5},
+                'N1' : {0, 1, 2, 3, 4, 5},
+                'N2' : {0, 1, 2, 3, 4, 5},
+                'N3' : {0, 1, 2, 3, 4, 5},
+                'N4' : {0, 1, 2, 3, 4, 5},
+                'N5' : {0, 1, 2, 3, 4, 5},
+                },
+            'T0' : {
+                'N0' : {False, True},
+                'N1' : {False, True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {False, True},
+                'N4' : {False, True},
+                'N5' : {False, True},
+                },
+            'T1' : {
+                'N0' : {False, True},
+                'N1' : {False, True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {False, True},
+                'N4' : {False, True},
+                'N5' : {False, True},
+                },
+            'T2' : {
+                'N0' : {False, True},
+                'N1' : {False, True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {False, True},
+                'N4' : {False, True},
+                'N5' : {False, True},
+                },
             }
-    run(primary_to_tol, node_to_data_fset)
+    run(primary_to_tol, interaction_map, data)
     print()
 
+    #TODO unfinished after here...
+
+    """
     # Alignment data only.
     print ('expectations given only alignment data but not disease data')
     print()
@@ -623,7 +663,9 @@ def main():
             }
     run(primary_to_tol, compound_states, node_to_data_fset)
     print()
+    """
 
+    """
     # Alignment and disease data.
     print ('expectations given alignment and disease data')
     print()
@@ -650,7 +692,9 @@ def main():
             }
     run(primary_to_tol, compound_states, node_to_data_fset)
     print()
+    """
 
+    """
     # Alignment and fully observed disease data.
     print ('expectations given alignment and fully observed disease data')
     print ('(all leaf disease states which were previously considered to be')
@@ -670,6 +714,7 @@ def main():
             }
     run(primary_to_tol, compound_states, node_to_data_fset)
     print()
+    """
 
 
 main()
