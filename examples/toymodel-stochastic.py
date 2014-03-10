@@ -192,7 +192,7 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
 
     # Construct a meta node for each structural node.
     node_to_meta = {}
-    print('building meta nodes corresponding to structural nodes')
+    #print('building meta nodes corresponding to structural nodes')
     for v in T:
         f = partial(set_or_confirm_history_state, fg_track.history, v)
         fset = fg_track.data[v]
@@ -216,11 +216,6 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
     for edge in T.edges():
         va, vb = edge
 
-        # Initialize background states at the beginning of the edge.
-        bg_track_to_state = {}
-        for bg_track in bg_tracks:
-            bg_track_to_state[bg_track.name] = bg_track.history[va]
-
         # Sequence meta nodes from three sources:
         # the two structural endpoint nodes,
         # the nodes representing transitions in background tracks,
@@ -228,11 +223,9 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
         # Note that meta nodes are not meaningfully sortable,
         # but events are sortable.
         events = []
+        events.extend(fg_track.events[edge])
         for bg_track in bg_tracks:
-            for ev in bg_track.events[edge]:
-                events.append(ev)
-        for ev in fg_track.events[edge]:
-            events.append(ev)
+            events.extend(bg_track.events[edge])
 
         # Construct the meta nodes corresponding to sorted events.
         seq = []
@@ -242,11 +235,16 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
             else:
                 m = MetaNode(P_nx=P_nx_identity,
                         set_sa=do_nothing, set_sb=do_nothing,
-                        transition=(bg_track.name, ev.sa, ev.sb))
+                        transition=(ev.track.name, ev.sa, ev.sb))
             seq.append(m)
         ma = node_to_meta[va]
         mb = node_to_meta[vb]
         seq = [ma] + seq + [mb]
+
+        # Initialize background states at the beginning of the edge.
+        bg_track_to_state = {}
+        for bg_track in bg_tracks:
+            bg_track_to_state[bg_track.name] = bg_track.history[va]
 
         # Add segments of the edge as edges of the meta node tree.
         # Track the state of each background track at each segment.
@@ -396,10 +394,15 @@ def blinking_model_rao_teh(
 
         # Update each blinking track.
         for track in tolerance_tracks:
+            name = track.name
+            #print('adding poisson events for track', name)
             track.add_poisson_events(T, edge_to_blen)
+            #print('clearing state labels for track', name)
             track.clear_state_labels()
+            #print('sampling state transitions for track', name)
             sample_transitions(T, root,
-                    track, [primary_track], interaction_map[track.name])
+                    track, [primary_track], interaction_map[name])
+            #print('removing self transitions for track', name)
             track.remove_self_transitions()
 
         # Summarize the sample.
@@ -533,9 +536,9 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
         rate = Q_primary_nx[sa][sb]['weight']
         expected_primary_rate += p * rate
     #
-    print('pure primary process expected rate:')
-    print(expected_primary_rate)
-    print()
+    #print('pure primary process expected rate:')
+    #print(expected_primary_rate)
+    #print()
     #
     for sa, sb in Q_primary_nx.edges():
         Q_primary_nx[sa][sb]['weight'] /= expected_primary_rate
@@ -580,18 +583,20 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
         n = i + 1
         e_on, e_off = info
         expected_on += e_on
-        expected_off += e_on
+        expected_off += e_off
         avg_on = expected_on / n
         avg_off = expected_off / n
-        print('n:')
-        print(n)
-        print()
-        print('expected off->on:')
-        print(avg_on)
-        print()
-        print('expected on->off:')
-        print(avg_off)
-        print()
+        #print('n:')
+        #print(n)
+        #print()
+        #print('expected off->on:')
+        #print(avg_on)
+        #print()
+        #print('expected on->off:')
+        #print(avg_off)
+        #print()
+        #print(n, avg_on, avg_off, sep='\t')
+        print(e_on, e_off, sep='\t')
 
 
 def main():
