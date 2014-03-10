@@ -64,7 +64,7 @@ def init_complete_blink_events(T, edge_to_blen, track):
     Init blink track.
 
     """
-    for edge in T:
+    for edge in T.edges():
         va, vb = edge
         sa = track.history[va]
         sb = track.history[vb]
@@ -138,9 +138,6 @@ class MetaNode(object):
 
     def __hash__(self):
         return id(self)
-
-    #TODO I am sorting these nodes
-    # so make it mean something other than sorting pointers
 
 
 def do_nothing():
@@ -379,35 +376,40 @@ def blinking_model_rao_teh(
     # Sample the state of the primary track.
     sample_transitions(T, root,
             primary_track, tolerance_tracks, interaction_map['P'])
+    #
+    # Remove self-transition events from the primary track.
+    primary_track.remove_self_transitions()
 
-
+    # Outer loop of the Rao-Teh-Gibbs sampler.
     while True:
-        for foreground_track in tracks:
 
-            # TODO
-            # Add poisson events as incomplete events, using the ephemeral
-            # edges defined by the foreground track.
-            poisson_rates = x
-            add_poisson_events(T, edge_to_blen, poisson_rates, track_info)
+        # Update the primary track.
+        primary_track.add_poisson_events(T, edge_to_blen)
+        primary_track.clear_state_labels()
+        sample_transitions(T, root,
+                primary_track, tolerance_tracks, interaction_map['P'])
+        primary_track.remove_self_transitions()
 
-            # TODO
-            # Remove the transitions associated with foreground events
-            # and remove the foreground history.
+        # Update each blinking track.
+        for track in tolerance_tracks:
+            track.add_poisson_events(T, edge_to_blen)
+            track.clear_state_labels()
+            sample_transitions(T, root,
+                    track, [primary_track], interaction_map[track.name])
+            track.remove_self_transitions()
 
-            # TODO
-            # Use the background and foreground events and node states and data
-            # to define state restrictions on ephemeral edges and to define the
-            # transitions between the states at these ephemeral edges.
-            # Then use this construction to sample transitions associated
-            # with foreground events and to assign a corresponding foreground
-            # history to the structural nodes.
-            sample_primary(T, root, primary_to_tol, primary_distn,
-                    P_primary, primary_info, blink_infos)
+        # Summarize the sample.
+        expected_on = 0
+        expected_off = 0
+        for track in tolerance_tracks:
+            for edge in T.edges():
+                for ev in track.events[edge]:
+                    if ev.transition == (False, True):
+                        expected_on += 1
+                    elif ev.transition == (True, False):
+                        expected_off += 1
 
-            # TODO
-            # Remove all foreground events that correspond to self-transitions.
-
-            pass
+        yield expected_on, expected_off
 
 
 
@@ -563,12 +565,28 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     tolerance_tracks = list(name_to_blink_track.values())
 
     # sample correlated trajectories using rao teh on the blinking model
-    for foo in blinking_model_rao_teh(
+    expected_on = 0
+    expected_off = 0
+    for i, info in enumerate(blinking_model_rao_teh(
             T, root, edge_to_blen, primary_to_tol,
             Q_primary_nx, Q_blink,
             primary_track, tolerance_tracks, interaction_map,
-            track_to_node_to_data_fset):
-        print(foo)
+            track_to_node_to_data_fset)):
+        n = i + 1
+        e_on, e_off = info
+        expected_on += e_on
+        expected_off += e_on
+        avg_on = expected_on / n
+        avg_off = expected_off / n
+        print('n:')
+        print(n)
+        print()
+        print('expected off->on:')
+        print(avg_on)
+        print()
+        print('expected on->off:')
+        print(avg_off)
+        print()
 
 
 def main():

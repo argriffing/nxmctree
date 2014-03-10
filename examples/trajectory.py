@@ -6,6 +6,7 @@ Eventually this module should be moved out of the nxmctree package.
 """
 from __future__ import division, print_function, absolute_import
 
+import numpy as np
 import networkx as nx
 
 from util import get_total_rates, get_omega, get_poisson_rates
@@ -64,6 +65,7 @@ class Trajectory(object):
         self.poisson_rates = get_poisson_rates(self.total_rates, self.omega)
 
     def remove_self_transitions(self):
+        edges = set(self.events)
         for edge in edges:
             events = self.events[edge]
             self.events[edge] = [ev for ev in events if ev.sb == ev.sa]
@@ -118,7 +120,8 @@ class Trajectory(object):
                 if None in (ta_final, tb_initial):
                     raise Exception('trajectory has incomplete events')
                 if ta_final != tb_initial:
-                    raise Exception('trajectory has incompatible transitions')
+                    raise Exception('trajectory has incompatible transitions: '
+                            'ta_final %s  tb_initial %s' % (ta_final, tb_initial))
                 state = ta_final
                 rate = self.poisson_rates[state]
                 blen = tb_tm - ta_tm
