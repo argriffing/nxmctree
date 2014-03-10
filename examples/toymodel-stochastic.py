@@ -521,20 +521,57 @@ def run(primary_to_tol, compound_states, node_to_data_fset):
 
 def main():
 
-    #TODO work in progress, no compound states
-
     # Get the analog of the genetic code.
     primary_to_tol = get_primary_to_tol()
 
     # Define track interactions.
     # This is analogous to the creation of the compound rate matrices.
-    d = {
+    interaction_map = {
             'P' : {
                 'T0' : {
-                    True : {
-            'T1' : {wat},
-            'T1' : {wat},
-            'T1' : {wat},
+                    True : {0, 1, 2, 3, 4, 5},
+                    False : {2, 3, 4, 5},
+                    },
+                'T1' : {
+                    True : {0, 1, 2, 3, 4, 5},
+                    False : {0, 1, 4, 5},
+                    }
+                'T2' : {
+                    True : {0, 1, 2, 3, 4, 5},
+                    False : {0, 1, 2, 3},
+                    }
+                }
+            'T0' : {
+                'P' : {
+                    0 : {True},
+                    1 : {True},
+                    2 : {False, True},
+                    3 : {False, True},
+                    4 : {False, True},
+                    5 : {False, True},
+                    }
+                }
+            'T1' : {
+                'P' : {
+                    0 : {False, True},
+                    1 : {False, True},
+                    2 : {True},
+                    3 : {True},
+                    4 : {False, True},
+                    5 : {False, True},
+                    }
+                }
+            'T2' : {
+                'P' : {
+                    0 : {False, True},
+                    1 : {False, True},
+                    2 : {False, True},
+                    3 : {False, True},
+                    4 : {True},
+                    5 : {True},
+                    }
+                }
+            }
 
     # Define primary and blinking trajectories.
 
