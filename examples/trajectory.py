@@ -133,12 +133,12 @@ class Trajectory(object):
 
 
 class Event(object):
-    def __init__(self, traj=None, tm=None, sa=None, sb=None):
+    def __init__(self, track=None, tm=None, sa=None, sb=None):
         """
 
         Parameters
         ----------
-        traj : Trajectory object, optional
+        track : Trajectory object, optional
             the trajectory object on which the event occurs
         tm : float, optional
             time along the edge at which the event occurs
@@ -148,7 +148,7 @@ class Event(object):
             final state of the transition
 
         """
-        self.traj = traj
+        self.track = track
         self.tm = tm
         self.sa = sa
         self.sb = sb
