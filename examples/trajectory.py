@@ -68,7 +68,7 @@ class Trajectory(object):
         edges = set(self.events)
         for edge in edges:
             events = self.events[edge]
-            self.events[edge] = [ev for ev in events if ev.sb == ev.sa]
+            self.events[edge] = [ev for ev in events if ev.sb != ev.sa]
 
     def clear_state_labels(self):
         """
@@ -128,7 +128,7 @@ class Trajectory(object):
                 n = np.random.poisson(rate * blen)
                 times = np.random.uniform(low=ta_tm, high=tb_tm, size=n)
                 for tm in times:
-                    ev = Event(track=track_label, edge=edge, tm=tm)
+                    ev = Event(track=self, tm=tm)
                     poisson_events.append(ev)
 
             # add the sampled poisson events to the track info for the branch

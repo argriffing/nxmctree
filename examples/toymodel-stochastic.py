@@ -140,7 +140,7 @@ class MetaNode(object):
         return id(self)
 
 
-def do_nothing():
+def do_nothing(state):
     """
     Helper function as a placeholder callback.
 
@@ -256,10 +256,14 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
 
             # Keep the state of each background track up to date.
             if ma.transition is not None:
-                track_name, sa, sb = ma.transition
+                name, sa, sb = ma.transition
                 if bg_track_to_state[name] != sa:
-                    raise Exception('incompatible transition')
-                bg_track_to_state[track_name] = sb
+                    raise Exception('incompatible transition: '
+                            'current state on track %s is %s '
+                            'but encountered a transition event from '
+                            'state %s to state %s' % (
+                                name, bg_track_to_state[name], sa, sb))
+                bg_track_to_state[name] = sb
 
             # Use the states of the background tracks,
             # together with fsets of the two meta nodes if applicable,
@@ -404,9 +408,10 @@ def blinking_model_rao_teh(
         for track in tolerance_tracks:
             for edge in T.edges():
                 for ev in track.events[edge]:
-                    if ev.transition == (False, True):
+                    transition = (ev.sa, ev.sb)
+                    if transition == (False, True):
                         expected_on += 1
-                    elif ev.transition == (True, False):
+                    elif transition == (True, False):
                         expected_off += 1
 
         yield expected_on, expected_off
