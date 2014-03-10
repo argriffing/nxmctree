@@ -48,21 +48,21 @@ from trajectory import Trajectory, Event
 
 
 
-def init_blink_history(T, edge_to_blen, track_info):
+def init_blink_history(T, edge_to_blen, track):
     """
     Initial blink history is True where consistent with the data.
 
     """
     for v in T:
-        track_info.history[v] = (True in track_info.data[v])
+        track.history[v] = (True in track.data[v])
 
 
-def init_complete_blink_events(T, edge_to_blen, track_info):
+def init_complete_blink_events(T, edge_to_blen, track):
     """
     Init blink track.
 
     """
-    track_label = track_info.track
+    name = track.name
     for edge in T:
         va, vb = edge
         sa = track_info.history[va]
@@ -70,9 +70,9 @@ def init_complete_blink_events(T, edge_to_blen, track_info):
         blen = edge_to_blen[edge]
         tma = blen * np.random.uniform(0, 1/3)
         tmb = blen * np.random.uniform(2/3, 1)
-        eva = Event(track=track_label, edge=edge, tm=tma, sa=sa, sb=True)
-        evb = Event(track=track_label, edge=edge, tm=tmb, sa=True, sb=sb)
-        track_info.events[edge] = [eva, evb]
+        eva = Event(track=name, edge=edge, tm=tma, sa=sa, sb=True)
+        evb = Event(track=name, edge=edge, tm=tmb, sa=True, sb=sb)
+        track.events[edge] = [eva, evb]
 
 
 def init_incomplete_primary_events(T, edge_to_blen, traj, diameter):
@@ -326,26 +326,18 @@ def blinking_model_rao_teh(
         x
 
     """
-
-    #TODO properly initialize the track states
-
-    init_blink_history(T, edge_to_blen, track_info)
-
-    # Define the map from blink track to set of primary states.
-    tol_to_primary_states = defaultdict(set)
-    for primary, tol in primary_to_tol.items():
-        tol_to_primary_states[tol].add(primary)
-
-    # Partially initialize track info.
-    # This does not intialize a history or a trajectory.
-    track_to_info = dict((t, TrackInfo(t, d)) for t, d in track_to_data.items())
+    for track in tolerance_tracks:
+        init_blink_history(T, edge_to_blen, track)
 
     # Initialize the primary trajectory.
     #
 
+    #TODO finish properly initializing the track states
+
+
     # Define 'incomplete events' associated with the primary track.
 
-    for i in range(nsamples):
+    while True:
         for foreground_track in tracks:
 
             # TODO
@@ -500,7 +492,7 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     # Define primary trajectory.
     primary_track = Trajectory(
             name='P', data=track_to_node_to_data_fset['P'],
-            history=None, events=None,
+            history=dict(), events=dict(),
             prior_root_distn=primary_distn, Q_nx=Q_primary_nx,
             uniformization_factor=uniformization_factor)
 
@@ -520,7 +512,7 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     for name in ('T0', 'T1', 'T2'):
         track = Trajectory(
                 name=name, data=track_to_node_to_data_fset[name],
-                history=None, events=None,
+                history=dict(), events=dict(),
                 prior_root_distn=blink_distn, Q_nx=Q_blink,
                 uniformization_factor=uniformization_factor)
         name_to_blink_track[name] = track
