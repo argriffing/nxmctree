@@ -15,8 +15,7 @@ from collections import defaultdict
 import networkx as nx
 
 import nxmctree
-from nxmctree.docspam import ddec
-from nxmctree.util import dict_distn
+from nxmctree.util import ddec, dict_distn
 
 __all__ = [
         'get_lhood',
@@ -36,11 +35,11 @@ params = """\
         Following networkx convention, this may be anything hashable.
     root_prior_distn : dict
         Prior state distribution at the root.
-    node_to_data_fset : dict
-        Map from node to set of feasible states.
-        The feasibility could be interpreted as due to restrictions
-        caused by observed data.
+    node_to_data_lmap : dict
+        For each node, a map from state to observation likelihood.
 """
+
+#TODO only copypasted not yet modified
 
 
 @ddec(params=params)

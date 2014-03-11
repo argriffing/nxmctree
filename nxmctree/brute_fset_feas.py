@@ -9,7 +9,7 @@ from __future__ import division, print_function, absolute_import
 import networkx as nx
 
 import nxmctree
-from nxmctree.docspam import ddec
+from nxmctree.util import ddec
 from nxmctree.history import get_history_feas, gen_plausible_histories
 
 __all__ = [

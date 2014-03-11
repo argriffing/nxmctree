@@ -15,8 +15,7 @@ from collections import defaultdict
 import networkx as nx
 
 import nxmctree
-from nxmctree.docspam import ddec
-from nxmctree.util import dict_distn
+from nxmctree.util import ddec, dict_distn
 
 __all__ = [
         'get_lhood',

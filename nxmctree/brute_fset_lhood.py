@@ -11,8 +11,7 @@ from collections import defaultdict
 import networkx as nx
 
 import nxmctree
-from nxmctree.util import dict_distn
-from nxmctree.docspam import ddec
+from nxmctree.util import ddec, dict_distn
 from nxmctree.history import (
         get_history_feas, get_history_lhood, gen_plausible_histories)
 

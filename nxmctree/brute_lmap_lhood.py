@@ -11,8 +11,7 @@ from collections import defaultdict
 import networkx as nx
 
 import nxmctree
-from nxmctree.util import dict_distn
-from nxmctree.docspam import ddec
+from nxmctree.util import ddec, dict_distn
 from nxmctree.history import (
         get_history_feas, get_history_lhood, gen_plausible_histories)
 
@@ -34,15 +33,13 @@ params = """\
         Following networkx convention, this may be anything hashable.
     root_prior_distn : dict
         Prior state distribution at the root.
-    node_to_data_fset : dict
-        Map from node to set of feasible states.
-        The feasibility could be interpreted as due to restrictions
-        caused by observed data.
+    node_to_data_lmap : dict
+        For each node, a map from state to observation likelihood.
 """
 
 
 @ddec(params=params)
-def get_lhood_brute(T, edge_to_P, root, root_prior_distn, node_to_data_fset):
+def get_lhood_brute(T, edge_to_P, root, root_prior_distn, node_to_data_lmap):
     """
     Get the likelihood of this combination of parameters.
 
@@ -54,10 +51,12 @@ def get_lhood_brute(T, edge_to_P, root, root_prior_distn, node_to_data_fset):
 
     """
     lk_total = None
-    for node_to_state in gen_plausible_histories(node_to_data_fset):
+    for node_to_state in gen_plausible_histories(node_to_data_lmap):
         lk = get_history_lhood(T, edge_to_P, root,
                 root_prior_distn, node_to_state)
         if lk is not None:
+            probs = [node_to_data_lmap[v][s] for v, s in node_to_state.items()]
+            lk *= np.prod(probs)
             if lk_total is None:
                 lk_total = lk
             else:
@@ -67,7 +66,7 @@ def get_lhood_brute(T, edge_to_P, root, root_prior_distn, node_to_data_fset):
 
 @ddec(params=params)
 def get_node_to_distn_brute(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
+        root_prior_distn, node_to_data_lmap):
     """
     Get the map from node to state distribution.
 
@@ -78,12 +77,14 @@ def get_node_to_distn_brute(T, edge_to_P, root,
     {params}
 
     """
-    nodes = set(node_to_data_fset)
+    nodes = set(node_to_data_lmap)
     v_to_d = dict((v, defaultdict(float)) for v in nodes)
-    for node_to_state in gen_plausible_histories(node_to_data_fset):
+    for node_to_state in gen_plausible_histories(node_to_data_lmap):
         lk = get_history_lhood(T, edge_to_P, root,
                 root_prior_distn, node_to_state)
         if lk is not None:
+            probs = [node_to_data_lmap[v][s] for v, s in node_to_state.items()]
+            lk *= np.prod(probs)
             for node, state in node_to_state.items():
                 v_to_d[node][state] += lk
     v_to_posterior_distn = dict((v, dict_distn(d)) for v, d in v_to_d.items())
@@ -92,7 +93,7 @@ def get_node_to_distn_brute(T, edge_to_P, root,
 
 @ddec(params=params)
 def get_edge_to_nxdistn_brute(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+        root_prior_distn, node_to_data_lmap):
     """
 
     Parameters
@@ -101,10 +102,12 @@ def get_edge_to_nxdistn_brute(T, edge_to_P, root,
 
     """
     edge_to_d = dict((edge, nx.DiGraph()) for edge in T.edges())
-    for node_to_state in gen_plausible_histories(node_to_data_feasible_set):
+    for node_to_state in gen_plausible_histories(node_to_data_lmap):
         lk = get_history_lhood(T, edge_to_P, root,
                 root_prior_distn, node_to_state)
         if lk is not None:
+            probs = [node_to_data_lmap[v][s] for v, s in node_to_state.items()]
+            lk *= np.prod(probs)
             for tree_edge in T.edges():
                 va, vb = tree_edge
                 sa = node_to_state[va]

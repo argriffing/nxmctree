@@ -4,6 +4,18 @@ Utility functions.
 """
 from __future__ import division, print_function, absolute_import
 
+
+def ddec(**kwargs):
+    """
+    A decorator that puts some named string substitutions into a docstring.
+
+    """
+    def dec(obj):
+        obj.__doc__ = obj.__doc__.format(**kwargs)
+        return obj
+    return dec
+
+
 def dict_distn(d):
     """
     
