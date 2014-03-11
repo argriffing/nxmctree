@@ -15,7 +15,7 @@ from collections import defaultdict
 import networkx as nx
 
 import nxmctree
-from nxmctree.docspam import ddec, common_params
+from nxmctree.docspam import ddec
 from nxmctree.util import dict_distn
 
 __all__ = [
@@ -25,7 +25,25 @@ __all__ = [
         ]
 
 
-@ddec(params=common_params)
+params = """\
+    T : directed networkx tree graph
+        Edge and node annotations are ignored.
+    edge_to_adjacency : dict
+        A map from directed edges of the tree graph
+        to networkx graphs representing state transition feasibility.
+    root : hashable
+        This is the root node.
+        Following networkx convention, this may be anything hashable.
+    root_prior_distn : dict
+        Prior state distribution at the root.
+    node_to_data_fset : dict
+        Map from node to set of feasible states.
+        The feasibility could be interpreted as due to restrictions
+        caused by observed data.
+"""
+
+
+@ddec(params=params)
 def get_lhood(T, edge_to_P, root,
         root_prior_distn, node_to_data_fset):
     """
@@ -47,7 +65,7 @@ def get_lhood(T, edge_to_P, root,
     return sum(root_lhoods.values()) if root_lhoods else None
 
 
-@ddec(params=common_params)
+@ddec(params=params)
 def get_node_to_distn(T, edge_to_P, root,
         root_prior_distn, node_to_data_fset):
     """
@@ -65,7 +83,7 @@ def get_node_to_distn(T, edge_to_P, root,
     return v_to_posterior_distn
 
 
-@ddec(params=common_params)
+@ddec(params=params)
 def get_edge_to_nxdistn(T, edge_to_P, root,
         root_prior_distn, node_to_data_fset):
     """
@@ -83,7 +101,7 @@ def get_edge_to_nxdistn(T, edge_to_P, root,
     return edge_to_J
 
 
-@ddec(params=common_params)
+@ddec(params=params)
 def _get_root_lhoods(T, edge_to_P, root,
         root_prior_distn, node_to_data_fset):
     """
@@ -101,7 +119,7 @@ def _get_root_lhoods(T, edge_to_P, root,
     return v_to_subtree_partial_likelihoods[root]
 
 
-@ddec(params=common_params)
+@ddec(params=params)
 def _backward(T, edge_to_P, root,
         root_prior_distn, node_to_data_fset):
     """
