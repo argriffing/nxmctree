@@ -12,7 +12,6 @@ from numpy.testing import (run_module_suite, TestCase,
 
 import nxmctree
 from nxmctree.dynamic_fset_lhood import get_lhood
-from nxmctree.puzzles import gen_random_systems
 
 
 def test_dynamic_history_likelihood():

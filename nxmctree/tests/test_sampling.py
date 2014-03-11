@@ -14,7 +14,7 @@ from numpy.testing import (run_module_suite, assert_equal, assert_allclose,
 import nxmctree
 from nxmctree.sampling import (
         dict_random_choice, sample_history, sample_histories)
-from nxmctree.puzzles import gen_random_systems
+from nxmctree.puzzles import gen_random_fset_systems
 from nxmctree.history import get_history_lhood
 from nxmctree.dynamic_fset_feas import get_feas
 from nxmctree.dynamic_fset_lhood import get_lhood, get_edge_to_nxdistn
@@ -155,7 +155,7 @@ def test_sampling_fast():
 def test_puzzles():
     # Check for raised exceptions but do not check the answers.
     pzero = 0.2
-    for args in gen_random_systems(pzero):
+    for args in gen_random_fset_systems(pzero):
         T, e_to_P, r, r_prior, feas_nodes = args
         node_to_state = sample_history(*args)
         feas = get_feas(*args)

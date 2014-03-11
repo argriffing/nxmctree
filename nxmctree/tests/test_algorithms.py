@@ -13,7 +13,8 @@ from numpy.testing import (
 import nxmctree
 from nxmctree.nputil import (
         assert_dict_distn_allclose, assert_nx_distn_allclose)
-from nxmctree.puzzles import gen_random_systems, gen_random_infeasible_systems
+from nxmctree.puzzles import (
+        gen_random_fset_systems, gen_random_infeasible_fset_systems)
 from nxmctree.brute_fset_feas import *
 from nxmctree.brute_fset_lhood import *
 from nxmctree.dynamic_fset_feas import *
@@ -30,7 +31,7 @@ suites = (
 
 def test_infeasible_systems():
     # Test systems that are structurally infeasible.
-    for args in gen_random_infeasible_systems():
+    for args in gen_random_infeasible_fset_systems():
         T, e_to_P, r, r_prior, node_feas = args
 
         for f_overall, f_node, f_edge in suites:
@@ -56,7 +57,7 @@ def test_infeasible_systems():
 def test_complete_density():
     # Test the special case of a completely dense system.
     pzero = 0
-    for args in gen_random_systems(pzero):
+    for args in gen_random_fset_systems(pzero):
         T, e_to_P, r, r_prior, node_feas = args
 
         for feas_suite, lhood_suite in (
@@ -95,7 +96,7 @@ def test_complete_density():
 def test_dynamic_vs_brute():
     # Compare dynamic programming vs. summing over all histories.
     pzero = 0.2
-    for args in gen_random_systems(pzero):
+    for args in gen_random_fset_systems(pzero):
         T, e_to_P, r, r_prior, node_feas = args
 
         # likelihood

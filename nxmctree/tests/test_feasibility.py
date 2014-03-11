@@ -12,7 +12,6 @@ from numpy.testing import (run_module_suite, TestCase,
 
 import nxmctree
 from nxmctree.dynamic_fset_feas import get_feas, get_node_to_fset
-from nxmctree.puzzles import gen_random_systems
 
 
 class Test_ShortPathFeasibility(TestCase):
