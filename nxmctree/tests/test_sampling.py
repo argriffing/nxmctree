@@ -16,8 +16,8 @@ from nxmctree.sampling import (
         dict_random_choice, sample_history, sample_histories)
 from nxmctree.puzzles import gen_random_systems
 from nxmctree.history import get_history_lhood
-from nxmctree.dynamic_feasibility import get_feas
-from nxmctree.dynamic_likelihood import get_lhood, get_edge_to_nxdistn
+from nxmctree.dynamic_fset_feas import get_feas
+from nxmctree.dynamic_fset_lhood import get_lhood, get_edge_to_nxdistn
 
 
 def _sampling_helper(sqrt_nsamples):

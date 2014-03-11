@@ -14,18 +14,18 @@ import nxmctree
 from nxmctree.nputil import (
         assert_dict_distn_allclose, assert_nx_distn_allclose)
 from nxmctree.puzzles import gen_random_systems, gen_random_infeasible_systems
-from nxmctree.brute_feasibility import *
-from nxmctree.brute_likelihood import *
-from nxmctree.dynamic_feasibility import *
-from nxmctree.dynamic_likelihood import *
+from nxmctree.brute_fset_feas import *
+from nxmctree.brute_fset_lhood import *
+from nxmctree.dynamic_fset_feas import *
+from nxmctree.dynamic_fset_lhood import *
 
 
 # function suites for testing
 suites = (
-        nxmctree.brute_feasibility.fnsuite,
-        nxmctree.brute_likelihood.fnsuite,
-        nxmctree.dynamic_feasibility.fnsuite,
-        nxmctree.dynamic_feasibility.fnsuite)
+        nxmctree.brute_fset_feas.fnsuite,
+        nxmctree.brute_fset_lhood.fnsuite,
+        nxmctree.dynamic_fset_feas.fnsuite,
+        nxmctree.dynamic_fset_lhood.fnsuite)
 
 
 def test_infeasible_systems():
@@ -61,11 +61,11 @@ def test_complete_density():
 
         for feas_suite, lhood_suite in (
                 (
-                    nxmctree.dynamic_feasibility.fnsuite,
-                    nxmctree.dynamic_likelihood.fnsuite),
+                    nxmctree.dynamic_fset_feas.fnsuite,
+                    nxmctree.dynamic_fset_lhood.fnsuite),
                 (
-                    nxmctree.brute_feasibility.fnsuite,
-                    nxmctree.brute_likelihood.fnsuite),
+                    nxmctree.brute_fset_feas.fnsuite,
+                    nxmctree.brute_fset_lhood.fnsuite),
                 ):
             f_feas, f_node_to_fset, f_edge_to_nxfset = feas_suite
             f_lhood, f_node_to_distn, f_edge_to_nxdistn = lhood_suite

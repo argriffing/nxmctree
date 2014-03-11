@@ -14,7 +14,7 @@ from __future__ import division, print_function, absolute_import
 
 import networkx as nx
 
-from nxmctree.docspam import ddec, common_params
+from nxmctree.docspam import ddec
 
 __all__ = [
         'get_feas',

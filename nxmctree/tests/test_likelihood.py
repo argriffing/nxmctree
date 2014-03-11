@@ -11,7 +11,7 @@ from numpy.testing import (run_module_suite, TestCase,
         decorators, assert_, assert_equal, assert_allclose)
 
 import nxmctree
-from nxmctree.dynamic_likelihood import get_lhood
+from nxmctree.dynamic_fset_lhood import get_lhood
 from nxmctree.puzzles import gen_random_systems
 
 
