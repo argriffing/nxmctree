@@ -8,7 +8,7 @@ This module is only for testing.
 import networkx as nx
 
 import nxmctree
-from nxmctree.docspam import ddec, common_params
+from nxmctree.docspam import ddec, common_lmap_params
 from nxmctree.history import get_history_feas, gen_plausible_histories
 
 __all__ = [

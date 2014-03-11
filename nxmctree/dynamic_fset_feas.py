@@ -23,7 +23,27 @@ __all__ = [
         ]
 
 
-@ddec(params=common_params)
+params = """\
+    T : directed networkx tree graph
+        Edge and node annotations are ignored.
+    edge_to_adjacency : dict
+        A map from directed edges of the tree graph
+        to networkx graphs representing state transition feasibility.
+    root : hashable
+        This is the root node.
+        Following networkx convention, this may be anything hashable.
+    root_prior_fset : set
+        The set of feasible prior root states.
+        This may be interpreted as the support of the prior state
+        distribution at the root.
+    node_to_data_fset : dict
+        Map from node to set of feasible states.
+        The feasibility could be interpreted as due to restrictions
+        caused by observed data.
+"""
+
+
+@ddec(params=params)
 def get_feas(T, edge_to_adjacency, root, root_prior_fset, node_to_data_fset):
     """
     Get the feasibility of this combination of parameters.
@@ -44,7 +64,7 @@ def get_feas(T, edge_to_adjacency, root, root_prior_fset, node_to_data_fset):
     return True if root_fset else False
 
 
-@ddec(params=common_params)
+@ddec(params=params)
 def get_node_to_fset(T, edge_to_adjacency, root,
         root_prior_fset, node_to_data_fset):
     """
@@ -73,7 +93,7 @@ def get_node_to_fset(T, edge_to_adjacency, root,
     return v_to_posterior_fset
 
 
-@ddec(params=common_params)
+@ddec(params=params)
 def get_edge_to_nxfset(T, edge_to_adjacency, root,
         root_prior_fset, node_to_data_fset):
     """
@@ -108,6 +128,7 @@ def get_edge_to_nxfset(T, edge_to_adjacency, root,
     return edge_to_nxfset
 
 
+@ddec(params=params)
 def _get_root_fset(T, edge_to_adjacency, root,
         root_prior_fset, node_to_data_fset):
     """
@@ -123,7 +144,7 @@ def _get_root_fset(T, edge_to_adjacency, root,
     return v_to_subtree_fset[root]
 
 
-@ddec(params=common_params)
+@ddec(params=params)
 def _backward(T, edge_to_adjacency, root,
         root_prior_fset, node_to_data_fset):
     """

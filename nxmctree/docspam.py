@@ -12,7 +12,7 @@ def ddec(**kwargs):
     return dec
 
 
-common_params = """\
+params = """\
     T : directed networkx tree graph
         Edge and node annotations are ignored.
     edge_to_adjacency : dict
@@ -30,3 +30,24 @@ common_params = """\
         The feasibility could be interpreted as due to restrictions
         caused by observed data.
 """
+
+
+common_lmap_params = """\
+    T : directed networkx tree graph
+        Edge and node annotations are ignored.
+    edge_to_adjacency : dict
+        A map from directed edges of the tree graph
+        to networkx graphs representing state transition feasibility.
+    root : hashable
+        This is the root node.
+        Following networkx convention, this may be anything hashable.
+    root_prior_lmap : set
+        The set of feasible prior root states.
+        This may be interpreted as the support of the prior state
+        distribution at the root.
+    node_to_data_lmap : dict
+        Map from node to set of feasible states.
+        The feasibility could be interpreted as due to restrictions
+        caused by observed data.
+"""
+
