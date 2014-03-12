@@ -8,10 +8,9 @@ from __future__ import division, print_function, absolute_import
 
 import networkx as nx
 from numpy.testing import (run_module_suite, TestCase,
-        decorators, assert_, assert_equal, assert_allclose)
+        decorators, assert_, assert_allclose)
 
 import nxmctree
-from nxmctree.util import generalize_node_to_data_fset
 from nxmctree import dynamic_fset_lhood, brute_fset_lhood
 from nxmctree import dynamic_lmap_lhood, brute_lmap_lhood
 
@@ -75,20 +74,20 @@ def test_dynamic_history_likelihood():
     # Compare to brute fset likelihood.
     actual_likelihood = brute_fset_lhood.get_lhood_brute(T, edge_to_P, root,
             root_prior_distn, node_to_data_fset)
-    assert_equal(actual_likelihood, desired_fset_likelihood)
+    assert_allclose(actual_likelihood, desired_fset_likelihood)
 
     # Compare to dynamic fset likelihood.
     actual_likelihood = dynamic_fset_lhood.get_lhood(T, edge_to_P, root,
             root_prior_distn, node_to_data_fset)
-    assert_equal(actual_likelihood, desired_fset_likelihood)
+    assert_allclose(actual_likelihood, desired_fset_likelihood)
 
     # Compare to brute lmap likelihood.
     actual_likelihood = brute_lmap_lhood.get_lhood_brute(T, edge_to_P, root,
             root_prior_distn, node_to_data_lmap)
-    assert_equal(actual_likelihood, desired_lmap_likelihood)
+    assert_allclose(actual_likelihood, desired_lmap_likelihood)
 
     # Compare to dynamic lmap likelihood.
     actual_likelihood = dynamic_lmap_lhood.get_lhood(T, edge_to_P, root,
             root_prior_distn, node_to_data_lmap)
-    assert_equal(actual_likelihood, desired_lmap_likelihood)
+    assert_allclose(actual_likelihood, desired_lmap_likelihood)
 

@@ -9,7 +9,7 @@ import random
 import networkx as nx
 
 import nxmctree
-from nxmctree.dynamic_fset_lhood import _backward
+from nxmctree.dynamic_lmap_lhood import _backward
 
 __all__ = [
         'sample_history',
@@ -27,28 +27,28 @@ def dict_random_choice(d):
 
 
 def sample_history(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set):
+        root_prior_distn, node_to_data_lmap):
     """
     Jointly sample states on a tree.
     This is called a history.
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set)
+        root_prior_distn, node_to_data_lmap)
     node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
             v_to_subtree_partial_likelihoods)
     return node_to_state
 
 
 def sample_histories(T, edge_to_P, root,
-        root_prior_distn, node_to_data_feasible_set, nhistories):
+        root_prior_distn, node_to_data_lmap, nhistories):
     """
     Sample multiple history.
     Each history is a joint sample of states on the tree.
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_feasible_set)
+            root_prior_distn, node_to_data_lmap)
     for i in range(nhistories):
         node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
                 v_to_subtree_partial_likelihoods)
@@ -61,7 +61,6 @@ def _sample_states_preprocessed(T, edge_to_P, root,
     Jointly sample states on a tree.
 
     This variant requires subtree partial likelihoods.
-    NOTE: this is like raoteh/sampler/_sample_mc0.py
 
     """
     root_partial_likelihoods = v_to_subtree_partial_likelihoods[root]

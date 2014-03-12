@@ -43,8 +43,7 @@ params = """\
 
 
 @ddec(params=params)
-def get_lhood(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
+def get_lhood(T, edge_to_P, root, root_prior_distn, node_to_data_fset):
     """
     Get the likelihood of this combination of parameters.
 
@@ -119,8 +118,7 @@ def _get_root_lhoods(T, edge_to_P, root,
 
 
 @ddec(params=params)
-def _backward(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
+def _backward(T, edge_to_P, root, root_prior_distn, node_to_data_fset):
     """
     Determine the subtree feasible state set of each node.
 

@@ -39,12 +39,9 @@ params = """\
         For each node, a map from state to observation likelihood.
 """
 
-#TODO only copypasted not yet modified
-
 
 @ddec(params=params)
-def get_lhood(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
+def get_lhood(T, edge_to_P, root, root_prior_distn, node_to_data_lmap):
     """
     Get the likelihood of this combination of parameters.
 
@@ -60,13 +57,13 @@ def get_lhood(T, edge_to_P, root,
 
     """
     root_lhoods = _get_root_lhoods(T, edge_to_P, root,
-            root_prior_distn, node_to_data_fset)
+            root_prior_distn, node_to_data_lmap)
     return sum(root_lhoods.values()) if root_lhoods else None
 
 
 @ddec(params=params)
 def get_node_to_distn(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
+        root_prior_distn, node_to_data_lmap):
     """
     Get the map from node to state distribution.
 
@@ -76,7 +73,7 @@ def get_node_to_distn(T, edge_to_P, root,
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_fset)
+            root_prior_distn, node_to_data_lmap)
     v_to_posterior_distn = _forward(T, edge_to_P, root,
             v_to_subtree_partial_likelihoods)
     return v_to_posterior_distn
@@ -84,7 +81,7 @@ def get_node_to_distn(T, edge_to_P, root,
 
 @ddec(params=params)
 def get_edge_to_nxdistn(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
+        root_prior_distn, node_to_data_lmap):
     """
     Get the map from edge to joint state distribution at endpoint nodes.
 
@@ -94,7 +91,7 @@ def get_edge_to_nxdistn(T, edge_to_P, root,
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_fset)
+            root_prior_distn, node_to_data_lmap)
     edge_to_J = _forward_edges(T, edge_to_P, root,
             v_to_subtree_partial_likelihoods)
     return edge_to_J
@@ -102,7 +99,7 @@ def get_edge_to_nxdistn(T, edge_to_P, root,
 
 @ddec(params=params)
 def _get_root_lhoods(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
+        root_prior_distn, node_to_data_lmap):
     """
     Get the posterior likelihoods at the root, conditional on root state.
 
@@ -114,13 +111,12 @@ def _get_root_lhoods(T, edge_to_P, root,
 
     """
     v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_fset)
+            root_prior_distn, node_to_data_lmap)
     return v_to_subtree_partial_likelihoods[root]
 
 
 @ddec(params=params)
-def _backward(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
+def _backward(T, edge_to_P, root, root_prior_distn, node_to_data_lmap):
     """
     Determine the subtree feasible state set of each node.
 
@@ -137,20 +133,20 @@ def _backward(T, edge_to_P, root,
     else:
         postorder_nodes = [root]
     for v in postorder_nodes:
-        fset_data = node_to_data_fset[v]
+        lmap_data = node_to_data_lmap[v]
         if T and T[v]:
             cs = T[v]
         else:
             cs = set()
         if cs:
             partial_likelihoods = {}
-            for s in fset_data:
+            for s, lk_obs in lmap_data.items():
                 prob =  _get_partial_likelihood(edge_to_P,
                         v_to_subtree_partial_likelihoods, v, cs, s)
                 if prob is not None:
-                    partial_likelihoods[s] = prob
+                    partial_likelihoods[s] = prob * lk_obs
         else:
-            partial_likelihoods = dict((s, 1) for s in fset_data)
+            partial_likelihoods = lmap_data
         if v == root:
             pnext = {}
             for s in set(partial_likelihoods) & set(root_prior_distn):

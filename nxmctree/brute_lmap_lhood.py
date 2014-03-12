@@ -84,7 +84,7 @@ def get_node_to_distn_brute(T, edge_to_P, root,
                 root_prior_distn, node_to_state)
         if lk is not None:
             probs = [node_to_data_lmap[v][s] for v, s in node_to_state.items()]
-            lk *= np.prod(probs)
+            lk *= prod(probs)
             for node, state in node_to_state.items():
                 v_to_d[node][state] += lk
     v_to_posterior_distn = dict((v, dict_distn(d)) for v, d in v_to_d.items())
@@ -107,7 +107,7 @@ def get_edge_to_nxdistn_brute(T, edge_to_P, root,
                 root_prior_distn, node_to_state)
         if lk is not None:
             probs = [node_to_data_lmap[v][s] for v, s in node_to_state.items()]
-            lk *= np.prod(probs)
+            lk *= prod(probs)
             for tree_edge in T.edges():
                 va, vb = tree_edge
                 sa = node_to_state[va]

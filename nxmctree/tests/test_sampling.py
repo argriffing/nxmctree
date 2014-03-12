@@ -1,6 +1,8 @@
 """
 Test joint state sampling on Markov chains on NetworkX tree graphs.
+
 """
+from __future__ import division, print_function, absolute_import
 
 from collections import defaultdict
 import math
@@ -14,10 +16,10 @@ from numpy.testing import (run_module_suite, assert_equal, assert_allclose,
 import nxmctree
 from nxmctree.sampling import (
         dict_random_choice, sample_history, sample_histories)
-from nxmctree.puzzles import gen_random_fset_systems
+from nxmctree.puzzles import gen_random_lmap_systems
 from nxmctree.history import get_history_lhood
 from nxmctree.dynamic_fset_feas import get_feas
-from nxmctree.dynamic_fset_lhood import get_lhood, get_edge_to_nxdistn
+from nxmctree.dynamic_lmap_lhood import get_lhood, get_edge_to_nxdistn
 
 
 def _sampling_helper(sqrt_nsamples):
@@ -49,27 +51,28 @@ def _sampling_helper(sqrt_nsamples):
             }
 
     # Define data state restrictions at nodes.
-    node_to_data_feasible_set_traditional = {
-            0 : {'a', 'b', 'c'},
-            1 : {'a', 'b', 'c'},
-            2 : {'a'},
-            3 : {'b'},
-            4 : {'b'},
-            5 : {'c'},
+    # Use some arbitrary emission likelihoods.
+    node_to_data_lmap_traditional = {
+            0 : {'a' : 0.8, 'b' : 0.8, 'c' : 0.1},
+            1 : {'a' : 0.1, 'b' : 0.8, 'c' : 0.8},
+            2 : {'a' : 0.1},
+            3 : {'b' : 0.2},
+            4 : {'b' : 0.3},
+            5 : {'c' : 0.4},
             }
-    node_to_data_feasible_set_internal_constraint = {
-            0 : {'a', 'b'},
-            1 : {'b', 'c'},
-            2 : {'a'},
-            3 : {'b'},
-            4 : {'b'},
-            5 : {'c'},
+    node_to_data_lmap_internal_constraint = {
+            0 : {'a' : 0.8, 'b' : 0.8},
+            1 : {'b' : 0.3, 'c' : 0.4},
+            2 : {'a' : 0.1},
+            3 : {'b' : 0.2},
+            4 : {'b' : 0.3},
+            5 : {'c' : 0.4},
             }
 
     # Try a couple of state restrictions.
-    for node_to_data_feasible_set in (
-            node_to_data_feasible_set_traditional,
-            node_to_data_feasible_set_internal_constraint):
+    for node_to_data_lmap in (
+            node_to_data_lmap_traditional,
+            node_to_data_lmap_internal_constraint):
 
         # Try a couple of roots.
         for root in (0, 2):
@@ -80,15 +83,14 @@ def _sampling_helper(sqrt_nsamples):
 
             # Compute the exact joint distributions at edges.
             edge_to_J_exact = get_edge_to_nxdistn(
-                    T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set)
+                    T, edge_to_P, root, root_prior_distn, node_to_data_lmap)
 
             # Sample a bunch of joint states.
             nsamples = sqrt_nsamples * sqrt_nsamples
             edge_to_J_approx = dict(
                     (edge, nx.DiGraph()) for edge in T.edges())
             for node_to_state in sample_histories(T, edge_to_P, root,
-                    root_prior_distn, node_to_data_feasible_set, nsamples):
+                    root_prior_distn, node_to_data_lmap, nsamples):
                 for tree_edge in T.edges():
                     va, vb = tree_edge
                     sa = node_to_state[va]
@@ -155,8 +157,8 @@ def test_sampling_fast():
 def test_puzzles():
     # Check for raised exceptions but do not check the answers.
     pzero = 0.2
-    for args in gen_random_fset_systems(pzero):
-        T, e_to_P, r, r_prior, feas_nodes = args
+    for args in gen_random_lmap_systems(pzero):
+        T, e_to_P, r, r_prior, node_data = args
         node_to_state = sample_history(*args)
         feas = get_feas(*args)
         if node_to_state:
@@ -165,8 +167,8 @@ def test_puzzles():
                         'for an infeasible problem')
             else:
                 # sampled a node to state map for a feasible problem
-                constraint = dict((n, {s}) for n, s in node_to_state.items())
-                lk = get_lhood(T, e_to_P, r, r_prior, constraint)
+                data = dict((v, {s : 1}) for v, s in node_to_state.items())
+                lk = get_lhood(T, e_to_P, r, r_prior, data)
                 hlk = get_history_lhood(T, e_to_P, r, r_prior, node_to_state)
                 assert_allclose(lk, hlk)
         else:
