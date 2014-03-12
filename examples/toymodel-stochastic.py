@@ -35,10 +35,14 @@ import networkx as nx
 import numpy as np
 import scipy.linalg
 
-from nxmctree import get_lhood, get_edge_to_nxdistn, sample_history
+import nxmctree
+from nxmctree.sampling import sample_history_fset
 
 from util import get_total_rates
 from trajectory import Trajectory, Event
+
+#TODO adjust the poisson rate correctly for each segment
+# using the background context
 
 #TODO this whole script is currently broken
 # because the input format for the nxmctree conditional history sampling
@@ -309,7 +313,7 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
 
     # Use nxmctree to sample a history on the meta edge tree.
     node_to_data_fset[meta_edge_root] = fg_track.data[root]
-    meta_edge_to_sampled_state = sample_history(
+    meta_edge_to_sampled_state = sample_history_fset(
             meta_edge_tree, edge_to_P, meta_edge_root,
             fg_track.prior_root_distn, node_to_data_fset)
     #print('size of sampled history:')

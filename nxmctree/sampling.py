@@ -8,8 +8,7 @@ import random
 
 import networkx as nx
 
-import nxmctree
-from nxmctree.dynamic_lmap_lhood import _backward
+from nxmctree import dynamic_fset_lhood, dynamic_lmap_lhood
 
 __all__ = [
         'sample_history',
@@ -26,6 +25,35 @@ def dict_random_choice(d):
             return i
 
 
+def sample_history_fset(T, edge_to_P, root,
+        root_prior_distn, node_to_data_fset):
+    """
+    Jointly sample states on a tree.
+    This is called a history.
+
+    """
+    v_to_subtree_partial_likelihoods = dynamic_fset_lhood._backward(
+            T, edge_to_P, root, root_prior_distn, node_to_data_fset)
+    node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
+            v_to_subtree_partial_likelihoods)
+    return node_to_state
+
+
+def sample_histories_fset(T, edge_to_P, root,
+        root_prior_distn, node_to_data_fset, nhistories):
+    """
+    Sample multiple history.
+    Each history is a joint sample of states on the tree.
+
+    """
+    v_to_subtree_partial_likelihoods = dynamic_fset_lhood._backward(
+            T, edge_to_P, root, root_prior_distn, node_to_data_fset)
+    for i in range(nhistories):
+        node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
+                v_to_subtree_partial_likelihoods)
+        yield node_to_state
+
+
 def sample_history(T, edge_to_P, root,
         root_prior_distn, node_to_data_lmap):
     """
@@ -33,8 +61,8 @@ def sample_history(T, edge_to_P, root,
     This is called a history.
 
     """
-    v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-        root_prior_distn, node_to_data_lmap)
+    v_to_subtree_partial_likelihoods = dynamic_lmap_lhood._backward(
+            T, edge_to_P, root, root_prior_distn, node_to_data_lmap)
     node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
             v_to_subtree_partial_likelihoods)
     return node_to_state
@@ -47,8 +75,8 @@ def sample_histories(T, edge_to_P, root,
     Each history is a joint sample of states on the tree.
 
     """
-    v_to_subtree_partial_likelihoods = _backward(T, edge_to_P, root,
-            root_prior_distn, node_to_data_lmap)
+    v_to_subtree_partial_likelihoods = dynamic_lmap_lhood._backward(
+            T, edge_to_P, root, root_prior_distn, node_to_data_lmap)
     for i in range(nhistories):
         node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
                 v_to_subtree_partial_likelihoods)
