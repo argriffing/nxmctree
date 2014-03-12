@@ -38,6 +38,19 @@ def sample_transition_graph(states, pzero):
     return P
 
 
+def sample_fset(states, pzero):
+    """
+    Parameters
+    ----------
+    states : set
+        set of states
+    pzero : float
+        probability that any given state is infeasible
+
+    """
+    return set(s for s in states if random.random() > pzero)
+
+
 def sample_dict_distn(states, pzero):
     """
     Return a random state distribution as a dict.
@@ -51,9 +64,21 @@ def sample_dict_distn(states, pzero):
         probability that any given state has nonzero probability
 
     """
-    fset = set(s for s in states if random.random() > pzero)
-    d = dict((s, random.expovariate(1)) for s in fset)
+    d = dict((s, random.expovariate(1)) for s in sample_fset(states, pzero))
     return dict_distn(d)
+
+
+def sample_lmap(states, pzero):
+    """
+    Parameters
+    ----------
+    states : set
+        set of states
+    pzero : float
+        probability that any given state has nonzero probability
+
+    """
+    return sample_dict_distn(states, pzero)
 
 
 def sample_data_fsets(nodes, states, pzero):
@@ -70,32 +95,38 @@ def sample_data_fsets(nodes, states, pzero):
         probability that any given state is infeasible
 
     """
-    d = {}
-    for v in nodes:
-        fset = set(s for s in states if random.random() > pzero)
-        d[v] = fset
-    return d
+    return dict((v, sample_fset(states, pzero)) for v in nodes)
 
 
-def sample_single_node_fset_system(pzero):
+def sample_data_lmaps(nodes, states, pzero):
     """
-    Sample a system with a single node.
+    Return a map from node to feasible state set.
+
+    Parameters
+    ----------
+    nodes : set
+        nodes
+    states : set
+        set of states
+    pzero : float
+        probability that any given state is infeasible
+
     """
+    return dict((v, sample_lmap(states, pzero)) for v in nodes)
+
+
+def _sample_single_node_system(pzero, fn_sample_data):
     root = 42
     nodes = {root}
     states = set(['a', 'b', 'c'])
     T = nx.DiGraph()
     root_prior_distn = sample_dict_distn(states, pzero)
     edge_to_P = {}
-    node_to_data_fset = sample_data_fsets(nodes, states, pzero)
-    return (T, edge_to_P, root, root_prior_distn, node_to_data_fset)
+    node_to_data = fn_sample_data(nodes, states, pzero)
+    return (T, edge_to_P, root, root_prior_distn, node_to_data)
 
 
-def sample_four_node_fset_system(pzero_transition, pzero_other):
-    """
-    Sample node states for a 4-node tree with a root and three leaves.
-
-    """
+def _sample_four_node_system(pzero_transition, pzero_other, fn_sample_data):
     nnodes = 4
     root = random.randrange(nnodes)
     nodes = set(range(nnodes))
@@ -110,34 +141,61 @@ def sample_four_node_fset_system(pzero_transition, pzero_other):
     for edge in T.edges():
         P = sample_transition_graph(states, pzero_transition)
         edge_to_P[edge] = P
-    node_to_data_fset = sample_data_fsets(nodes, states, pzero_other)
-    return (T, edge_to_P, root, root_prior_distn, node_to_data_fset)
+    node_to_data = fn_sample_data(nodes, states, pzero_other)
+    return (T, edge_to_P, root, root_prior_distn, node_to_data)
+
+
+def _gen_random_systems(pzero, fn_sample_data, nsystems):
+    for i in range(nsystems):
+        if random.choice((0, 1)):
+            yield _sample_single_node_system(pzero, fn_sample_data)
+        else:
+            yield _sample_four_node_system(pzero, pzero, fn_sample_data)
+
+
+def _gen_random_infeasible_systems(fn_sample_data, nsystems):
+    pzero = 1
+    for i in range(nsystems):
+        k = random.randrange(3)
+        if k == 0:
+            yield _sample_single_node_system(pzero, fn_sample_data)
+        elif k == 1:
+            yield _sample_four_node_system(pzero, pzero, fn_sample_data)
+        else:
+            pzero_transition = 1
+            pzero_other = 0.2
+            yield _sample_four_node_system(
+                    pzero_transition, pzero_other, fn_sample_data)
 
 
 def gen_random_fset_systems(pzero, nsystems=40):
     """
     Sample whole systems for testing likelihood.
     The pzero parameter indicates sparsity.
-    Yield (T, edge_to_P, root, root_prior_distn, node_to_data_feasible_set).
+    Yield (T, edge_to_P, root, root_prior_distn, node_to_data_fset).
 
     """
-    for i in range(nsystems):
-        if random.choice((0, 1)):
-            yield sample_single_node_fset_system(pzero)
-        else:
-            yield sample_four_node_fset_system(pzero, pzero)
+    for x in _gen_random_systems(pzero, sample_data_fsets, nsystems):
+        yield x
 
 
 def gen_random_infeasible_fset_systems(nsystems=60):
-    pzero = 1
-    for i in range(nsystems):
-        k = random.randrange(3)
-        if k == 0:
-            yield sample_single_node_fset_system(pzero)
-        elif k == 1:
-            yield sample_four_node_fset_system(pzero, pzero)
-        else:
-            pzero_transition = 1
-            pzero_other = 0.2
-            yield sample_four_node_fset_system(pzero_transition, pzero_other)
+    for x in _gen_random_infeasible_systems(sample_data_fsets, nsystems):
+        yield x
+
+
+def gen_random_lmap_systems(pzero, nsystems=40):
+    """
+    Sample whole systems for testing likelihood.
+    The pzero parameter indicates sparsity.
+    Yield (T, edge_to_P, root, root_prior_distn, node_to_data_lmap).
+
+    """
+    for x in _gen_random_systems(pzero, sample_data_lmaps, nsystems):
+        yield x
+
+
+def gen_random_infeasible_lmap_systems(nsystems=60):
+    for x in _gen_random_infeasible_systems(sample_data_lmaps, nsystems):
+        yield x
 
