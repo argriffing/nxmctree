@@ -10,7 +10,7 @@ import networkx as nx
 import numpy as np
 import scipy.linalg
 
-from nxmctree import get_lhood, get_edge_to_nxdistn
+from nxmctree import dynamic_fset_lhood
 
 
 def get_Q_primary():
@@ -264,14 +264,15 @@ def run(primary_to_tol, compound_states, node_to_data_fset):
         edge_to_P_nx[edge] = P_nx
 
     # Compute the likelihood
-    lhood = get_lhood(T, edge_to_P_nx, root, compound_distn, node_to_data_fset)
+    lhood = dynamic_fset_lhood.get_lhood(
+            T, edge_to_P_nx, root, compound_distn, node_to_data_fset)
     print('likelihood:')
     print(lhood)
     print()
 
     # Compute the map from edge to posterior joint state distribution.
     # Convert the nx transition probability matrices back into dense ndarrays.
-    edge_to_nxdistn = get_edge_to_nxdistn(
+    edge_to_nxdistn = dynamic_fset_lhood.get_edge_to_nxdistn(
             T, edge_to_P_nx, root, compound_distn, node_to_data_fset)
     edge_to_J = {}
     for edge, J_nx in edge_to_nxdistn.items():

@@ -40,6 +40,13 @@ from nxmctree import get_lhood, get_edge_to_nxdistn, sample_history
 from util import get_total_rates
 from trajectory import Trajectory, Event
 
+#TODO this whole script is currently broken
+# because the input format for the nxmctree conditional history sampling
+# has been changed.
+# Well, that and also it never gave samples from the correct distribution,
+# possibly because the conditional sampling needs to be more subtle
+# than conditioning on allowed vs. not allowed histories.
+
 #TODO use 'segment' vs. 'edge' jargon
 
 
