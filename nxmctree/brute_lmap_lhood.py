@@ -11,7 +11,7 @@ from collections import defaultdict
 import networkx as nx
 
 import nxmctree
-from nxmctree.util import ddec, dict_distn
+from nxmctree.util import prod, ddec, dict_distn
 from nxmctree.history import (
         get_history_feas, get_history_lhood, gen_plausible_histories)
 
@@ -56,7 +56,7 @@ def get_lhood_brute(T, edge_to_P, root, root_prior_distn, node_to_data_lmap):
                 root_prior_distn, node_to_state)
         if lk is not None:
             probs = [node_to_data_lmap[v][s] for v, s in node_to_state.items()]
-            lk *= np.prod(probs)
+            lk *= prod(probs)
             if lk_total is None:
                 lk_total = lk
             else:

@@ -11,7 +11,9 @@ from numpy.testing import (run_module_suite, TestCase,
         decorators, assert_, assert_equal, assert_allclose)
 
 import nxmctree
-from nxmctree.dynamic_fset_lhood import get_lhood
+from nxmctree.util import generalize_node_to_data_fset
+from nxmctree import dynamic_fset_lhood, brute_fset_lhood
+from nxmctree import dynamic_lmap_lhood, brute_lmap_lhood
 
 
 def test_dynamic_history_likelihood():
@@ -27,11 +29,19 @@ def test_dynamic_history_likelihood():
     T = nx.dfs_tree(G, root)
 
     # The data completely restricts the set of states.
-    node_to_data_feasible_set = {
+    node_to_data_fset = {
             0 : {'a'},
             1 : {'a'},
             2 : {'a'},
             3 : {'a'},
+            }
+
+    # The data completely restricts the set of states and includes likelihood.
+    node_to_data_lmap = {
+            0 : {'a' : 0.1},
+            1 : {'a' : 0.2},
+            2 : {'a' : 0.3},
+            3 : {'a' : 0.4},
             }
 
     # The root prior distribution is informative.
@@ -59,11 +69,26 @@ def test_dynamic_history_likelihood():
     edge_to_P = dict((edge, P) for edge in T.edges())
 
     # The likelihood is simple in this case.
-    desired_likelihood = 0.5 ** 4
+    desired_fset_likelihood = (0.5 ** 4)
+    desired_lmap_likelihood = (0.5 ** 4) * (0.1 * 0.2 * 0.3 * 0.4)
 
-    # Compute the likelhood.
-    actual_likelihood = get_lhood(T, edge_to_P, root,
-            root_prior_distn, node_to_data_feasible_set)
+    # Compare to brute fset likelihood.
+    actual_likelihood = brute_fset_lhood.get_lhood_brute(T, edge_to_P, root,
+            root_prior_distn, node_to_data_fset)
+    assert_equal(actual_likelihood, desired_fset_likelihood)
 
-    # Check that the likelihood is correct.
-    assert_equal(actual_likelihood, desired_likelihood)
+    # Compare to dynamic fset likelihood.
+    actual_likelihood = dynamic_fset_lhood.get_lhood(T, edge_to_P, root,
+            root_prior_distn, node_to_data_fset)
+    assert_equal(actual_likelihood, desired_fset_likelihood)
+
+    # Compare to brute lmap likelihood.
+    actual_likelihood = brute_lmap_lhood.get_lhood_brute(T, edge_to_P, root,
+            root_prior_distn, node_to_data_lmap)
+    assert_equal(actual_likelihood, desired_lmap_likelihood)
+
+    # Compare to dynamic lmap likelihood.
+    actual_likelihood = dynamic_lmap_lhood.get_lhood(T, edge_to_P, root,
+            root_prior_distn, node_to_data_lmap)
+    assert_equal(actual_likelihood, desired_lmap_likelihood)
+
