@@ -190,6 +190,94 @@ def get_edge_tree(T, root):
     return T_dual, dual_root
 
 
+def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
+    """
+    Sample poisson events on the tree.
+
+    The poisson rate is piecewise homogeneous on the tree
+    and depends not only on the foreground track,
+    but also on the background tracks.
+
+    """
+    # TODO under construction
+    P_nx = fg_track.P_nx
+    P_nx_identity = fg_track.P_nx_identity
+
+    for edge in T.edges():
+        va, vb = edge
+
+        events = []
+        events.extend(fg_track.events[edge])
+        for bg_track in bg_tracks:
+            events.extend(bg_track.events[edge])
+
+        # Construct the meta nodes corresponding to sorted events.
+        # No times should coincide.
+        seq = []
+        for ev in sorted(events):
+            seq.append((ev.tm, ev.track, ev.sa, ev.sb))
+        info_a = (0, None, None, None)
+        info_b = (edge_to_blen[edge], None, None, None)
+        seq = [info_a] + seq + [info_b]
+
+        # Initialize foreground state and background states
+        # at the beginning of the edge.
+        track_to_state = {}
+        for bg_track in bg_tracks:
+            track_to_state[bg_track.name] = bg_track.history[va]
+        track_to_state[fg_track.name] = fg_track.history[va]
+
+        # Iterate over segments of the edge.
+        # Within each segment the foreground and background tracks
+        # maintain the same state, and therefore the rate
+        # of new foreground poisson events is constant within the segment.
+        poisson_events = []
+        for segment in zip(seq[:-1], seq[1:]):
+            info_a, info_b = segment
+            tma, tracka, saa, sba = info_a
+            tmb, trackb, sab, sbb = info_b
+            blen = tmb - tma
+
+            # Keep the state of each track up to date.
+            if tracka is not None:
+                tm, track, sa, sb = info_a
+                name = tracka.name
+                if track_to_state[name] != sa:
+                    raise Exception('incompatible transition: '
+                            'current state on track %s is %s '
+                            'but encountered a transition event from '
+                            'state %s to state %s' % (
+                                name, track_to_state[name], sa, sb))
+                track_to_state[name] = sb
+
+            # Use the foreground and background track states
+            # to define the poisson rate that is homogeneous on this segment.
+            poisson_rate = 0
+            primary_sa = track_to_state[fg_track.name]
+            for primary_sb in fg_track.Q_nx[primary_sa]:
+                tolerated = True
+                for bg_track in bg_tracks:
+                    #print(track_to_state)
+                    bg_state = track_to_state[bg_track.name]
+                    fset = bg_to_fg_fset[bg_track.name][bg_state]
+                    if primary_sb not in fset:
+                        tolerated = False
+                if not tolerated:
+                    continue
+                poisson_rate += fg_track.Q_nx[primary_sa][primary_sb]['weight']
+
+            # Sample some poisson events on the segment.
+            nevents = np.random.poisson(poisson_rate * blen)
+            times = np.random.uniform(low=tma, high=tmb, size=nevents)
+            for tm in times:
+                ev = Event(track=fg_track, tm=tm)
+                poisson_events.append(ev)
+
+        # Add the poisson events into the list of foreground
+        # track events for this edge.
+        fg_track.events[edge].extend(poisson_events)
+
+
 def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
     """
     Sample the history (nodes to states) and the events (edge to event list).
@@ -397,7 +485,8 @@ def blinking_model_rao_teh(
     while True:
 
         # Update the primary track.
-        primary_track.add_poisson_events(T, edge_to_blen)
+        sample_poisson_events(T, edge_to_blen,
+                primary_track, tolerance_tracks, interaction_map['P'])
         primary_track.clear_state_labels()
         sample_transitions(T, root,
                 primary_track, tolerance_tracks, interaction_map['P'])
@@ -407,7 +496,9 @@ def blinking_model_rao_teh(
         for track in tolerance_tracks:
             name = track.name
             #print('adding poisson events for track', name)
-            track.add_poisson_events(T, edge_to_blen)
+            sample_poisson_events(T, edge_to_blen,
+                    track, [primary_track], interaction_map[name])
+            #track.add_poisson_events(T, edge_to_blen)
             #print('clearing state labels for track', name)
             track.clear_state_labels()
             #print('sampling state transitions for track', name)
