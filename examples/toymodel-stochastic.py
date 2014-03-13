@@ -562,26 +562,22 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
             uniformization_factor=uniformization_factor)
 
     # Define the rate matrix for a single blinking trajectory.
-    rate_on = 1.0
-    rate_off = 1.0
-    Q_blink = nx.DiGraph()
-    Q_blink.add_edge(False, True, weight=rate_on)
-    Q_blink.add_edge(True, False, weight=rate_off)
+    #TODO use blink on/off rates that are not hardcoded as 1.0
+    Q_blink = get_Q_blink()
 
     # Define the prior blink state distribution.
     #TODO do not use hardcoded uniform distribution
     blink_distn = {False : 0.5, True : 0.5}
 
     # Define tolerance process trajectories.
-    name_to_blink_track = dict()
+    tolerance_tracks = []
     for name in ('T0', 'T1', 'T2'):
         track = Trajectory(
                 name=name, data=track_to_node_to_data_fset[name],
                 history=dict(), events=dict(),
                 prior_root_distn=blink_distn, Q_nx=Q_blink,
                 uniformization_factor=uniformization_factor)
-        name_to_blink_track[name] = track
-    tolerance_tracks = list(name_to_blink_track.values())
+        tolerance_tracks.append(track)
 
     # sample correlated trajectories using rao teh on the blinking model
     expected_on = 0
