@@ -41,6 +41,13 @@ from nxmctree.sampling import sample_history_fset
 from util import get_total_rates
 from trajectory import Trajectory, Event
 
+RATE_ON = 1.0
+RATE_OFF = 1.0
+
+P_ON = RATE_ON / (RATE_ON + RATE_OFF)
+P_OFF = RATE_OFF / (RATE_ON + RATE_OFF)
+
+
 #TODO adjust the poisson rate correctly for each segment
 # using the background context
 
@@ -252,18 +259,18 @@ def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
 
             # Use the foreground and background track states
             # to define the poisson rate that is homogeneous on this segment.
-            poisson_rate = 0
+            rate = 0
             fg_sa = track_to_state[fg_track.name]
             for fg_sb in fg_track.Q_nx[fg_sa]:
                 tolerated = True
                 for bg_track in bg_tracks:
-                    #print(track_to_state)
                     bg_state = track_to_state[bg_track.name]
                     fset = bg_to_fg_fset[bg_track.name][bg_state]
                     if fg_sb not in fset:
                         tolerated = False
                 if tolerated:
-                    poisson_rate += fg_track.Q_nx[fg_sa][fg_sb]['weight']
+                    rate += fg_track.Q_nx[fg_sa][fg_sb]['weight']
+            poisson_rate = fg_track.omega - rate
 
             # Sample some poisson events on the segment.
             nevents = np.random.poisson(poisson_rate * blen)
@@ -409,8 +416,8 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
                 # according to the sum of rates from the current
                 # primary state to primary states controlled by
                 # the proposed foreground track.
-                #if Q_meta.has_edge(pri_state, fg_track.name):
-                if False:
+                #if False:
+                if Q_meta.has_edge(pri_state, fg_track.name):
                     rate_sum = Q_meta[pri_state][fg_track.name]['weight']
                     lmap[True] = np.exp(-rate_sum)
                 else:
@@ -599,12 +606,10 @@ def get_Q_primary():
 
 
 def get_Q_blink():
-    rate_on = 1
-    rate_off = 1
     Q_blink = nx.DiGraph()
     Q_blink.add_weighted_edges_from((
-        (False, True, rate_on),
-        (True, False, rate_off),
+        (False, True, RATE_ON),
+        (True, False, RATE_OFF),
         ))
     return Q_blink
 
@@ -721,12 +726,11 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
             uniformization_factor=uniformization_factor)
 
     # Define the rate matrix for a single blinking trajectory.
-    #TODO use blink on/off rates that are not hardcoded as 1.0
     Q_blink = get_Q_blink()
 
     # Define the prior blink state distribution.
     #TODO do not use hardcoded uniform distribution
-    blink_distn = {False : 0.5, True : 0.5}
+    blink_distn = {False : P_OFF, True : P_ON}
 
     Q_meta = get_Q_meta(Q_primary, primary_to_tol)
 
@@ -742,7 +746,7 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
 
     # sample correlated trajectories using rao teh on the blinking model
     va_vb_type_to_count = defaultdict(int)
-    k = 50
+    k = 80
     nsamples = k * k
     burnin = nsamples // 10
     ncounted = 0
