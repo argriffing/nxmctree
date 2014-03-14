@@ -253,18 +253,17 @@ def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
             # Use the foreground and background track states
             # to define the poisson rate that is homogeneous on this segment.
             poisson_rate = 0
-            primary_sa = track_to_state[fg_track.name]
-            for primary_sb in fg_track.Q_nx[primary_sa]:
+            pri_sa = track_to_state[fg_track.name]
+            for pri_sb in fg_track.Q_nx[pri_sa]:
                 tolerated = True
                 for bg_track in bg_tracks:
                     #print(track_to_state)
                     bg_state = track_to_state[bg_track.name]
                     fset = bg_to_fg_fset[bg_track.name][bg_state]
-                    if primary_sb not in fset:
+                    if pri_sb not in fset:
                         tolerated = False
-                if not tolerated:
-                    continue
-                poisson_rate += fg_track.Q_nx[primary_sa][primary_sb]['weight']
+                if tolerated:
+                    poisson_rate += fg_track.Q_nx[pri_sa][pri_sb]['weight']
 
             # Sample some poisson events on the segment.
             nevents = np.random.poisson(poisson_rate * blen)
