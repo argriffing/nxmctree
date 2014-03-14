@@ -278,7 +278,24 @@ def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
         fg_track.events[edge].extend(poisson_events)
 
 
-def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
+def foo():
+    """
+    Moved out of sample_transitions
+
+    """
+    # Use the states of the background tracks,
+    # together with fsets of the two meta nodes if applicable,
+    # to define the set of feasible foreground states at this segment.
+    fsets = []
+    for m in segment:
+        if m.fset is not None:
+            fsets.append(m.fset)
+    for name, state in bg_track_to_state.items():
+        fsets.append(bg_to_fg_fset[name][state])
+    fset = set.intersection(*fsets)
+
+
+def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
     """
     Sample the history (nodes to states) and the events (edge to event list).
 
@@ -311,7 +328,7 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
     # to sets of primary states not directly contradicted by data or context.
     #
     meta_node_tree = nx.DiGraph()
-    node_to_data_fset = dict()
+    node_to_data_lmap = dict()
     for edge in T.edges():
         va, vb = edge
 
@@ -362,20 +379,46 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
                                 name, bg_track_to_state[name], sa, sb))
                 bg_track_to_state[name] = sb
 
-            # Use the states of the background tracks,
-            # together with fsets of the two meta nodes if applicable,
-            # to define the set of feasible foreground states at this segment.
-            fsets = []
-            for m in segment:
-                if m.fset is not None:
-                    fsets.append(m.fset)
-            for name, state in bg_track_to_state.items():
-                fsets.append(bg_to_fg_fset[name][state])
-            fset = set.intersection(*fsets)
+            # For each possible foreground state,
+            # use the states of the background tracks and the data
+            # to determine foreground feasibility
+            # and possibly a multiplicative rate penalty.
+            lmap = dict()
+            if len(bg_tracks) > 1:
+                # Foreground is the primary track.
+                # Use the states of the background blinking tracks,
+                # together with fsets of the two meta nodes if applicable,
+                # to define the set of feasible foreground states
+                # at this segment.
+                fsets = []
+                for m in segment:
+                    if m.fset is not None:
+                        fsets.append(m.fset)
+                for name, state in bg_track_to_state.items():
+                    fsets.append(bg_to_fg_fset[name][state])
+                lmap = dict((s, 1) for s in set.intersection(*fsets))
+            else:
+                # Foreground is a blinking track.
+                # The lmap has nontrivial penalties
+                # depending on both the background (primary) track state
+                # and the proposed foreground blink state.
+                pri_track = bg_tracks[0]
+                pri_state = bg_track_to_state[pri_track.name]
+                if False in bg_to_fg_fset[pri_track.name][pri_state]:
+                    lmap[False] = 1
+                # The blink state choice of True should be penalized
+                # according to the sum of rates from the current
+                # primary state to primary states controlled by
+                # the proposed foreground track.
+                if Q_meta.has_edge(pri_state, fg_track.name):
+                    rate_sum = Q_meta[pri_state][fg_track.name]['weight']
+                    lmap[True] = np.exp(-rate_sum)
+                else:
+                    lmap[True] = 1
 
-            # Map the segment to the fset.
+            # Map the segment to the lmap.
             # Segments will be nodes of the tree whose history will be sampled.
-            node_to_data_fset[segment] = fset
+            node_to_data_lmap[segment] = lmap
 
             # Add the meta node to the meta node tree.
             #print('adding segment', ma, mb)
@@ -400,10 +443,10 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
         edge_to_P[pair] = mb.P_nx
 
     # Use nxmctree to sample a history on the meta edge tree.
-    node_to_data_fset[meta_edge_root] = fg_track.data[root]
+    node_to_data_lmap[meta_edge_root] = fg_track.data[root]
     meta_edge_to_sampled_state = sample_history_fset(
             meta_edge_tree, edge_to_P, meta_edge_root,
-            fg_track.prior_root_distn, node_to_data_fset)
+            fg_track.prior_root_distn, node_to_data_lmap)
     #print('size of sampled history:')
     #print(len(meta_edge_to_sampled_state))
     #print()
@@ -426,7 +469,7 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset):
 
 def blinking_model_rao_teh(
         T, root, edge_to_blen, primary_to_tol,
-        Q_primary, Q_blink,
+        Q_primary, Q_blink, Q_meta,
         primary_track, tolerance_tracks, interaction_map, track_to_data):
     """
 
@@ -476,7 +519,7 @@ def blinking_model_rao_teh(
     #
     # Sample the state of the primary track.
     sample_transitions(T, root,
-            primary_track, tolerance_tracks, interaction_map['P'])
+            primary_track, tolerance_tracks, interaction_map['P'], Q_meta)
     #
     # Remove self-transition events from the primary track.
     primary_track.remove_self_transitions()
@@ -489,7 +532,7 @@ def blinking_model_rao_teh(
                 primary_track, tolerance_tracks, interaction_map['P'])
         primary_track.clear_state_labels()
         sample_transitions(T, root,
-                primary_track, tolerance_tracks, interaction_map['P'])
+                primary_track, tolerance_tracks, interaction_map['P'], Q_meta)
         primary_track.remove_self_transitions()
 
         # Update each blinking track.
@@ -503,7 +546,7 @@ def blinking_model_rao_teh(
             track.clear_state_labels()
             #print('sampling state transitions for track', name)
             sample_transitions(T, root,
-                    track, [primary_track], interaction_map[name])
+                    track, [primary_track], interaction_map[name], Q_meta)
             #print('removing self transitions for track', name)
             track.remove_self_transitions()
 
@@ -562,8 +605,12 @@ def get_Q_blink():
 
 
 def get_primary_to_tol():
-    # This is like a genetic code mapping codons to amino acids.
-    # It is a map from primary state to tolerance track name.
+    """
+    Return a map from primary state to tolerance track name.
+
+    This is like a genetic code mapping codons to amino acids.
+
+    """
     primary_to_tol = {
             0 : 'T0',
             1 : 'T0',
@@ -573,6 +620,22 @@ def get_primary_to_tol():
             5 : 'T2',
             }
     return primary_to_tol
+
+
+def get_Q_meta(Q_primary, primary_to_tol):
+    """
+    Return a DiGraph of rates from primary states into sets of states.
+
+    """
+    Q_meta = nx.DiGraph()
+    for primary_sa, primary_sb in Q_primary.edges():
+        rate = Q_primary[primary_sa][primary_sb]['weight']
+        tol_sb = primary_to_tol[primary_sb]
+        if not Q_meta.has_edge(primary_sa, tol_sb):
+            Q_meta.add_edge(primary_sa, tol_sb, weight=rate)
+        else:
+            Q_meta[primary_sa][tol_sb]['weight'] += rate
+    return Q_meta
 
 
 def get_T_and_root():
@@ -624,7 +687,7 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     uniformization_factor = 2
 
     # Define the primary rate matrix.
-    Q_primary_nx = get_Q_primary()
+    Q_primary = get_Q_primary()
 
     # Define the prior primary state distribution.
     #TODO do not use hardcoded uniform distribution
@@ -633,23 +696,23 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
 
     # Normalize the primary rate matrix to have expected rate 1.
     expected_primary_rate = 0
-    for sa, sb in Q_primary_nx.edges():
+    for sa, sb in Q_primary.edges():
         p = primary_distn[sa]
-        rate = Q_primary_nx[sa][sb]['weight']
+        rate = Q_primary[sa][sb]['weight']
         expected_primary_rate += p * rate
     #
     #print('pure primary process expected rate:')
     #print(expected_primary_rate)
     #print()
     #
-    for sa, sb in Q_primary_nx.edges():
-        Q_primary_nx[sa][sb]['weight'] /= expected_primary_rate
+    for sa, sb in Q_primary.edges():
+        Q_primary[sa][sb]['weight'] /= expected_primary_rate
 
     # Define primary trajectory.
     primary_track = Trajectory(
             name='P', data=track_to_node_to_data_fset['P'],
             history=dict(), events=dict(),
-            prior_root_distn=primary_distn, Q_nx=Q_primary_nx,
+            prior_root_distn=primary_distn, Q_nx=Q_primary,
             uniformization_factor=uniformization_factor)
 
     # Define the rate matrix for a single blinking trajectory.
@@ -659,6 +722,8 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     # Define the prior blink state distribution.
     #TODO do not use hardcoded uniform distribution
     blink_distn = {False : 0.5, True : 0.5}
+
+    Q_meta = get_Q_meta(Q_primary, primary_to_tol)
 
     # Define tolerance process trajectories.
     tolerance_tracks = []
@@ -675,7 +740,7 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     expected_off = 0
     for i, info in enumerate(blinking_model_rao_teh(
             T, root, edge_to_blen, primary_to_tol,
-            Q_primary_nx, Q_blink,
+            Q_primary, Q_blink, Q_meta,
             primary_track, tolerance_tracks, interaction_map,
             track_to_node_to_data_fset)):
         n = i + 1
