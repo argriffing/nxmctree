@@ -253,17 +253,17 @@ def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
             # Use the foreground and background track states
             # to define the poisson rate that is homogeneous on this segment.
             poisson_rate = 0
-            pri_sa = track_to_state[fg_track.name]
-            for pri_sb in fg_track.Q_nx[pri_sa]:
+            fg_sa = track_to_state[fg_track.name]
+            for fg_sb in fg_track.Q_nx[fg_sa]:
                 tolerated = True
                 for bg_track in bg_tracks:
                     #print(track_to_state)
                     bg_state = track_to_state[bg_track.name]
                     fset = bg_to_fg_fset[bg_track.name][bg_state]
-                    if pri_sb not in fset:
+                    if fg_sb not in fset:
                         tolerated = False
                 if tolerated:
-                    poisson_rate += fg_track.Q_nx[pri_sa][pri_sb]['weight']
+                    poisson_rate += fg_track.Q_nx[fg_sa][fg_sb]['weight']
 
             # Sample some poisson events on the segment.
             nevents = np.random.poisson(poisson_rate * blen)
@@ -409,7 +409,8 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
                 # according to the sum of rates from the current
                 # primary state to primary states controlled by
                 # the proposed foreground track.
-                if Q_meta.has_edge(pri_state, fg_track.name):
+                #if Q_meta.has_edge(pri_state, fg_track.name):
+                if False:
                     rate_sum = Q_meta[pri_state][fg_track.name]['weight']
                     lmap[True] = np.exp(-rate_sum)
                 else:
@@ -549,6 +550,7 @@ def blinking_model_rao_teh(
             #print('removing self transitions for track', name)
             track.remove_self_transitions()
 
+        """
         # Summarize the sample.
         expected_on = 0
         expected_off = 0
@@ -562,6 +564,10 @@ def blinking_model_rao_teh(
                         expected_off += 1
 
         yield expected_on, expected_off
+        """
+
+        # Yield the track states.
+        yield primary_track, tolerance_tracks
 
 
 
@@ -735,30 +741,46 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
         tolerance_tracks.append(track)
 
     # sample correlated trajectories using rao teh on the blinking model
-    expected_on = 0
-    expected_off = 0
-    for i, info in enumerate(blinking_model_rao_teh(
+    va_vb_type_to_count = defaultdict(int)
+    k = 50
+    nsamples = k * k
+    burnin = nsamples // 10
+    ncounted = 0
+    for i, (pri_track, tol_tracks) in enumerate(blinking_model_rao_teh(
             T, root, edge_to_blen, primary_to_tol,
             Q_primary, Q_blink, Q_meta,
             primary_track, tolerance_tracks, interaction_map,
             track_to_node_to_data_fset)):
-        n = i + 1
-        e_on, e_off = info
-        expected_on += e_on
-        expected_off += e_off
-        avg_on = expected_on / n
-        avg_off = expected_off / n
-        #print('n:')
-        #print(n)
-        #print()
-        #print('expected off->on:')
-        #print(avg_on)
-        #print()
-        #print('expected on->off:')
-        #print(avg_off)
-        #print()
-        #print(n, avg_on, avg_off, sep='\t')
-        print(e_on, e_off, sep='\t')
+        nsampled = i+1
+        if nsampled < burnin:
+            continue
+        # Summarize the trajectories.
+        for edge in T.edges():
+            va, vb = edge
+            for track in tol_tracks:
+                for ev in track.events[edge]:
+                    transition = (ev.sa, ev.sb)
+                    if transition == (False, True):
+                        va_vb_type_to_count[va, vb, 'on'] += 1
+                    elif transition == (True, False):
+                        va_vb_type_to_count[va, vb, 'off'] += 1
+            for ev in pri_track.events[edge]:
+                transition = (ev.sa, ev.sb)
+                if primary_to_tol[ev.sa] == primary_to_tol[ev.sb]:
+                    va_vb_type_to_count[va, vb, 'syn'] += 1
+                else:
+                    va_vb_type_to_count[va, vb, 'non'] += 1
+        # Loop control.
+        ncounted += 1
+        if ncounted == nsamples:
+            break
+
+    # report infos
+    print('burnin:', burnin)
+    print('samples after burnin:', nsamples)
+    for va_vb_type, count in sorted(va_vb_type_to_count.items()):
+        va, vb, s = va_vb_type
+        print(va, '->', vb, s, ':', count / nsamples)
 
 
 def main():

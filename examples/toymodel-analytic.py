@@ -8,9 +8,11 @@ import itertools
 
 import networkx as nx
 import numpy as np
+from numpy.testing import assert_allclose
 import scipy.linalg
 
 from nxmctree import dynamic_fset_lhood
+import util
 
 
 def get_Q_primary():
@@ -251,6 +253,13 @@ def run(primary_to_tol, compound_states, node_to_data_fset):
     #print('compound distn:')
     #print(compound_distn)
     #print()
+
+    # Convert the compound state distribution to a dense array.
+    # Check that the distribution is at equilibrium.
+    compound_distn_np = np.array([
+            compound_distn.get(k, 0) for k in compound_states])
+    equilibrium_rates = np.dot(compound_distn_np, Q_compound)
+    assert_allclose(equilibrium_rates, 0, atol=1e-10)
 
     # Make the np and nx transition probability matrices.
     # Map each branch to the transition matrix.
