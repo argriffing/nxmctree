@@ -498,13 +498,14 @@ def sample_transitions(T, root, node_to_tm,
                 # primary state to primary states controlled by
                 # the proposed foreground track.
                 #if False:
-                if Q_meta.has_edge(pri_state, fg_track.name):
-                    #print('effectively disallowing some blinked-on states')
-                    rate_sum = Q_meta[pri_state][fg_track.name]['weight']
-                    amount = rate_sum * (mb.tm - ma.tm)
-                    lmap[True] = np.exp(-amount)
-                else:
-                    lmap[True] = 1
+                if True in bg_to_fg_fset[pri_track.name][pri_state]:
+                    if Q_meta.has_edge(pri_state, fg_track.name):
+                        #print('effectively disallowing some blinked-on states')
+                        rate_sum = Q_meta[pri_state][fg_track.name]['weight']
+                        amount = rate_sum * (mb.tm - ma.tm)
+                        lmap[True] = np.exp(-amount)
+                    else:
+                        lmap[True] = 1
 
             # Map the segment to the lmap.
             # Segments will be nodes of the tree whose history will be sampled.
@@ -1015,39 +1016,51 @@ def main():
                 'N5' : {False, True},
                 },
             }
+    #run(primary_to_tol, interaction_map, data)
+    print()
+
+
+    # Alignment and disease data.
+    print ('expectations given alignment and disease data')
+    print()
+    data = {
+            'P' : {
+                'N0' : {0},
+                'N1' : {0, 1, 2, 3, 4, 5},
+                'N2' : {0, 1, 2, 3, 4, 5},
+                'N3' : {4},
+                'N4' : {5},
+                'N5' : {1},
+                },
+            'T0' : {
+                'N0' : {True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {False, True},
+                'N4' : {False, True},
+                'N5' : {True},
+                },
+            'T1' : {
+                'N0' : {False},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {False, True},
+                'N4' : {False, True},
+                'N5' : {False, True},
+                },
+            'T2' : {
+                'N0' : {True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {True},
+                'N4' : {True},
+                'N5' : {False, True},
+                },
+            }
     run(primary_to_tol, interaction_map, data)
     print()
 
     #TODO unfinished after here...
-
-    """
-    # Alignment and disease data.
-    print ('expectations given alignment and disease data')
-    print()
-    node_to_data_fset = {
-            'N0' : {
-                (0, (1, 0, 1))},
-            'N1' : set(compound_states),
-            'N2' : set(compound_states),
-            'N3' : {
-                (4, (0, 0, 1)),
-                (4, (0, 1, 1)),
-                (4, (1, 0, 1)),
-                (4, (1, 1, 1))},
-            'N4' : {
-                (5, (0, 0, 1)),
-                (5, (0, 1, 1)),
-                (5, (1, 0, 1)),
-                (5, (1, 1, 1))},
-            'N5' : {
-                (1, (1, 0, 0)),
-                (1, (1, 0, 1)),
-                (1, (1, 1, 0)),
-                (1, (1, 1, 1))},
-            }
-    run(primary_to_tol, compound_states, node_to_data_fset)
-    print()
-    """
 
     """
     # Alignment and fully observed disease data.
