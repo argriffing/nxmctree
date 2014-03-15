@@ -832,8 +832,8 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
 
     # sample correlated trajectories using rao teh on the blinking model
     va_vb_type_to_count = defaultdict(int)
-    k = 320
-    #k = 250
+    #k = 320
+    k = 200
     #k = 100
     nsamples = k * k
     burnin = nsamples // 10
@@ -952,7 +952,6 @@ def main():
             'T0' : {
                 'N0' : {False, True},
                 'N1' : {False, True},
-                'N1' : {False, True},
                 'N2' : {False, True},
                 'N3' : {False, True},
                 'N4' : {False, True},
@@ -960,7 +959,6 @@ def main():
                 },
             'T1' : {
                 'N0' : {False, True},
-                'N1' : {False, True},
                 'N1' : {False, True},
                 'N2' : {False, True},
                 'N3' : {False, True},
@@ -970,10 +968,50 @@ def main():
             'T2' : {
                 'N0' : {False, True},
                 'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {False, True},
+                'N4' : {False, True},
+                'N5' : {False, True},
+                },
+            }
+    #run(primary_to_tol, interaction_map, data)
+    print()
+
+
+    # Alignment data only.
+    print ('expectations given only alignment data but not disease data')
+    print()
+    data = {
+            'P' : {
+                'N0' : {0},
+                'N1' : {0, 1, 2, 3, 4, 5},
+                'N2' : {0, 1, 2, 3, 4, 5},
+                'N3' : {4},
+                'N4' : {5},
+                'N5' : {1},
+                },
+            'T0' : {
+                'N0' : {True},
                 'N1' : {False, True},
                 'N2' : {False, True},
                 'N3' : {False, True},
                 'N4' : {False, True},
+                'N5' : {True},
+                },
+            'T1' : {
+                'N0' : {False, True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {False, True},
+                'N4' : {False, True},
+                'N5' : {False, True},
+                },
+            'T2' : {
+                'N0' : {False, True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {True},
+                'N4' : {True},
                 'N5' : {False, True},
                 },
             }
@@ -981,38 +1019,6 @@ def main():
     print()
 
     #TODO unfinished after here...
-
-    """
-    # Alignment data only.
-    print ('expectations given only alignment data but not disease data')
-    print()
-    node_to_data_fset = {
-            'N0' : {
-                (0, (1, 0, 0)),
-                (0, (1, 0, 1)),
-                (0, (1, 1, 0)),
-                (0, (1, 1, 1))},
-            'N1' : set(compound_states),
-            'N2' : set(compound_states),
-            'N3' : {
-                (4, (0, 0, 1)),
-                (4, (0, 1, 1)),
-                (4, (1, 0, 1)),
-                (4, (1, 1, 1))},
-            'N4' : {
-                (5, (0, 0, 1)),
-                (5, (0, 1, 1)),
-                (5, (1, 0, 1)),
-                (5, (1, 1, 1))},
-            'N5' : {
-                (1, (1, 0, 0)),
-                (1, (1, 0, 1)),
-                (1, (1, 1, 0)),
-                (1, (1, 1, 1))},
-            }
-    run(primary_to_tol, compound_states, node_to_data_fset)
-    print()
-    """
 
     """
     # Alignment and disease data.
