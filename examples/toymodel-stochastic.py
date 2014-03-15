@@ -36,13 +36,22 @@ import numpy as np
 import scipy.linalg
 
 import nxmctree
-from nxmctree.sampling import sample_history_fset
+from nxmctree.sampling import sample_history
 
-from util import get_total_rates
+from util import get_node_to_tm, get_total_rates
 from trajectory import Trajectory, Event
+
 
 RATE_ON = 1.0
 RATE_OFF = 1.0
+
+#NTOLS = 3
+
+#alpha = RATE_ON / (RATE_ON + RATE_OFF)
+#t = 1 / NTOLS
+
+#P_ON = t * 1 + (1-t) * alpha
+#P_OFF = t * 0 + (1-t) * (1-alpha)
 
 P_ON = RATE_ON / (RATE_ON + RATE_OFF)
 P_OFF = RATE_OFF / (RATE_ON + RATE_OFF)
@@ -67,7 +76,7 @@ P_OFF = RATE_OFF / (RATE_ON + RATE_OFF)
 
 
 #TODO unused
-def init_blink_history(T, edge_to_blen, track):
+def init_blink_history(T, track):
     """
     Initial blink history is True where consistent with the data.
 
@@ -77,7 +86,7 @@ def init_blink_history(T, edge_to_blen, track):
 
 
 #TODO unused
-def init_complete_blink_events(T, edge_to_blen, track):
+def init_complete_blink_events(T, node_to_tm, track):
     """
     Init blink track.
 
@@ -86,22 +95,24 @@ def init_complete_blink_events(T, edge_to_blen, track):
         va, vb = edge
         sa = track.history[va]
         sb = track.history[vb]
-        blen = edge_to_blen[edge]
-        tma = blen * np.random.uniform(0, 1/3)
-        tmb = blen * np.random.uniform(2/3, 1)
+        edge_tma = node_to_tmp[va]
+        edge_tmb = node_to_tmp[vb]
+        blen = tmb - tma
+        tma = edge_tma + blen * np.random.uniform(0, 1/3)
+        tmb = edge_tma + blen * np.random.uniform(2/3, 1)
         eva = Event(track=track, edge=edge, tm=tma, sa=sa, sb=True)
         evb = Event(track=track, edge=edge, tm=tmb, sa=True, sb=sb)
         track.events[edge] = [eva, evb]
 
 
-def init_incomplete_primary_events(T, edge_to_blen, primary_track, diameter):
+def init_incomplete_primary_events(T, node_to_tm, primary_track, diameter):
     """
     Parameters
     ----------
     T : nx tree
         tree
-    edge_to_blen : dict
-        maps edges to branch lengths
+    node_to_tm : dict
+        maps nodes to times
     primary_track : Trajectory
         current state of the track
     diameter : int
@@ -109,8 +120,12 @@ def init_incomplete_primary_events(T, edge_to_blen, primary_track, diameter):
 
     """
     for edge in T.edges():
-        blen = edge_to_blen[edge]
-        times = blen * np.random.uniform(low=1/3, high=2/3, size=diameter-1)
+        va, vb = edge
+        edge_tma = node_to_tm[va]
+        edge_tmb = node_to_tm[vb]
+        blen = edge_tmb - edge_tma
+        times = edge_tma + blen * np.random.uniform(
+                low=1/3, high=2/3, size=diameter-1)
         events = [Event(track=primary_track, tm=tm) for tm in times]
         primary_track.events[edge] = events
 
@@ -125,7 +140,7 @@ class MetaNode(object):
 
     """
     def __init__(self, P_nx=None,
-            set_sa=None, set_sb=None, fset=None, transition=None):
+            set_sa=None, set_sb=None, fset=None, transition=None, tm=None):
         """
 
         Parameters
@@ -143,6 +158,8 @@ class MetaNode(object):
         transition : triple, optional
             A transition like (trajectory_name, sa, sb) or None.
             None is interpreted as absence of background transition.
+        tm : float
+            time
 
         """
         self.P_nx = P_nx
@@ -150,6 +167,7 @@ class MetaNode(object):
         self.set_sb = set_sb
         self.fset = fset
         self.transition = transition
+        self.tm = tm
 
     def __eq__(self, other):
         return id(self) == id(other)
@@ -197,7 +215,7 @@ def get_edge_tree(T, root):
     return T_dual, dual_root
 
 
-def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
+def sample_poisson_events(T, node_to_tm, fg_track, bg_tracks, bg_to_fg_fset):
     """
     Sample poisson events on the tree.
 
@@ -206,12 +224,13 @@ def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
     but also on the background tracks.
 
     """
-    # TODO under construction
     P_nx = fg_track.P_nx
     P_nx_identity = fg_track.P_nx_identity
 
     for edge in T.edges():
         va, vb = edge
+        tma = node_to_tm[va]
+        tmb = node_to_tm[vb]
 
         events = []
         events.extend(fg_track.events[edge])
@@ -223,8 +242,8 @@ def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
         seq = []
         for ev in sorted(events):
             seq.append((ev.tm, ev.track, ev.sa, ev.sb))
-        info_a = (0, None, None, None)
-        info_b = (edge_to_blen[edge], None, None, None)
+        info_a = (tma, None, None, None)
+        info_b = (tmb, None, None, None)
         seq = [info_a] + seq + [info_b]
 
         # Initialize foreground state and background states
@@ -270,7 +289,9 @@ def sample_poisson_events(T, edge_to_blen, fg_track, bg_tracks, bg_to_fg_fset):
                         tolerated = False
                 if tolerated:
                     rate += fg_track.Q_nx[fg_sa][fg_sb]['weight']
-            poisson_rate = fg_track.omega - rate
+            #poisson_rate = fg_track.omega - rate
+            #TODO hack
+            poisson_rate = fg_track.poisson_rates[fg_sa]
 
             # Sample some poisson events on the segment.
             nevents = np.random.poisson(poisson_rate * blen)
@@ -301,7 +322,8 @@ def foo():
     fset = set.intersection(*fsets)
 
 
-def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
+def sample_transitions(T, root, node_to_tm,
+        fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
     """
     Sample the history (nodes to states) and the events (edge to event list).
 
@@ -318,7 +340,8 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
     for v in T:
         f = partial(set_or_confirm_history_state, fg_track.history, v)
         fset = fg_track.data[v]
-        m = MetaNode(P_nx=P_nx_identity, set_sa=f, set_sb=f, fset=fset)
+        m = MetaNode(P_nx=P_nx_identity, set_sa=f, set_sb=f, fset=fset,
+                tm=node_to_tm[v])
         node_to_meta[v] = m
         #print('adding meta node', v, m)
 
@@ -353,11 +376,13 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
         seq = []
         for ev in sorted(events):
             if ev.track is fg_track:
-                m = MetaNode(P_nx=P_nx, set_sa=ev.init_sa, set_sb=ev.init_sb)
+                m = MetaNode(P_nx=P_nx, set_sa=ev.init_sa, set_sb=ev.init_sb,
+                        tm=ev.tm)
             else:
                 m = MetaNode(P_nx=P_nx_identity,
                         set_sa=do_nothing, set_sb=do_nothing,
-                        transition=(ev.track.name, ev.sa, ev.sb))
+                        transition=(ev.track.name, ev.sa, ev.sb),
+                        tm=ev.tm)
             seq.append(m)
         ma = node_to_meta[va]
         mb = node_to_meta[vb]
@@ -418,8 +443,10 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
                 # the proposed foreground track.
                 #if False:
                 if Q_meta.has_edge(pri_state, fg_track.name):
+                    #print('effectively disallowing some blinked-on states')
                     rate_sum = Q_meta[pri_state][fg_track.name]['weight']
-                    lmap[True] = np.exp(-rate_sum)
+                    amount = rate_sum * (mb.tm - ma.tm)
+                    lmap[True] = np.exp(-amount)
                 else:
                     lmap[True] = 1
 
@@ -450,8 +477,11 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
         edge_to_P[pair] = mb.P_nx
 
     # Use nxmctree to sample a history on the meta edge tree.
-    node_to_data_lmap[meta_edge_root] = fg_track.data[root]
-    meta_edge_to_sampled_state = sample_history_fset(
+    root_data_fset = fg_track.data[root]
+    #print(root_data_fset)
+    #print(node_to_data_lmap)
+    node_to_data_lmap[meta_edge_root] = dict((s, 1) for s in root_data_fset)
+    meta_edge_to_sampled_state = sample_history(
             meta_edge_tree, edge_to_P, meta_edge_root,
             fg_track.prior_root_distn, node_to_data_lmap)
     #print('size of sampled history:')
@@ -475,7 +505,7 @@ def sample_transitions(T, root, fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
 
 
 def blinking_model_rao_teh(
-        T, root, edge_to_blen, primary_to_tol,
+        T, root, node_to_tm, primary_to_tol,
         Q_primary, Q_blink, Q_meta,
         primary_track, tolerance_tracks, interaction_map, track_to_data):
     """
@@ -486,7 +516,7 @@ def blinking_model_rao_teh(
         x
     root : x
         x
-    edge_to_blen : x
+    node_to_tm : x
         x
     primary_to_tol : x
         x
@@ -507,8 +537,8 @@ def blinking_model_rao_teh(
     #TODO go back to this when disease data is used
     # Initialize blink history and events.
     #for track in tolerance_tracks:
-        #init_blink_history(T, edge_to_blen, track)
-        #init_complete_blink_events(T, edge_to_blen, track)
+        #init_blink_history(T, node_to_tm, track)
+        #init_complete_blink_events(T, node_to_tm, track)
 
     # For now use a custom initialization of the blinking process.
     # Assume that all states are initially blinked on.
@@ -522,10 +552,10 @@ def blinking_model_rao_teh(
     # Initialize the primary trajectory with many incomplete events.
     # TODO change this when we begin using disease data
     diameter = 4
-    init_incomplete_primary_events(T, edge_to_blen, primary_track, diameter)
+    init_incomplete_primary_events(T, node_to_tm, primary_track, diameter)
     #
     # Sample the state of the primary track.
-    sample_transitions(T, root,
+    sample_transitions(T, root, node_to_tm,
             primary_track, tolerance_tracks, interaction_map['P'], Q_meta)
     #
     # Remove self-transition events from the primary track.
@@ -535,10 +565,10 @@ def blinking_model_rao_teh(
     while True:
 
         # Update the primary track.
-        sample_poisson_events(T, edge_to_blen,
+        sample_poisson_events(T, node_to_tm,
                 primary_track, tolerance_tracks, interaction_map['P'])
         primary_track.clear_state_labels()
-        sample_transitions(T, root,
+        sample_transitions(T, root, node_to_tm,
                 primary_track, tolerance_tracks, interaction_map['P'], Q_meta)
         primary_track.remove_self_transitions()
 
@@ -546,13 +576,13 @@ def blinking_model_rao_teh(
         for track in tolerance_tracks:
             name = track.name
             #print('adding poisson events for track', name)
-            sample_poisson_events(T, edge_to_blen,
+            sample_poisson_events(T, node_to_tm,
                     track, [primary_track], interaction_map[name])
-            #track.add_poisson_events(T, edge_to_blen)
+            #track.add_poisson_events(T, node_to_tm)
             #print('clearing state labels for track', name)
             track.clear_state_labels()
             #print('sampling state transitions for track', name)
-            sample_transitions(T, root,
+            sample_transitions(T, root, node_to_tm,
                     track, [primary_track], interaction_map[name], Q_meta)
             #print('removing self transitions for track', name)
             track.remove_self_transitions()
@@ -692,6 +722,7 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     # It is the expected number of primary process transitions
     # along the branch conditional on all tolerance classes being tolerated.
     edge_to_blen = get_edge_to_blen()
+    node_to_tm = get_node_to_tm(T, root, edge_to_blen)
 
     # Define the uniformization factor.
     uniformization_factor = 2
@@ -729,7 +760,6 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     Q_blink = get_Q_blink()
 
     # Define the prior blink state distribution.
-    #TODO do not use hardcoded uniform distribution
     blink_distn = {False : P_OFF, True : P_ON}
 
     Q_meta = get_Q_meta(Q_primary, primary_to_tol)
@@ -746,12 +776,14 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
 
     # sample correlated trajectories using rao teh on the blinking model
     va_vb_type_to_count = defaultdict(int)
-    k = 80
+    k = 250
     nsamples = k * k
     burnin = nsamples // 10
     ncounted = 0
+    dwell_off = 0
+    dwell_on = 0
     for i, (pri_track, tol_tracks) in enumerate(blinking_model_rao_teh(
-            T, root, edge_to_blen, primary_to_tol,
+            T, root, node_to_tm, primary_to_tol,
             Q_primary, Q_blink, Q_meta,
             primary_track, tolerance_tracks, interaction_map,
             track_to_node_to_data_fset)):

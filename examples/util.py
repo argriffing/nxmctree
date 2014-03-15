@@ -83,3 +83,10 @@ def get_identity_P_nx(states):
         P_nx.add_edge(s, s, weight=1)
     return P_nx
 
+
+def get_node_to_tm(T, root, node_to_blen):
+    node_to_tm = {root : 0}
+    for edge in nx.bfs_edges(T, root):
+        va, vb = edge
+        node_to_tm[vb] = node_to_tm[va] + node_to_blen[edge]
+    return node_to_tm
