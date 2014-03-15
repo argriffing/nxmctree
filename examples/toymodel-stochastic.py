@@ -75,7 +75,6 @@ P_OFF = RATE_OFF / (RATE_ON + RATE_OFF)
 
 
 
-#TODO unused
 def init_blink_history(T, track):
     """
     Initial blink history is True where consistent with the data.
@@ -85,7 +84,6 @@ def init_blink_history(T, track):
         track.history[v] = (True in track.data[v])
 
 
-#TODO unused
 def init_complete_blink_events(T, node_to_tm, track):
     """
     Init blink track.
@@ -95,13 +93,13 @@ def init_complete_blink_events(T, node_to_tm, track):
         va, vb = edge
         sa = track.history[va]
         sb = track.history[vb]
-        edge_tma = node_to_tmp[va]
-        edge_tmb = node_to_tmp[vb]
-        blen = tmb - tma
+        edge_tma = node_to_tm[va]
+        edge_tmb = node_to_tm[vb]
+        blen = edge_tmb - edge_tma
         tma = edge_tma + blen * np.random.uniform(0, 1/3)
         tmb = edge_tma + blen * np.random.uniform(2/3, 1)
-        eva = Event(track=track, edge=edge, tm=tma, sa=sa, sb=True)
-        evb = Event(track=track, edge=edge, tm=tmb, sa=True, sb=sb)
+        eva = Event(track=track, tm=tma, sa=sa, sb=True)
+        evb = Event(track=track, tm=tmb, sa=True, sb=sb)
         track.events[edge] = [eva, evb]
 
 
@@ -466,6 +464,14 @@ def sample_transitions(T, root, node_to_tm,
                                 name, bg_track_to_state[name], sa, sb))
                 bg_track_to_state[name] = sb
 
+            # Get the set of states allowed by data and background interaction.
+            fsets = []
+            for m in segment:
+                if m.fset is not None:
+                    fsets.append(m.fset)
+            for name, state in bg_track_to_state.items():
+                fsets.append(bg_to_fg_fset[name][state])
+            fg_allowed = set.intersection(*fsets)
             # For each possible foreground state,
             # use the states of the background tracks and the data
             # to determine foreground feasibility
@@ -477,13 +483,7 @@ def sample_transitions(T, root, node_to_tm,
                 # together with fsets of the two meta nodes if applicable,
                 # to define the set of feasible foreground states
                 # at this segment.
-                fsets = []
-                for m in segment:
-                    if m.fset is not None:
-                        fsets.append(m.fset)
-                for name, state in bg_track_to_state.items():
-                    fsets.append(bg_to_fg_fset[name][state])
-                lmap = dict((s, 1) for s in set.intersection(*fsets))
+                lmap = dict((s, 1) for s in fg_allowed)
             else:
                 # Foreground is a blinking track.
                 # The lmap has nontrivial penalties
@@ -491,14 +491,14 @@ def sample_transitions(T, root, node_to_tm,
                 # and the proposed foreground blink state.
                 pri_track = bg_tracks[0]
                 pri_state = bg_track_to_state[pri_track.name]
-                if False in bg_to_fg_fset[pri_track.name][pri_state]:
+                if False in fg_allowed:
                     lmap[False] = 1
                 # The blink state choice of True should be penalized
                 # according to the sum of rates from the current
                 # primary state to primary states controlled by
                 # the proposed foreground track.
                 #if False:
-                if True in bg_to_fg_fset[pri_track.name][pri_state]:
+                if True in fg_allowed:
                     if Q_meta.has_edge(pri_state, fg_track.name):
                         #print('effectively disallowing some blinked-on states')
                         rate_sum = Q_meta[pri_state][fg_track.name]['weight']
@@ -564,7 +564,7 @@ def sample_transitions(T, root, node_to_tm,
 def blinking_model_rao_teh(
         T, root, node_to_tm, primary_to_tol,
         Q_primary, Q_blink, Q_meta,
-        primary_track, tolerance_tracks, interaction_map, track_to_data):
+        primary_track, tolerance_tracks, interaction_map):
     """
 
     Parameters
@@ -587,27 +587,15 @@ def blinking_model_rao_teh(
         labels of tolerance tracks
     interaction_map : dict
         x
-    track_to_data : x
-        x
 
     """
-    #TODO go back to this when disease data is used
     # Initialize blink history and events.
-    #for track in tolerance_tracks:
-        #init_blink_history(T, node_to_tm, track)
-        #init_complete_blink_events(T, node_to_tm, track)
-
-    # For now use a custom initialization of the blinking process.
-    # Assume that all states are initially blinked on.
-    # TODO change this when we begin using disease data
     for track in tolerance_tracks:
-        for va in T:
-            track.history[va] = True
-        for edge in T.edges():
-            track.events[edge] = []
+        init_blink_history(T, track)
+        init_complete_blink_events(T, node_to_tm, track)
+        track.remove_self_transitions()
 
     # Initialize the primary trajectory with many incomplete events.
-    # TODO change this when we begin using disease data
     diameter = 4
     init_incomplete_primary_events(T, node_to_tm, primary_track, diameter)
     #
@@ -844,8 +832,7 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     for i, (pri_track, tol_tracks) in enumerate(blinking_model_rao_teh(
             T, root, node_to_tm, primary_to_tol,
             Q_primary, Q_blink, Q_meta,
-            primary_track, tolerance_tracks, interaction_map,
-            track_to_node_to_data_fset)):
+            primary_track, tolerance_tracks, interaction_map)):
         nsampled = i+1
         if nsampled < burnin:
             continue
@@ -1057,32 +1044,50 @@ def main():
                 'N5' : {False, True},
                 },
             }
-    run(primary_to_tol, interaction_map, data)
+    #run(primary_to_tol, interaction_map, data)
     print()
 
-    #TODO unfinished after here...
-
-    """
     # Alignment and fully observed disease data.
     print ('expectations given alignment and fully observed disease data')
     print ('(all leaf disease states which were previously considered to be')
     print ('unobserved are now considered to be tolerated (blinked on))')
     print()
-    node_to_data_fset = {
-            'N0' : {
-                (0, (1, 0, 1))},
-            'N1' : set(compound_states),
-            'N2' : set(compound_states),
-            'N3' : {
-                (4, (1, 1, 1))},
-            'N4' : {
-                (5, (1, 1, 1))},
-            'N5' : {
-                (1, (1, 1, 1))},
+    data = {
+            'P' : {
+                'N0' : {0},
+                'N1' : {0, 1, 2, 3, 4, 5},
+                'N2' : {0, 1, 2, 3, 4, 5},
+                'N3' : {4},
+                'N4' : {5},
+                'N5' : {1},
+                },
+            'T0' : {
+                'N0' : {True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {True},
+                'N4' : {True},
+                'N5' : {True},
+                },
+            'T1' : {
+                'N0' : {False},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {True},
+                'N4' : {True},
+                'N5' : {True},
+                },
+            'T2' : {
+                'N0' : {True},
+                'N1' : {False, True},
+                'N2' : {False, True},
+                'N3' : {True},
+                'N4' : {True},
+                'N5' : {True},
+                },
             }
-    run(primary_to_tol, compound_states, node_to_data_fset)
+    run(primary_to_tol, interaction_map, data)
     print()
-    """
 
 
 main()
