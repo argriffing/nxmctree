@@ -215,6 +215,64 @@ def get_edge_tree(T, root):
     return T_dual, dual_root
 
 
+def get_blink_dwell_times(T, node_to_tm, blink_tracks):
+    dwell_off = 0
+    dwell_on = 0
+    for edge in T.edges():
+        va, vb = edge
+        tma = node_to_tm[va]
+        tmb = node_to_tm[vb]
+
+        # construct unordered collection of events
+        events = []
+        for track in blink_tracks:
+            events.extend(track.events[edge])
+
+        # construct ordered sequence of events and endpoints
+        seq = [(ev.tm, ev.track, ev.sa, ev.sb) for ev in sorted(events)]
+        info_a = (tma, None, None, None)
+        info_b = (tmb, None, None, None)
+        seq = [info_a] + seq + [info_b]
+
+        # initialize the state of each blining track along the edge
+        track_to_state = {}
+        for track in blink_tracks:
+            track_to_state[track.name] = track.history[va]
+
+        # compute dwell times associated with each trajectory on each segment
+        for segment in zip(seq[:-1], seq[1:]):
+            info_a, info_b = segment
+            tma, tracka, saa, sba = info_a
+            tmb, trackb, sab, sbb = info_b
+            blen = tmb - tma
+
+            # Keep the state of each track up to date.
+            if tracka is not None:
+                tm, track, sa, sb = info_a
+                name = tracka.name
+                if track_to_state[name] != sa:
+                    raise Exception('incompatible transition: '
+                            'current state on track %s is %s '
+                            'but encountered a transition event from '
+                            'state %s to state %s' % (
+                                name, track_to_state[name], sa, sb))
+                track_to_state[name] = sb
+
+            # update the dwell times
+            for track in blink_tracks:
+                state = track_to_state[track.name]
+                if state == False:
+                    dwell_off += blen
+                elif state == True:
+                    dwell_on += blen
+                else:
+                    raise Exception
+
+    # return the dwell times
+    return dwell_off, dwell_on
+
+
+
 def sample_poisson_events(T, node_to_tm, fg_track, bg_tracks, bg_to_fg_fset):
     """
     Sample poisson events on the tree.
@@ -239,9 +297,7 @@ def sample_poisson_events(T, node_to_tm, fg_track, bg_tracks, bg_to_fg_fset):
 
         # Construct the meta nodes corresponding to sorted events.
         # No times should coincide.
-        seq = []
-        for ev in sorted(events):
-            seq.append((ev.tm, ev.track, ev.sa, ev.sb))
+        seq = [(ev.tm, ev.track, ev.sa, ev.sb) for ev in sorted(events)]
         info_a = (tma, None, None, None)
         info_b = (tmb, None, None, None)
         seq = [info_a] + seq + [info_b]
@@ -776,12 +832,14 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
 
     # sample correlated trajectories using rao teh on the blinking model
     va_vb_type_to_count = defaultdict(int)
-    k = 250
+    k = 320
+    #k = 250
+    #k = 100
     nsamples = k * k
     burnin = nsamples // 10
     ncounted = 0
-    dwell_off = 0
-    dwell_on = 0
+    total_dwell_off = 0
+    total_dwell_on = 0
     for i, (pri_track, tol_tracks) in enumerate(blinking_model_rao_teh(
             T, root, node_to_tm, primary_to_tol,
             Q_primary, Q_blink, Q_meta,
@@ -806,6 +864,9 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
                     va_vb_type_to_count[va, vb, 'syn'] += 1
                 else:
                     va_vb_type_to_count[va, vb, 'non'] += 1
+        dwell_off, dwell_on = get_blink_dwell_times(T, node_to_tm, tol_tracks)
+        total_dwell_off += dwell_off
+        total_dwell_on += dwell_on
         # Loop control.
         ncounted += 1
         if ncounted == nsamples:
@@ -817,6 +878,8 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
     for va_vb_type, count in sorted(va_vb_type_to_count.items()):
         va, vb, s = va_vb_type
         print(va, '->', vb, s, ':', count / nsamples)
+    print('dwell off:', total_dwell_off / nsamples)
+    print('dwell on :', total_dwell_on / nsamples)
 
 
 def main():
