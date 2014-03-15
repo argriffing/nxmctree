@@ -376,7 +376,7 @@ def foo():
     fset = set.intersection(*fsets)
 
 
-def sample_transitions(T, root, node_to_tm,
+def sample_transitions(T, root, node_to_tm, primary_to_tol,
         fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
     """
     Sample the history (nodes to states) and the events (edge to event list).
@@ -499,6 +499,8 @@ def sample_transitions(T, root, node_to_tm,
                 # the proposed foreground track.
                 #if False:
                 if True in fg_allowed:
+                    #if primary_to_tol[pri_state] == fg_track.name:
+                        #lmap[True] = 1
                     if Q_meta.has_edge(pri_state, fg_track.name):
                         #print('effectively disallowing some blinked-on states')
                         rate_sum = Q_meta[pri_state][fg_track.name]['weight']
@@ -600,7 +602,7 @@ def blinking_model_rao_teh(
     init_incomplete_primary_events(T, node_to_tm, primary_track, diameter)
     #
     # Sample the state of the primary track.
-    sample_transitions(T, root, node_to_tm,
+    sample_transitions(T, root, node_to_tm, primary_to_tol,
             primary_track, tolerance_tracks, interaction_map['P'], Q_meta)
     #
     # Remove self-transition events from the primary track.
@@ -613,7 +615,7 @@ def blinking_model_rao_teh(
         sample_poisson_events(T, node_to_tm,
                 primary_track, tolerance_tracks, interaction_map['P'])
         primary_track.clear_state_labels()
-        sample_transitions(T, root, node_to_tm,
+        sample_transitions(T, root, node_to_tm, primary_to_tol,
                 primary_track, tolerance_tracks, interaction_map['P'], Q_meta)
         primary_track.remove_self_transitions()
 
@@ -627,7 +629,7 @@ def blinking_model_rao_teh(
             #print('clearing state labels for track', name)
             track.clear_state_labels()
             #print('sampling state transitions for track', name)
-            sample_transitions(T, root, node_to_tm,
+            sample_transitions(T, root, node_to_tm, primary_to_tol,
                     track, [primary_track], interaction_map[name], Q_meta)
             #print('removing self transitions for track', name)
             track.remove_self_transitions()
@@ -821,8 +823,10 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
 
     # sample correlated trajectories using rao teh on the blinking model
     va_vb_type_to_count = defaultdict(int)
+    k = 800
+    #k = 400
     #k = 320
-    k = 200
+    #k = 200
     #k = 100
     nsamples = k * k
     burnin = nsamples // 10
@@ -842,12 +846,16 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
             for track in tol_tracks:
                 for ev in track.events[edge]:
                     transition = (ev.sa, ev.sb)
+                    if ev.sa == ev.sb:
+                        raise Exception('self-transitions should not remain')
                     if transition == (False, True):
                         va_vb_type_to_count[va, vb, 'on'] += 1
                     elif transition == (True, False):
                         va_vb_type_to_count[va, vb, 'off'] += 1
             for ev in pri_track.events[edge]:
                 transition = (ev.sa, ev.sb)
+                if ev.sa == ev.sb:
+                    raise Exception('self-transitions should not remain')
                 if primary_to_tol[ev.sa] == primary_to_tol[ev.sb]:
                     va_vb_type_to_count[va, vb, 'syn'] += 1
                 else:
@@ -962,7 +970,7 @@ def main():
                 'N5' : {False, True},
                 },
             }
-    #run(primary_to_tol, interaction_map, data)
+    run(primary_to_tol, interaction_map, data)
     print()
 
 
@@ -1086,7 +1094,7 @@ def main():
                 'N5' : {True},
                 },
             }
-    run(primary_to_tol, interaction_map, data)
+    #run(primary_to_tol, interaction_map, data)
     print()
 
 
