@@ -59,13 +59,7 @@ P_OFF = RATE_OFF / (RATE_ON + RATE_OFF)
 
 #TODO adjust the poisson rate correctly for each segment
 # using the background context
-
-#TODO this whole script is currently broken
-# because the input format for the nxmctree conditional history sampling
-# has been changed.
-# Well, that and also it never gave samples from the correct distribution,
-# possibly because the conditional sampling needs to be more subtle
-# than conditioning on allowed vs. not allowed histories.
+# adjust the transition matrices accordingly
 
 #TODO use 'segment' vs. 'edge' jargon
 
@@ -157,7 +151,7 @@ class MetaNode(object):
             A transition like (trajectory_name, sa, sb) or None.
             None is interpreted as absence of background transition.
         tm : float
-            time
+            time elapsed since the root
 
         """
         self.P_nx = P_nx
