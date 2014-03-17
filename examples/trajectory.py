@@ -84,56 +84,6 @@ class Trajectory(object):
                 ev.sa = None
                 ev.sb = None
 
-    def add_poisson_events(self, T, edge_to_blen):
-        """
-        Add incomplete events to all edges.
-
-        Parameters
-        ----------
-        T : directed nx tree
-            tree
-        edge_to_blen : dict
-            maps structural edges to branch lengths
-
-        """
-        for edge in T.edges():
-            va, vb = edge
-
-            # build triples defining the foreground trajectory along the branch
-            triples = []
-            for ev in self.events[edge]:
-                triple = (ev.tm, ev.sa, ev.sb)
-                triples.append(triple)
-            initial_triple = (0, None, self.history[va])
-            final_triple = (edge_to_blen[edge], self.history[vb], None)
-            triples = sorted([initial_triple] + triples + [final_triple])
-
-            # sample new poisson events along the branch
-            poisson_events = []
-            for ta, tb in zip(triples[:-1], triples[1:]):
-                ta_tm, ta_initial, ta_final = ta
-                tb_tm, tb_initial, tb_final = tb
-                if ta_tm == tb_tm:
-                    warnings.warn('multiple events occur simultaneously')
-                if tb_tm < ta_tm:
-                    raise Exception('times are not monotonically increasing')
-                if None in (ta_final, tb_initial):
-                    raise Exception('trajectory has incomplete events')
-                if ta_final != tb_initial:
-                    raise Exception('trajectory has incompatible transitions: '
-                            'ta_final %s  tb_initial %s' % (ta_final, tb_initial))
-                state = ta_final
-                rate = self.poisson_rates[state]
-                blen = tb_tm - ta_tm
-                n = np.random.poisson(rate * blen)
-                times = np.random.uniform(low=ta_tm, high=tb_tm, size=n)
-                for tm in times:
-                    ev = Event(track=self, tm=tm)
-                    poisson_events.append(ev)
-
-            # add the sampled poisson events to the track info for the branch
-            self.events[edge].extend(poisson_events)
-
 
 class Event(object):
     def __init__(self, track=None, tm=None, sa=None, sb=None):

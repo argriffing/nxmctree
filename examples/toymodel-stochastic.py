@@ -38,7 +38,8 @@ import scipy.linalg
 import nxmctree
 from nxmctree.sampling import sample_history
 
-from util import get_node_to_tm, get_total_rates
+from util import (
+        get_node_to_tm, get_total_rates, get_omega, get_uniformized_P_nx)
 from trajectory import Trajectory, Event
 
 
@@ -131,12 +132,14 @@ class MetaNode(object):
     This is hashable so it can be a node in a networkx graph.
 
     """
-    def __init__(self, P_nx=None,
+    def __init__(self, track=None, P_nx=None,
             set_sa=None, set_sb=None, fset=None, transition=None, tm=None):
         """
 
         Parameters
         ----------
+        track : Trajectory
+            event track if any
         P_nx : nx transition matrix, optional
             the node is associated with this transition matrix
         set_sa : callback, optional
@@ -154,6 +157,7 @@ class MetaNode(object):
             time elapsed since the root
 
         """
+        self.track = track
         self.P_nx = P_nx
         self.set_sa = set_sa
         self.set_sb = set_sb
@@ -324,22 +328,48 @@ def sample_poisson_events(T, node_to_tm, fg_track, bg_tracks, bg_to_fg_fset):
                                 name, track_to_state[name], sa, sb))
                 track_to_state[name] = sb
 
-            # Use the foreground and background track states
-            # to define the poisson rate that is homogeneous on this segment.
-            rate = 0
-            fg_sa = track_to_state[fg_track.name]
-            for fg_sb in fg_track.Q_nx[fg_sa]:
-                tolerated = True
+            if len(bg_tracks) > 1:
+                # Get the set of foreground states allowed by the background.
+                fsets = []
                 for bg_track in bg_tracks:
                     bg_state = track_to_state[bg_track.name]
-                    fset = bg_to_fg_fset[bg_track.name][bg_state]
-                    if fg_sb not in fset:
-                        tolerated = False
-                if tolerated:
-                    rate += fg_track.Q_nx[fg_sa][fg_sb]['weight']
-            #poisson_rate = fg_track.omega - rate
-            #TODO hack
-            poisson_rate = fg_track.poisson_rates[fg_sa]
+                    fsets.append(bg_to_fg_fset[bg_track.name][bg_state])
+                fg_allowed = set.intersection(*fsets)
+
+                # Get the local transition rate matrix determined by background.
+                Q_local = nx.DiGraph()
+                for s in fg_track.Q_nx:
+                    Q_local.add_node(s)
+                for sa, sb in fg_track.Q_nx.edges():
+                    if sb in fg_allowed:
+                        rate = fg_track.Q_nx[sa][sb]['weight']
+                        Q_local.add_edge(sa, sb, weight=rate)
+                # Compute the total local rates.
+                local_rates = get_total_rates(Q_local)
+                local_omega = get_omega(local_rates, 2)
+
+                # Use the foreground and background track states
+                # to define the poisson rate that is homogeneous on this segment.
+                """
+                rate = 0
+                fg_sa = track_to_state[fg_track.name]
+                for fg_sb in fg_track.Q_nx[fg_sa]:
+                    tolerated = True
+                    for bg_track in bg_tracks:
+                        bg_state = track_to_state[bg_track.name]
+                        fset = bg_to_fg_fset[bg_track.name][bg_state]
+                        if fg_sb not in fset:
+                            tolerated = False
+                    if tolerated:
+                        rate += fg_track.Q_nx[fg_sa][fg_sb]['weight']
+                """
+                fg_state = track_to_state[fg_track.name]
+                poisson_rate = local_omega - local_rates[fg_state]
+                #TODO hack
+                #poisson_rate = fg_track.poisson_rates[fg_sa]
+            else:
+                fg_sa = track_to_state[fg_track.name]
+                poisson_rate = fg_track.poisson_rates[fg_sa]
 
             # Sample some poisson events on the segment.
             nevents = np.random.poisson(poisson_rate * blen)
@@ -379,7 +409,6 @@ def sample_transitions(T, root, node_to_tm, primary_to_tol,
     and a collection of contextual background tracks.
 
     """
-    P_nx = fg_track.P_nx
     P_nx_identity = fg_track.P_nx_identity
 
     # Construct a meta node for each structural node.
@@ -388,7 +417,8 @@ def sample_transitions(T, root, node_to_tm, primary_to_tol,
     for v in T:
         f = partial(set_or_confirm_history_state, fg_track.history, v)
         fset = fg_track.data[v]
-        m = MetaNode(P_nx=P_nx_identity, set_sa=f, set_sb=f, fset=fset,
+        m = MetaNode(track=None, P_nx=P_nx_identity,
+                set_sa=f, set_sb=f, fset=fset,
                 tm=node_to_tm[v])
         node_to_meta[v] = m
         #print('adding meta node', v, m)
@@ -424,10 +454,11 @@ def sample_transitions(T, root, node_to_tm, primary_to_tol,
         seq = []
         for ev in sorted(events):
             if ev.track is fg_track:
-                m = MetaNode(P_nx=P_nx, set_sa=ev.init_sa, set_sb=ev.init_sb,
+                m = MetaNode(track=ev.track, P_nx=None,
+                        set_sa=ev.init_sa, set_sb=ev.init_sb,
                         tm=ev.tm)
             else:
-                m = MetaNode(P_nx=P_nx_identity,
+                m = MetaNode(track=ev.track, P_nx=P_nx_identity,
                         set_sa=do_nothing, set_sb=do_nothing,
                         transition=(ev.track.name, ev.sa, ev.sb),
                         tm=ev.tm)
@@ -458,6 +489,36 @@ def sample_transitions(T, root, node_to_tm, primary_to_tol,
                                 name, bg_track_to_state[name], sa, sb))
                 bg_track_to_state[name] = sb
 
+            # Get the set of foreground states allowed by the background.
+            fsets = []
+            for name, state in bg_track_to_state.items():
+                fsets.append(bg_to_fg_fset[name][state])
+            fg_allowed = set.intersection(*fsets)
+
+            # Update the mb transition matrix if it is a foreground event.
+            if ma.track is fg_track:
+                #if False:
+                if len(bg_tracks) > 1:
+                    # Foreground is the primary track.
+                    # Uniformize the transition matrix
+                    # according to the background states.
+                    Q_local = nx.DiGraph()
+                    for s in fg_track.Q_nx:
+                        Q_local.add_node(s)
+                    for sa, sb in fg_track.Q_nx.edges():
+                        if sb in fg_allowed:
+                            rate = fg_track.Q_nx[sa][sb]['weight']
+                            Q_local.add_edge(sa, sb, weight=rate)
+                    # Compute the total local rates.
+                    local_rates = get_total_rates(Q_local)
+                    local_omega = get_omega(local_rates, 2)
+                    P_local = get_uniformized_P_nx(Q_local, local_omega)
+                    ma.P_nx = P_local
+                else:
+                    # Foreground is a blinking track.
+                    # Use the generic transition matrix.
+                    ma.P_nx = fg_track.P_nx
+
             # Get the set of states allowed by data and background interaction.
             fsets = []
             for m in segment:
@@ -466,6 +527,7 @@ def sample_transitions(T, root, node_to_tm, primary_to_tol,
             for name, state in bg_track_to_state.items():
                 fsets.append(bg_to_fg_fset[name][state])
             fg_allowed = set.intersection(*fsets)
+
             # For each possible foreground state,
             # use the states of the background tracks and the data
             # to determine foreground feasibility
@@ -817,11 +879,8 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
 
     # sample correlated trajectories using rao teh on the blinking model
     va_vb_type_to_count = defaultdict(int)
-    k = 800
-    #k = 400
-    #k = 320
-    #k = 200
-    #k = 100
+    k = 200
+    #k = 80
     nsamples = k * k
     burnin = nsamples // 10
     ncounted = 0
