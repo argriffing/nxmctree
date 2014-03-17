@@ -879,7 +879,9 @@ def run(primary_to_tol, interaction_map, track_to_node_to_data_fset):
 
     # sample correlated trajectories using rao teh on the blinking model
     va_vb_type_to_count = defaultdict(int)
-    k = 200
+    k = 800
+    #k = 400
+    #k = 200
     #k = 80
     nsamples = k * k
     burnin = nsamples // 10
