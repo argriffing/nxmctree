@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nxmctree.brute_fset_lhood module &mdash; nxmctree 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nxmctree 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="nxmctree package" href="nxmctree.html" />
+    <link rel="next" title="nxmctree.brute_lmap_lhood module" href="nxmctree.brute_lmap_lhood.html" />
+    <link rel="prev" title="nxmctree.brute_fset_feas module" href="nxmctree.brute_fset_feas.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.brute_lmap_lhood.html" title="nxmctree.brute_lmap_lhood module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.brute_fset_feas.html" title="nxmctree.brute_fset_feas module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >nxmctree</a> &raquo;</li>
+          <li><a href="nxmctree.html" accesskey="U">nxmctree package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-nxmctree.brute_fset_lhood">
+<span id="nxmctree-brute-fset-lhood-module"></span><h1>nxmctree.brute_fset_lhood module<a class="headerlink" href="#module-nxmctree.brute_fset_lhood" title="Permalink to this headline">¶</a></h1>
+<p>Brute force likelihood calculations.</p>
+<p>This module is only for testing.</p>
+<dl class="function">
+<dt id="nxmctree.brute_fset_lhood.get_lhood_brute">
+<tt class="descclassname">nxmctree.brute_fset_lhood.</tt><tt class="descname">get_lhood_brute</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_fset</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/brute_fset_lhood.html#get_lhood_brute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.brute_fset_lhood.get_lhood_brute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the likelihood of this combination of parameters.</p>
+<p>Use brute force enumeration over all possible states.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote class="last">
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.brute_fset_lhood.get_node_to_distn_brute">
+<tt class="descclassname">nxmctree.brute_fset_lhood.</tt><tt class="descname">get_node_to_distn_brute</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_fset</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/brute_fset_lhood.html#get_node_to_distn_brute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.brute_fset_lhood.get_node_to_distn_brute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the map from node to state distribution.</p>
+<p>Use brute force enumeration over all possible states.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote class="last">
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.brute_fset_lhood.get_edge_to_nxdistn_brute">
+<tt class="descclassname">nxmctree.brute_fset_lhood.</tt><tt class="descname">get_edge_to_nxdistn_brute</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/brute_fset_lhood.html#get_edge_to_nxdistn_brute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.brute_fset_lhood.get_edge_to_nxdistn_brute" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>T</strong> : directed networkx tree graph</p>
+<blockquote>
+<div><p>Edge and node annotations are ignored.</p>
+</div></blockquote>
+<p><strong>edge_to_adjacency</strong> : dict</p>
+<blockquote>
+<div><p>A map from directed edges of the tree graph
+to networkx graphs representing state transition feasibility.</p>
+</div></blockquote>
+<p><strong>root</strong> : hashable</p>
+<blockquote>
+<div><p>This is the root node.
+Following networkx convention, this may be anything hashable.</p>
+</div></blockquote>
+<p><strong>root_prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_fset</strong> : dict</p>
+<blockquote class="last">
+<div><p>Map from node to set of feasible states.
+The feasibility could be interpreted as due to restrictions
+caused by observed data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nxmctree.brute_fset_feas.html"
+                        title="previous chapter">nxmctree.brute_fset_feas module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nxmctree.brute_lmap_lhood.html"
+                        title="next chapter">nxmctree.brute_lmap_lhood module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/apidocs/nxmctree.brute_fset_lhood.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.brute_lmap_lhood.html" title="nxmctree.brute_lmap_lhood module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.brute_fset_feas.html" title="nxmctree.brute_fset_feas module"
+             >previous</a> |</li>
+        <li><a href="../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >nxmctree</a> &raquo;</li>
+          <li><a href="nxmctree.html" >nxmctree package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, alex.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

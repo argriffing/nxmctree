@@ -26,7 +26,7 @@
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="nxmctree 0.1.0 documentation" href="../index.html" />
     <link rel="up" title="nxmctree" href="modules.html" />
-    <link rel="next" title="nxmctree.brute_feasibility module" href="nxmctree.brute_feasibility.html" />
+    <link rel="next" title="nxmctree.brute_fset_feas module" href="nxmctree.brute_fset_feas.html" />
     <link rel="prev" title="nxmctree" href="modules.html" /> 
   </head>
   <body>
@@ -43,7 +43,7 @@
           <a href="../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="nxmctree.brute_feasibility.html" title="nxmctree.brute_feasibility module"
+          <a href="nxmctree.brute_fset_feas.html" title="nxmctree.brute_fset_feas module"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="modules.html" title="nxmctree"
@@ -64,11 +64,12 @@
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="nxmctree.brute_feasibility.html">nxmctree.brute_feasibility module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nxmctree.brute_likelihood.html">nxmctree.brute_likelihood module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nxmctree.docspam.html">nxmctree.docspam module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nxmctree.dynamic_feasibility.html">nxmctree.dynamic_feasibility module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nxmctree.dynamic_likelihood.html">nxmctree.dynamic_likelihood module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.brute_fset_feas.html">nxmctree.brute_fset_feas module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.brute_fset_lhood.html">nxmctree.brute_fset_lhood module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.brute_lmap_lhood.html">nxmctree.brute_lmap_lhood module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.dynamic_fset_feas.html">nxmctree.dynamic_fset_feas module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.dynamic_fset_lhood.html">nxmctree.dynamic_fset_lhood module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nxmctree.dynamic_lmap_lhood.html">nxmctree.dynamic_lmap_lhood module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nxmctree.history.html">nxmctree.history module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nxmctree.nputil.html">nxmctree.nputil module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nxmctree.puzzles.html">nxmctree.puzzles module</a></li>
@@ -82,7 +83,7 @@
 <p>nxmctree module short description first line</p>
 <dl class="function">
 <dt id="nxmctree.get_lhood">
-<tt class="descclassname">nxmctree.</tt><tt class="descname">get_lhood</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_fset</em><big>)</big><a class="headerlink" href="#nxmctree.get_lhood" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">nxmctree.</tt><tt class="descname">get_lhood</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="headerlink" href="#nxmctree.get_lhood" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the likelihood of this combination of parameters.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -102,17 +103,13 @@ to networkx graphs representing state transition feasibility.</p>
 <div><p>This is the root node.
 Following networkx convention, this may be anything hashable.</p>
 </div></blockquote>
-<p><strong>root_prior_fset</strong> : set</p>
+<p><strong>root_prior_distn</strong> : dict</p>
 <blockquote>
-<div><p>The set of feasible prior root states.
-This may be interpreted as the support of the prior state
-distribution at the root.</p>
+<div><p>Prior state distribution at the root.</p>
 </div></blockquote>
-<p><strong>node_to_data_fset</strong> : dict</p>
+<p><strong>node_to_data_lmap</strong> : dict</p>
 <blockquote>
-<div><p>Map from node to set of feasible states.
-The feasibility could be interpreted as due to restrictions
-caused by observed data.</p>
+<div><p>For each node, a map from state to observation likelihood.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -129,7 +126,7 @@ return the likelihood, otherwise None.</p>
 
 <dl class="function">
 <dt id="nxmctree.get_node_to_distn">
-<tt class="descclassname">nxmctree.</tt><tt class="descname">get_node_to_distn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_fset</em><big>)</big><a class="headerlink" href="#nxmctree.get_node_to_distn" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">nxmctree.</tt><tt class="descname">get_node_to_distn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="headerlink" href="#nxmctree.get_node_to_distn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the map from node to state distribution.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -149,17 +146,13 @@ to networkx graphs representing state transition feasibility.</p>
 <div><p>This is the root node.
 Following networkx convention, this may be anything hashable.</p>
 </div></blockquote>
-<p><strong>root_prior_fset</strong> : set</p>
+<p><strong>root_prior_distn</strong> : dict</p>
 <blockquote>
-<div><p>The set of feasible prior root states.
-This may be interpreted as the support of the prior state
-distribution at the root.</p>
+<div><p>Prior state distribution at the root.</p>
 </div></blockquote>
-<p><strong>node_to_data_fset</strong> : dict</p>
+<p><strong>node_to_data_lmap</strong> : dict</p>
 <blockquote class="last">
-<div><p>Map from node to set of feasible states.
-The feasibility could be interpreted as due to restrictions
-caused by observed data.</p>
+<div><p>For each node, a map from state to observation likelihood.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -169,7 +162,7 @@ caused by observed data.</p>
 
 <dl class="function">
 <dt id="nxmctree.get_edge_to_nxdistn">
-<tt class="descclassname">nxmctree.</tt><tt class="descname">get_edge_to_nxdistn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_fset</em><big>)</big><a class="headerlink" href="#nxmctree.get_edge_to_nxdistn" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">nxmctree.</tt><tt class="descname">get_edge_to_nxdistn</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="headerlink" href="#nxmctree.get_edge_to_nxdistn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the map from edge to joint state distribution at endpoint nodes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -189,17 +182,13 @@ to networkx graphs representing state transition feasibility.</p>
 <div><p>This is the root node.
 Following networkx convention, this may be anything hashable.</p>
 </div></blockquote>
-<p><strong>root_prior_fset</strong> : set</p>
+<p><strong>root_prior_distn</strong> : dict</p>
 <blockquote>
-<div><p>The set of feasible prior root states.
-This may be interpreted as the support of the prior state
-distribution at the root.</p>
+<div><p>Prior state distribution at the root.</p>
 </div></blockquote>
-<p><strong>node_to_data_fset</strong> : dict</p>
+<p><strong>node_to_data_lmap</strong> : dict</p>
 <blockquote class="last">
-<div><p>Map from node to set of feasible states.
-The feasibility could be interpreted as due to restrictions
-caused by observed data.</p>
+<div><p>For each node, a map from state to observation likelihood.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -209,14 +198,14 @@ caused by observed data.</p>
 
 <dl class="function">
 <dt id="nxmctree.sample_history">
-<tt class="descclassname">nxmctree.</tt><tt class="descname">sample_history</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em><big>)</big><a class="headerlink" href="#nxmctree.sample_history" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">nxmctree.</tt><tt class="descname">sample_history</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="headerlink" href="#nxmctree.sample_history" title="Permalink to this definition">¶</a></dt>
 <dd><p>Jointly sample states on a tree.
 This is called a history.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="nxmctree.sample_histories">
-<tt class="descclassname">nxmctree.</tt><tt class="descname">sample_histories</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_feasible_set</em>, <em>nhistories</em><big>)</big><a class="headerlink" href="#nxmctree.sample_histories" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">nxmctree.</tt><tt class="descname">sample_histories</tt><big>(</big><em>T</em>, <em>edge_to_P</em>, <em>root</em>, <em>root_prior_distn</em>, <em>node_to_data_lmap</em>, <em>nhistories</em><big>)</big><a class="headerlink" href="#nxmctree.sample_histories" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample multiple history.
 Each history is a joint sample of states on the tree.</p>
 </dd></dl>
@@ -265,8 +254,8 @@ is taken into account.</p>
   <p class="topless"><a href="modules.html"
                         title="previous chapter">nxmctree</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="nxmctree.brute_feasibility.html"
-                        title="next chapter">nxmctree.brute_feasibility module</a></p>
+  <p class="topless"><a href="nxmctree.brute_fset_feas.html"
+                        title="next chapter">nxmctree.brute_fset_feas module</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/apidocs/nxmctree.txt"
@@ -302,7 +291,7 @@ is taken into account.</p>
           <a href="../np-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="nxmctree.brute_feasibility.html" title="nxmctree.brute_feasibility module"
+          <a href="nxmctree.brute_fset_feas.html" title="nxmctree.brute_fset_feas module"
              >next</a> |</li>
         <li class="right" >
           <a href="modules.html" title="nxmctree"

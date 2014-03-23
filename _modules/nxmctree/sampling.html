@@ -62,8 +62,7 @@
 
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="kn">as</span> <span class="nn">nx</span>
 
-<span class="kn">import</span> <span class="nn">nxmctree</span>
-<span class="kn">from</span> <span class="nn">nxmctree.dynamic_likelihood</span> <span class="kn">import</span> <span class="n">_backward</span>
+<span class="kn">from</span> <span class="nn">nxmctree</span> <span class="kn">import</span> <span class="n">dynamic_fset_lhood</span><span class="p">,</span> <span class="n">dynamic_lmap_lhood</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s">&#39;sample_history&#39;</span><span class="p">,</span>
@@ -80,29 +79,58 @@
             <span class="k">return</span> <span class="n">i</span>
 
 
-<div class="viewcode-block" id="sample_history"><a class="viewcode-back" href="../../apidocs/nxmctree.sampling.html#nxmctree.sampling.sample_history">[docs]</a><span class="k">def</span> <span class="nf">sample_history</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">sample_history_fset</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Jointly sample states on a tree.</span>
 <span class="sd">    This is called a history.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">_backward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">)</span>
+    <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">dynamic_fset_lhood</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span>
+            <span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
+    <span class="n">node_to_state</span> <span class="o">=</span> <span class="n">_sample_states_preprocessed</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
+            <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">node_to_state</span>
+
+
+<span class="k">def</span> <span class="nf">sample_histories_fset</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">,</span> <span class="n">nhistories</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sample multiple history.</span>
+<span class="sd">    Each history is a joint sample of states on the tree.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">dynamic_fset_lhood</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span>
+            <span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_fset</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nhistories</span><span class="p">):</span>
+        <span class="n">node_to_state</span> <span class="o">=</span> <span class="n">_sample_states_preprocessed</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
+                <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">node_to_state</span>
+
+
+<div class="viewcode-block" id="sample_history"><a class="viewcode-back" href="../../apidocs/nxmctree.sampling.html#nxmctree.sampling.sample_history">[docs]</a><span class="k">def</span> <span class="nf">sample_history</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Jointly sample states on a tree.</span>
+<span class="sd">    This is called a history.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">dynamic_lmap_lhood</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span>
+            <span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">)</span>
     <span class="n">node_to_state</span> <span class="o">=</span> <span class="n">_sample_states_preprocessed</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
             <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">node_to_state</span>
 
 </div>
 <div class="viewcode-block" id="sample_histories"><a class="viewcode-back" href="../../apidocs/nxmctree.sampling.html#nxmctree.sampling.sample_histories">[docs]</a><span class="k">def</span> <span class="nf">sample_histories</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">,</span> <span class="n">nhistories</span><span class="p">):</span>
+        <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">,</span> <span class="n">nhistories</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sample multiple history.</span>
 <span class="sd">    Each history is a joint sample of states on the tree.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">_backward</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
-            <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_feasible_set</span><span class="p">)</span>
+    <span class="n">v_to_subtree_partial_likelihoods</span> <span class="o">=</span> <span class="n">dynamic_lmap_lhood</span><span class="o">.</span><span class="n">_backward</span><span class="p">(</span>
+            <span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">root_prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nhistories</span><span class="p">):</span>
         <span class="n">node_to_state</span> <span class="o">=</span> <span class="n">_sample_states_preprocessed</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">edge_to_P</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span>
                 <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">)</span>
@@ -115,7 +143,6 @@
 <span class="sd">    Jointly sample states on a tree.</span>
 
 <span class="sd">    This variant requires subtree partial likelihoods.</span>
-<span class="sd">    NOTE: this is like raoteh/sampler/_sample_mc0.py</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">root_partial_likelihoods</span> <span class="o">=</span> <span class="n">v_to_subtree_partial_likelihoods</span><span class="p">[</span><span class="n">root</span><span class="p">]</span>

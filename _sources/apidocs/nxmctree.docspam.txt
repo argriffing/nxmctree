@@ -1,0 +1,7 @@
+nxmctree.docspam module
+=======================
+
+.. automodule:: nxmctree.docspam
+    :members:
+    :undoc-members:
+    :show-inheritance:

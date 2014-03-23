@@ -61,54 +61,171 @@
             
   <div class="section" id="module-nxmctree.puzzles">
 <span id="nxmctree-puzzles-module"></span><h1>nxmctree.puzzles module<a class="headerlink" href="#module-nxmctree.puzzles" title="Permalink to this headline">¶</a></h1>
+<p>Sample random systems for testing.</p>
 <dl class="function">
-<dt id="nxmctree.puzzles.gen_random_infeasible_systems">
-<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">gen_random_infeasible_systems</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#gen_random_infeasible_systems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.gen_random_infeasible_systems" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="nxmctree.puzzles.gen_random_systems">
-<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">gen_random_systems</tt><big>(</big><em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#gen_random_systems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.gen_random_systems" title="Permalink to this definition">¶</a></dt>
+<dt id="nxmctree.puzzles.gen_random_fset_systems">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">gen_random_fset_systems</tt><big>(</big><em>pzero</em>, <em>nsystems=40</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#gen_random_fset_systems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.gen_random_fset_systems" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample whole systems for testing likelihood.
 The pzero parameter indicates sparsity.
-Yield (T, edge_to_P, root, root_prior_distn, node_to_data_feasible_set).</p>
+Yield (T, edge_to_P, root, root_prior_distn, node_to_data_fset).</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="nxmctree.puzzles.sample_data_feasible_sets">
-<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_data_feasible_sets</tt><big>(</big><em>nodes</em>, <em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_data_feasible_sets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_data_feasible_sets" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a map from node to feasible state set.
-states : set of states
-pzero : probability that any given state is infeasible</p>
+<dt id="nxmctree.puzzles.gen_random_infeasible_fset_systems">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">gen_random_infeasible_fset_systems</tt><big>(</big><em>nsystems=60</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#gen_random_infeasible_fset_systems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.gen_random_infeasible_fset_systems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.gen_random_infeasible_lmap_systems">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">gen_random_infeasible_lmap_systems</tt><big>(</big><em>nsystems=60</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#gen_random_infeasible_lmap_systems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.gen_random_infeasible_lmap_systems" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.gen_random_lmap_systems">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">gen_random_lmap_systems</tt><big>(</big><em>pzero</em>, <em>nsystems=40</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#gen_random_lmap_systems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.gen_random_lmap_systems" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample whole systems for testing likelihood.
+The pzero parameter indicates sparsity.
+Yield (T, edge_to_P, root, root_prior_distn, node_to_data_lmap).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.sample_data_fsets">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_data_fsets</tt><big>(</big><em>nodes</em>, <em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_data_fsets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_data_fsets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a map from node to feasible state set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nodes</strong> : set</p>
+<blockquote>
+<div><p>nodes</p>
+</div></blockquote>
+<p><strong>states</strong> : set</p>
+<blockquote>
+<div><p>set of states</p>
+</div></blockquote>
+<p><strong>pzero</strong> : float</p>
+<blockquote class="last">
+<div><p>probability that any given state is infeasible</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.puzzles.sample_data_lmaps">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_data_lmaps</tt><big>(</big><em>nodes</em>, <em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_data_lmaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_data_lmaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a map from node to feasible state set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>nodes</strong> : set</p>
+<blockquote>
+<div><p>nodes</p>
+</div></blockquote>
+<p><strong>states</strong> : set</p>
+<blockquote>
+<div><p>set of states</p>
+</div></blockquote>
+<p><strong>pzero</strong> : float</p>
+<blockquote class="last">
+<div><p>probability that any given state is infeasible</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="nxmctree.puzzles.sample_dict_distn">
 <tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_dict_distn</tt><big>(</big><em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_dict_distn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_dict_distn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a random state distribution as a dict.
-Some entries may be zero.
-states : set of states
-pzero : probability that any given state has nonzero probability</p>
+Some entries may be zero.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>states</strong> : set</p>
+<blockquote>
+<div><p>set of states</p>
+</div></blockquote>
+<p><strong>pzero</strong> : float</p>
+<blockquote class="last">
+<div><p>probability that any given state has nonzero probability</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="nxmctree.puzzles.sample_four_node_system">
-<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_four_node_system</tt><big>(</big><em>pzero_transition</em>, <em>pzero_other</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_four_node_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_four_node_system" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="nxmctree.puzzles.sample_fset">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_fset</tt><big>(</big><em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_fset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_fset" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>states</strong> : set</p>
+<blockquote>
+<div><p>set of states</p>
+</div></blockquote>
+<p><strong>pzero</strong> : float</p>
+<blockquote class="last">
+<div><p>probability that any given state is infeasible</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="function">
-<dt id="nxmctree.puzzles.sample_single_node_system">
-<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_single_node_system</tt><big>(</big><em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_single_node_system"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_single_node_system" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sample a system with a single node.</p>
+<dt id="nxmctree.puzzles.sample_lmap">
+<tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_lmap</tt><big>(</big><em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_lmap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_lmap" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>states</strong> : set</p>
+<blockquote>
+<div><p>set of states</p>
+</div></blockquote>
+<p><strong>pzero</strong> : float</p>
+<blockquote class="last">
+<div><p>probability that any given state has nonzero probability</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="nxmctree.puzzles.sample_transition_graph">
 <tt class="descclassname">nxmctree.puzzles.</tt><tt class="descname">sample_transition_graph</tt><big>(</big><em>states</em>, <em>pzero</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/puzzles.html#sample_transition_graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.puzzles.sample_transition_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a random transition matrix as a networkx digraph.
-Some entries may be zero.
-states : set of states
-pzero : probability that any given transition has nonzero probability</p>
+Some entries may be zero.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>states</strong> : set</p>
+<blockquote>
+<div><p>set of states</p>
+</div></blockquote>
+<p><strong>pzero</strong> : float</p>
+<blockquote class="last">
+<div><p>probability that any given transition has nonzero probability</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

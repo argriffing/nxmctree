@@ -58,6 +58,24 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span>
 
+<span class="kn">import</span> <span class="nn">operator</span>
+
+
+<div class="viewcode-block" id="prod"><a class="viewcode-back" href="../../apidocs/nxmctree.util.html#nxmctree.util.prod">[docs]</a><span class="k">def</span> <span class="nf">prod</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="ddec"><a class="viewcode-back" href="../../apidocs/nxmctree.util.html#nxmctree.util.ddec">[docs]</a><span class="k">def</span> <span class="nf">ddec</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A decorator that puts some named string substitutions into a docstring.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">dec</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">__doc__</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">return</span> <span class="n">dec</span>
+
+</div>
 <div class="viewcode-block" id="dict_distn"><a class="viewcode-back" href="../../apidocs/nxmctree.util.html#nxmctree.util.dict_distn">[docs]</a><span class="k">def</span> <span class="nf">dict_distn</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    </span>
