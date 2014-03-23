@@ -13,3 +13,7 @@ sphinx-apidoc --separate -o docs/source/apidocs nxmctree
 # use sphinx to build a static web page from the .rst files
 sphinx-build -b html docs/source /tmp/nxdocs
 
+# remove the temporarily created rst files
+rm -rf docs/source/apidocs
+
+
