@@ -210,8 +210,6 @@ def scaled_posterior_durbin(P, prior_distn, node_to_data_lmap):
     Parameters
     ----------
     {params}
-    scaling_factors : list
-        the scaling factor for each position
 
     Returns
     -------
