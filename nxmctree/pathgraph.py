@@ -9,21 +9,40 @@ These algorithms are from Biological Sequence Analysis by Durbin et al.
 """
 from __future__ import division, print_function, absolute_import
 
+from nxmctree.util import ddec
 
+params = """\
+    P : networkx directed graph
+        A sparse transition matrix as a networkx directed graph.
+    prior_distn : dict
+        Prior state distribution at the root.
+    node_to_data_lmap : dict
+        For each node, a map from state to observation likelihood.
+"""
+
+
+@ddec(params=params)
 def naive_forward_durbin(P, prior_distn, node_to_data_lmap):
     """
-    @param observations: the sequence of observations
-    @return: list of lists, total probability
+    naive forward durbin
+
+    Parameters
+    ----------
+    {params}
+
+    Returns
+    -------
+    ret : list of lists, total probability
+        x
+
     """
     states = sorted(set(P) | set(prior_distn))
     nhidden = len(states)
     nobs = len(node_to_data_lmap)
     f = [[0]*nhidden for i in range(nobs)]
-    # define the initial f variable
     for sink_index, sink_state in enumerate(states):
         p = prior_distn[sink_state]
         f[0][sink_index] = node_to_data_lmap[0][sink_state] * p
-    # define the subsequent f variables
     for i in range(1, nobs):
         lmap = node_to_data_lmap[i]
         for sink_index, sink_state in enumerate(states):
@@ -39,9 +58,20 @@ def naive_forward_durbin(P, prior_distn, node_to_data_lmap):
     return f, total_probability
 
 
+@ddec(params=params)
 def naive_backward_durbin(P, prior_distn, node_to_data_lmap):
     """
-    @return: list of lists, total probability
+    naive backward durbin
+
+    Parameters
+    ----------
+    {params}
+
+    Returns
+    -------
+    ret : list of lists, total probability
+        x
+
     """
     states = sorted(set(P) | set(prior_distn))
     nhidden = len(prior_distn)
@@ -66,28 +96,43 @@ def naive_backward_durbin(P, prior_distn, node_to_data_lmap):
     return b, total_probability
 
 
+@ddec(params=params)
 def naive_posterior_durbin(P, prior_distn, node_to_data_lmap):
     """
-    @return: distributions
+
+    Parameters
+    ----------
+    {params}
+
+    Returns
+    -------
+    ret : distributions
+        x
+
     """
     f, total_f = naive_forward_durbin(P, prior_distn, node_to_data_lmap)
     b, total_b = naive_backward_durbin(P, prior_distn, node_to_data_lmap)
-    #if not np.allclose(total_f, total_b):
-        #raise ValueError('inconsistent total probability calculations')
     total = (total_f + total_b) / 2
     distributions = []
     for fs, bs in zip(f, b):
         distribution = [x*y/total for x, y in zip(fs, bs)]
-        #if not np.allclose(sum(distribution), 1):
-            #raise ValueError('the distribution does not sum to 1: ' + str(sum(distribution)))
         distributions.append(distribution)
     return distributions
 
 
+@ddec(params=params)
 def scaled_forward_durbin(P, prior_distn, node_to_data_lmap):
     """
     At each position, the sum over states of the f variable is 1.
-    @return: the list of lists of scaled f variables, and the scaling variables
+
+    Parameters
+    ----------
+    {params}
+
+    Returns
+    -------
+    ret : x
+        the list of lists of scaled f variables, and the scaling variables
     """
     states = sorted(set(P) | set(prior_distn))
     nhidden = len(prior_distn)
@@ -122,11 +167,22 @@ def scaled_forward_durbin(P, prior_distn, node_to_data_lmap):
     return f, s
 
 
+@ddec(params=params)
 def scaled_backward_durbin(P, prior_distn, node_to_data_lmap, scaling_factors):
     """
     The scaled forward algorithm will have computed the scaling factors.
-    @param scaling_factors: the scaling factor for each position
-    @return: the list of lists of scaled b variables
+
+    Parameters
+    ----------
+    {params}
+    scaling_factors : list
+        the scaling factor for each position
+
+    Returns
+    -------
+    ret : x
+        the list of lists of scaled b variables
+
     """
     states = sorted(set(P) | set(prior_distn))
     nhidden = len(prior_distn)
@@ -146,14 +202,26 @@ def scaled_backward_durbin(P, prior_distn, node_to_data_lmap, scaling_factors):
     return b
 
 
+@ddec(params=params)
 def scaled_posterior_durbin(P, prior_distn, node_to_data_lmap):
     """
-    @return: the list of position-specific posterior hidden state distributions
+    scaled posterior durbin
+
+    Parameters
+    ----------
+    {params}
+    scaling_factors : list
+        the scaling factor for each position
+
+    Returns
+    -------
+    ret : x
+        the list of position-specific posterior hidden state distributions
+
     """
     f, s = scaled_forward_durbin(P, prior_distn, node_to_data_lmap)
     b = scaled_backward_durbin(P, prior_distn, node_to_data_lmap, s)
     distributions = []
-    #for i, (fs, bs) in enumerate(zip(f, b)):
     for fs, bs, si in zip(f, b, s):
         distribution = [x*y*si for x, y in zip(fs, bs)]
         distributions.append(distribution)
