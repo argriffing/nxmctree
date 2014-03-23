@@ -1,0 +1,7 @@
+nxmctree.pathgraph module
+=========================
+
+.. automodule:: nxmctree.pathgraph
+    :members:
+    :undoc-members:
+    :show-inheritance:

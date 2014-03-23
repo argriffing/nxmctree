@@ -1,1 +1,15 @@
 .buildinfo
+
+# exclude the build directory
+build
+
+# exclude compiled source
+*.pyc
+
+# exclude coverage stuff
+htmlcov
+*.coverage
+
+# exclude log files
+*.log
+

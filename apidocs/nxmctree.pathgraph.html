@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nxmctree.pathgraph module &mdash; nxmctree 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nxmctree 0.1.0 documentation" href="../index.html" />
+    <link rel="up" title="nxmctree package" href="nxmctree.html" />
+    <link rel="next" title="nxmctree.puzzles module" href="nxmctree.puzzles.html" />
+    <link rel="prev" title="nxmctree.nputil module" href="nxmctree.nputil.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.puzzles.html" title="nxmctree.puzzles module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.nputil.html" title="nxmctree.nputil module"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >nxmctree</a> &raquo;</li>
+          <li><a href="nxmctree.html" accesskey="U">nxmctree package</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-nxmctree.pathgraph">
+<span id="nxmctree-pathgraph-module"></span><h1>nxmctree.pathgraph module<a class="headerlink" href="#module-nxmctree.pathgraph" title="Permalink to this headline">¶</a></h1>
+<p>Algorithms specialized to homogeneous hidden state paths, for testing.</p>
+<p>All algorithms assume that the history is not branching and that the hidden
+state transition matrix is the same for each neighboring pair of time points.
+The implementation may also assume feasibility of all paths.
+These algorithms are from Biological Sequence Analysis by Durbin et al.</p>
+<dl class="function">
+<dt id="nxmctree.pathgraph.naive_backward_durbin">
+<tt class="descclassname">nxmctree.pathgraph.</tt><tt class="descname">naive_backward_durbin</tt><big>(</big><em>P</em>, <em>prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/pathgraph.html#naive_backward_durbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.pathgraph.naive_backward_durbin" title="Permalink to this definition">¶</a></dt>
+<dd><p>naive backward durbin</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>P</strong> : networkx directed graph</p>
+<blockquote>
+<div><p>A sparse transition matrix as a networkx directed graph.</p>
+</div></blockquote>
+<p><strong>prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_lmap</strong> : dict</p>
+<blockquote>
+<div><p>For each node, a map from state to observation likelihood.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ret</strong> : list of lists, total probability</p>
+<blockquote class="last">
+<div><p>x</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.pathgraph.naive_forward_durbin">
+<tt class="descclassname">nxmctree.pathgraph.</tt><tt class="descname">naive_forward_durbin</tt><big>(</big><em>P</em>, <em>prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/pathgraph.html#naive_forward_durbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.pathgraph.naive_forward_durbin" title="Permalink to this definition">¶</a></dt>
+<dd><p>naive forward durbin</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>P</strong> : networkx directed graph</p>
+<blockquote>
+<div><p>A sparse transition matrix as a networkx directed graph.</p>
+</div></blockquote>
+<p><strong>prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_lmap</strong> : dict</p>
+<blockquote>
+<div><p>For each node, a map from state to observation likelihood.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ret</strong> : list of lists, total probability</p>
+<blockquote class="last">
+<div><p>x</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.pathgraph.naive_posterior_durbin">
+<tt class="descclassname">nxmctree.pathgraph.</tt><tt class="descname">naive_posterior_durbin</tt><big>(</big><em>P</em>, <em>prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/pathgraph.html#naive_posterior_durbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.pathgraph.naive_posterior_durbin" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>P</strong> : networkx directed graph</p>
+<blockquote>
+<div><p>A sparse transition matrix as a networkx directed graph.</p>
+</div></blockquote>
+<p><strong>prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_lmap</strong> : dict</p>
+<blockquote>
+<div><p>For each node, a map from state to observation likelihood.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ret</strong> : distributions</p>
+<blockquote class="last">
+<div><p>x</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.pathgraph.scaled_backward_durbin">
+<tt class="descclassname">nxmctree.pathgraph.</tt><tt class="descname">scaled_backward_durbin</tt><big>(</big><em>P</em>, <em>prior_distn</em>, <em>node_to_data_lmap</em>, <em>scaling_factors</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/pathgraph.html#scaled_backward_durbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.pathgraph.scaled_backward_durbin" title="Permalink to this definition">¶</a></dt>
+<dd><p>The scaled forward algorithm will have computed the scaling factors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>P</strong> : networkx directed graph</p>
+<blockquote>
+<div><p>A sparse transition matrix as a networkx directed graph.</p>
+</div></blockquote>
+<p><strong>prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_lmap</strong> : dict</p>
+<blockquote>
+<div><p>For each node, a map from state to observation likelihood.</p>
+</div></blockquote>
+<p><strong>scaling_factors</strong> : list</p>
+<blockquote>
+<div><p>the scaling factor for each position</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ret</strong> : x</p>
+<blockquote class="last">
+<div><p>the list of lists of scaled b variables</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.pathgraph.scaled_forward_durbin">
+<tt class="descclassname">nxmctree.pathgraph.</tt><tt class="descname">scaled_forward_durbin</tt><big>(</big><em>P</em>, <em>prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/pathgraph.html#scaled_forward_durbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.pathgraph.scaled_forward_durbin" title="Permalink to this definition">¶</a></dt>
+<dd><p>At each position, the sum over states of the f variable is 1.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>P</strong> : networkx directed graph</p>
+<blockquote>
+<div><p>A sparse transition matrix as a networkx directed graph.</p>
+</div></blockquote>
+<p><strong>prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_lmap</strong> : dict</p>
+<blockquote>
+<div><p>For each node, a map from state to observation likelihood.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ret</strong> : x</p>
+<blockquote class="last">
+<div><p>the list of lists of scaled f variables, and the scaling variables</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nxmctree.pathgraph.scaled_posterior_durbin">
+<tt class="descclassname">nxmctree.pathgraph.</tt><tt class="descname">scaled_posterior_durbin</tt><big>(</big><em>P</em>, <em>prior_distn</em>, <em>node_to_data_lmap</em><big>)</big><a class="reference internal" href="../_modules/nxmctree/pathgraph.html#scaled_posterior_durbin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nxmctree.pathgraph.scaled_posterior_durbin" title="Permalink to this definition">¶</a></dt>
+<dd><p>scaled posterior durbin</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>P</strong> : networkx directed graph</p>
+<blockquote>
+<div><p>A sparse transition matrix as a networkx directed graph.</p>
+</div></blockquote>
+<p><strong>prior_distn</strong> : dict</p>
+<blockquote>
+<div><p>Prior state distribution at the root.</p>
+</div></blockquote>
+<p><strong>node_to_data_lmap</strong> : dict</p>
+<blockquote>
+<div><p>For each node, a map from state to observation likelihood.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ret</strong> : x</p>
+<blockquote class="last">
+<div><p>the list of position-specific posterior hidden state distributions</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nxmctree.nputil.html"
+                        title="previous chapter">nxmctree.nputil module</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nxmctree.puzzles.html"
+                        title="next chapter">nxmctree.puzzles module</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/apidocs/nxmctree.pathgraph.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.puzzles.html" title="nxmctree.puzzles module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nxmctree.nputil.html" title="nxmctree.nputil module"
+             >previous</a> |</li>
+        <li><a href="../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >nxmctree</a> &raquo;</li>
+          <li><a href="nxmctree.html" >nxmctree package</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, alex.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>

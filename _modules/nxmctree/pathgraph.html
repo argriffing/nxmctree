@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nxmctree.pathgraph &mdash; nxmctree 0.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nxmctree 0.1.0 documentation" href="../../index.html" />
+    <link rel="up" title="nxmctree" href="../nxmctree.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../nxmctree.html" accesskey="U">nxmctree</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for nxmctree.pathgraph</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Algorithms specialized to homogeneous hidden state paths, for testing.</span>
+
+<span class="sd">All algorithms assume that the history is not branching and that the hidden</span>
+<span class="sd">state transition matrix is the same for each neighboring pair of time points.</span>
+<span class="sd">The implementation may also assume feasibility of all paths.</span>
+<span class="sd">These algorithms are from Biological Sequence Analysis by Durbin et al.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span>
+
+<span class="kn">from</span> <span class="nn">nxmctree.util</span> <span class="kn">import</span> <span class="n">ddec</span>
+
+<span class="n">params</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">    P : networkx directed graph</span>
+<span class="s">        A sparse transition matrix as a networkx directed graph.</span>
+<span class="s">    prior_distn : dict</span>
+<span class="s">        Prior state distribution at the root.</span>
+<span class="s">    node_to_data_lmap : dict</span>
+<span class="s">        For each node, a map from state to observation likelihood.</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+<div class="viewcode-block" id="naive_forward_durbin"><a class="viewcode-back" href="../../apidocs/nxmctree.pathgraph.html#nxmctree.pathgraph.naive_forward_durbin">[docs]</a><span class="k">def</span> <span class="nf">naive_forward_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    naive forward durbin</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ret : list of lists, total probability</span>
+<span class="sd">        x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">prior_distn</span><span class="p">))</span>
+    <span class="n">nhidden</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_to_data_lmap</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">nhidden</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nobs</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">sink_index</span><span class="p">,</span> <span class="n">sink_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">prior_distn</span><span class="p">[</span><span class="n">sink_state</span><span class="p">]</span>
+        <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_to_data_lmap</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">sink_state</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nobs</span><span class="p">):</span>
+        <span class="n">lmap</span> <span class="o">=</span> <span class="n">node_to_data_lmap</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">sink_index</span><span class="p">,</span> <span class="n">sink_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">lmap</span><span class="p">[</span><span class="n">sink_state</span><span class="p">]</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">source_index</span><span class="p">,</span> <span class="n">source_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+                <span class="n">ptrans</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">source_state</span><span class="p">][</span><span class="n">sink_state</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">+=</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">source_index</span><span class="p">]</span> <span class="o">*</span> <span class="n">ptrans</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span> <span class="o">*=</span> <span class="n">p</span>
+    <span class="n">total_probability</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">source_index</span><span class="p">,</span> <span class="n">source_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+        <span class="n">total_probability</span> <span class="o">+=</span> <span class="n">f</span><span class="p">[</span><span class="n">nobs</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">source_index</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">total_probability</span>
+
+</div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+<div class="viewcode-block" id="naive_backward_durbin"><a class="viewcode-back" href="../../apidocs/nxmctree.pathgraph.html#nxmctree.pathgraph.naive_backward_durbin">[docs]</a><span class="k">def</span> <span class="nf">naive_backward_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    naive backward durbin</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ret : list of lists, total probability</span>
+<span class="sd">        x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">prior_distn</span><span class="p">))</span>
+    <span class="n">nhidden</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prior_distn</span><span class="p">)</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_to_data_lmap</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">nhidden</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nobs</span><span class="p">)]</span>
+    <span class="n">b</span><span class="p">[</span><span class="n">nobs</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">nhidden</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nobs</span><span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">source_index</span><span class="p">,</span> <span class="n">source_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">sink_index</span><span class="p">,</span> <span class="n">sink_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="n">p</span> <span class="o">*=</span> <span class="n">P</span><span class="p">[</span><span class="n">source_state</span><span class="p">][</span><span class="n">sink_state</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">*=</span> <span class="n">node_to_data_lmap</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">sink_state</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">*=</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span>
+                <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">source_index</span><span class="p">]</span> <span class="o">+=</span> <span class="n">p</span>
+    <span class="n">total_probability</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">sink_index</span><span class="p">,</span> <span class="n">sink_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="n">p</span> <span class="o">*=</span> <span class="n">prior_distn</span><span class="p">[</span><span class="n">sink_state</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">*=</span> <span class="n">node_to_data_lmap</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">sink_state</span><span class="p">]</span>
+        <span class="n">p</span> <span class="o">*=</span> <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span>
+        <span class="n">total_probability</span> <span class="o">+=</span> <span class="n">p</span>
+    <span class="k">return</span> <span class="n">b</span><span class="p">,</span> <span class="n">total_probability</span>
+
+</div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+<div class="viewcode-block" id="naive_posterior_durbin"><a class="viewcode-back" href="../../apidocs/nxmctree.pathgraph.html#nxmctree.pathgraph.naive_posterior_durbin">[docs]</a><span class="k">def</span> <span class="nf">naive_posterior_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ret : distributions</span>
+<span class="sd">        x</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">total_f</span> <span class="o">=</span> <span class="n">naive_forward_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">)</span>
+    <span class="n">b</span><span class="p">,</span> <span class="n">total_b</span> <span class="o">=</span> <span class="n">naive_backward_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">)</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_f</span> <span class="o">+</span> <span class="n">total_b</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">distributions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">fs</span><span class="p">,</span> <span class="n">bs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="n">distribution</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">/</span><span class="n">total</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">bs</span><span class="p">)]</span>
+        <span class="n">distributions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distribution</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">distributions</span>
+
+</div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+<div class="viewcode-block" id="scaled_forward_durbin"><a class="viewcode-back" href="../../apidocs/nxmctree.pathgraph.html#nxmctree.pathgraph.scaled_forward_durbin">[docs]</a><span class="k">def</span> <span class="nf">scaled_forward_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    At each position, the sum over states of the f variable is 1.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ret : x</span>
+<span class="sd">        the list of lists of scaled f variables, and the scaling variables</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">prior_distn</span><span class="p">))</span>
+    <span class="n">nhidden</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prior_distn</span><span class="p">)</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_to_data_lmap</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">nhidden</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nobs</span><span class="p">)]</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">nobs</span>
+    <span class="c"># define the initial unscaled f variable</span>
+    <span class="k">for</span> <span class="n">sink_index</span><span class="p">,</span> <span class="n">sink_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">prior_distn</span><span class="p">[</span><span class="n">sink_state</span><span class="p">]</span>
+        <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">node_to_data_lmap</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">sink_state</span><span class="p">]</span> <span class="o">*</span> <span class="n">p</span>
+    <span class="c"># define the initial scaling factor</span>
+    <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="c"># define the initial scaled f variable</span>
+    <span class="k">for</span> <span class="n">sink_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nhidden</span><span class="p">):</span>
+        <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span> <span class="o">/=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c"># define the subsequent f variables and scaling factors</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nobs</span><span class="p">):</span>
+        <span class="n">lmap</span> <span class="o">=</span> <span class="n">node_to_data_lmap</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c"># define an unscaled f variable at this position</span>
+        <span class="k">for</span> <span class="n">sink_index</span><span class="p">,</span> <span class="n">sink_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">lmap</span><span class="p">[</span><span class="n">sink_state</span><span class="p">]</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">source_index</span><span class="p">,</span> <span class="n">source_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+                <span class="n">ptrans</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="n">source_state</span><span class="p">][</span><span class="n">sink_state</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">+=</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">source_index</span><span class="p">]</span> <span class="o">*</span> <span class="n">ptrans</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span> <span class="o">*=</span> <span class="n">p</span>
+        <span class="c"># define the scaling factor at this position</span>
+        <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="c"># define the scaled f variable at this position</span>
+        <span class="k">for</span> <span class="n">sink_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nhidden</span><span class="p">):</span>
+            <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span> <span class="o">/=</span> <span class="n">s</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">f</span><span class="p">,</span> <span class="n">s</span>
+
+</div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+<div class="viewcode-block" id="scaled_backward_durbin"><a class="viewcode-back" href="../../apidocs/nxmctree.pathgraph.html#nxmctree.pathgraph.scaled_backward_durbin">[docs]</a><span class="k">def</span> <span class="nf">scaled_backward_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">,</span> <span class="n">scaling_factors</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The scaled forward algorithm will have computed the scaling factors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
+<span class="sd">    scaling_factors : list</span>
+<span class="sd">        the scaling factor for each position</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ret : x</span>
+<span class="sd">        the list of lists of scaled b variables</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">states</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">prior_distn</span><span class="p">))</span>
+    <span class="n">nhidden</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prior_distn</span><span class="p">)</span>
+    <span class="n">nobs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">node_to_data_lmap</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">nhidden</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nobs</span><span class="p">)]</span>
+    <span class="n">b</span><span class="p">[</span><span class="n">nobs</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="o">/</span><span class="n">scaling_factors</span><span class="p">[</span><span class="n">nobs</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span><span class="o">*</span><span class="n">nhidden</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nobs</span><span class="o">-</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">source_index</span><span class="p">,</span> <span class="n">source_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+            <span class="n">accum</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">sink_index</span><span class="p">,</span> <span class="n">sink_state</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">states</span><span class="p">):</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="n">p</span> <span class="o">*=</span> <span class="n">P</span><span class="p">[</span><span class="n">source_state</span><span class="p">][</span><span class="n">sink_state</span><span class="p">][</span><span class="s">&#39;weight&#39;</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">*=</span> <span class="n">node_to_data_lmap</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">sink_state</span><span class="p">]</span>
+                <span class="n">p</span> <span class="o">*=</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">sink_index</span><span class="p">]</span>
+                <span class="n">accum</span> <span class="o">+=</span> <span class="n">p</span>
+            <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">source_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">accum</span> <span class="o">/</span> <span class="n">scaling_factors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">b</span>
+
+</div>
+<span class="nd">@ddec</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+<div class="viewcode-block" id="scaled_posterior_durbin"><a class="viewcode-back" href="../../apidocs/nxmctree.pathgraph.html#nxmctree.pathgraph.scaled_posterior_durbin">[docs]</a><span class="k">def</span> <span class="nf">scaled_posterior_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    scaled posterior durbin</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {params}</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ret : x</span>
+<span class="sd">        the list of position-specific posterior hidden state distributions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">scaled_forward_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">scaled_backward_durbin</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">prior_distn</span><span class="p">,</span> <span class="n">node_to_data_lmap</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="n">distributions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">fs</span><span class="p">,</span> <span class="n">bs</span><span class="p">,</span> <span class="n">si</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="n">distribution</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">*</span><span class="n">y</span><span class="o">*</span><span class="n">si</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">bs</span><span class="p">)]</span>
+        <span class="n">distributions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">distribution</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">distributions</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">nxmctree 0.1.0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../nxmctree.html" >nxmctree</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, alex.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.1.
+    </div>
+  </body>
+</html>
