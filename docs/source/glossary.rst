@@ -10,7 +10,10 @@ glossary
       finite distribution over states, as a python dict
 
    fset
-      feasible set of feasible states, as a python set
+      set of feasible states, as a python set
+
+   lmap
+      a map from feasible state to likelihood, as a python dict
 
    lhood
       likelihood
