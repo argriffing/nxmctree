@@ -2,6 +2,7 @@
 # delete parts of the old build if present
 rm -rf /tmp/nxdocs
 rm -rf docs/source/apidocs
+rm -rf htmlcov
 
 # copy the manually edited .rst files into the source directory
 cp docs/manually-edited/*.rst docs/source/
