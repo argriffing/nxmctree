@@ -44,13 +44,15 @@ def get_total_rates(Q_nx):
     return total_rates
 
 
-def get_uniformized_P_nx(Q_nx, omega):
+def get_uniformized_P_nx(Q_nx, total_rates, omega):
     """
 
     Parameters
     ----------
     Q_nx : directed networkx graph
         rate matrix
+    total_rates : dict
+        map from state to sum of Q_nx rates out of that state
     omega : float
         uniformization rate
 
@@ -60,7 +62,6 @@ def get_uniformized_P_nx(Q_nx, omega):
         transition probability matrix
 
     """
-    total_rates = get_total_rates(Q_nx)
     P_nx = nx.DiGraph()
     for sa in Q_nx:
         total_rate = total_rates.get(sa, 0)

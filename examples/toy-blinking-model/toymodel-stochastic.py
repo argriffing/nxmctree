@@ -518,7 +518,8 @@ def sample_transitions(T, root, node_to_tm, primary_to_tol,
                     # Compute the total local rates.
                     local_rates = get_total_rates(Q_local)
                     local_omega = get_omega(local_rates, 2)
-                    P_local = get_uniformized_P_nx(Q_local, local_omega)
+                    P_local = get_uniformized_P_nx(
+                            Q_local, local_rates, local_omega)
                     ma.P_nx = P_local
                 else:
                     # Foreground is a blinking track.

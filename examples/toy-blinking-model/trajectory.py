@@ -56,7 +56,8 @@ class Trajectory(object):
         self.omega = get_omega(self.total_rates, self.uniformization_factor)
 
         # Precompute the uniformized transition matrix.
-        self.P_nx = get_uniformized_P_nx(self.Q_nx, self.omega)
+        self.P_nx = get_uniformized_P_nx(
+                self.Q_nx, self.total_rates, self.omega)
 
         # Precompute the identity transition matrix.
         self.P_nx_identity = get_identity_P_nx(set(self.P_nx))
