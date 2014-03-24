@@ -274,6 +274,186 @@ def get_blink_dwell_times(T, node_to_tm, blink_tracks):
     return dwell_off, dwell_on
 
 
+def sample_primary_poisson_events(
+        T, node_to_tm, primary_track, blink_tracks, blink_to_primary_fset):
+    """
+    Sample poisson events on the primary codon-like trajectory.
+
+    This function is a specialization of an earlier function
+    named sample_poisson_events which had intended to not care about
+    primary vs. blinking tracks except through their roles as
+    foreground vs. background tracks.
+    Some specific details of our model causes this aggregation
+    to not work so well in practice, but such a unification will make more
+    sense when a fully general CTBN sampler is implemented.
+
+    Parameters
+    ----------
+    T : x
+        x
+    node_to_tm : x
+        x
+    primary_track : x
+        x
+    blink_tracks : x
+        x
+    blink_to_primary_fset : x
+        x
+
+    """
+    fg_track = primary_track
+    bg_tracks = blink_tracks
+    bg_to_fg_fset = blink_to_primary_fset
+
+    for edge in T.edges():
+        va, vb = edge
+        tma = node_to_tm[va]
+        tmb = node_to_tm[vb]
+
+        events = []
+        events.extend(fg_track.events[edge])
+        for bg_track in bg_tracks:
+            events.extend(bg_track.events[edge])
+
+        # Construct the meta nodes corresponding to sorted events.
+        # No times should coincide.
+        seq = [(ev.tm, ev.track, ev.sa, ev.sb) for ev in sorted(events)]
+        info_a = (tma, None, None, None)
+        info_b = (tmb, None, None, None)
+        seq = [info_a] + seq + [info_b]
+
+        # Initialize foreground state and background states
+        # at the beginning of the edge.
+        track_to_state = {}
+        for bg_track in bg_tracks:
+            track_to_state[bg_track.name] = bg_track.history[va]
+        track_to_state[fg_track.name] = fg_track.history[va]
+
+        # Iterate over segments of the edge.
+        # Within each segment the foreground and background tracks
+        # maintain the same state, and therefore the rate
+        # of new foreground poisson events is constant within the segment.
+        poisson_events = []
+        for segment in zip(seq[:-1], seq[1:]):
+            info_a, info_b = segment
+            tma, tracka, saa, sba = info_a
+            tmb, trackb, sab, sbb = info_b
+            blen = tmb - tma
+
+            # Keep the state of each track up to date.
+            if tracka is not None:
+                tm, track, sa, sb = info_a
+                name = tracka.name
+                if track_to_state[name] != sa:
+                    raise Exception('incompatible transition: '
+                            'current state on track %s is %s '
+                            'but encountered a transition event from '
+                            'state %s to state %s' % (
+                                name, track_to_state[name], sa, sb))
+                track_to_state[name] = sb
+
+            # Get the set of foreground states allowed by the background.
+            fsets = []
+            for bg_track in bg_tracks:
+                bg_state = track_to_state[bg_track.name]
+                fsets.append(bg_to_fg_fset[bg_track.name][bg_state])
+            fg_allowed = set.intersection(*fsets)
+
+            # Get the local transition rate matrix determined by background.
+            Q_local = nx.DiGraph()
+            for s in fg_track.Q_nx:
+                Q_local.add_node(s)
+            for sa, sb in fg_track.Q_nx.edges():
+                if sb in fg_allowed:
+                    rate = fg_track.Q_nx[sa][sb]['weight']
+                    Q_local.add_edge(sa, sb, weight=rate)
+
+            # Compute the total local rates.
+            local_rates = get_total_rates(Q_local)
+            local_omega = get_omega(local_rates, 2)
+
+            # Compute the poisson rate.
+            fg_state = track_to_state[fg_track.name]
+            poisson_rate = local_omega - local_rates[fg_state]
+
+            # Sample some poisson events on the segment.
+            nevents = np.random.poisson(poisson_rate * blen)
+            times = np.random.uniform(low=tma, high=tmb, size=nevents)
+            for tm in times:
+                ev = Event(track=fg_track, tm=tm)
+                poisson_events.append(ev)
+
+        # Add the poisson events into the list of foreground
+        # track events for this edge.
+        fg_track.events[edge].extend(poisson_events)
+
+
+def sample_blink_poisson_events(
+        T, node_to_tm, fg_track, bg_tracks, bg_to_fg_fset):
+    """
+
+    """
+    for edge in T.edges():
+        va, vb = edge
+        tma = node_to_tm[va]
+        tmb = node_to_tm[vb]
+
+        events = []
+        events.extend(fg_track.events[edge])
+        for bg_track in bg_tracks:
+            events.extend(bg_track.events[edge])
+
+        # Construct the meta nodes corresponding to sorted events.
+        # No times should coincide.
+        seq = [(ev.tm, ev.track, ev.sa, ev.sb) for ev in sorted(events)]
+        info_a = (tma, None, None, None)
+        info_b = (tmb, None, None, None)
+        seq = [info_a] + seq + [info_b]
+
+        # Initialize foreground state and background states
+        # at the beginning of the edge.
+        track_to_state = {}
+        for bg_track in bg_tracks:
+            track_to_state[bg_track.name] = bg_track.history[va]
+        track_to_state[fg_track.name] = fg_track.history[va]
+
+        # Iterate over segments of the edge.
+        # Within each segment the foreground and background tracks
+        # maintain the same state, and therefore the rate
+        # of new foreground poisson events is constant within the segment.
+        poisson_events = []
+        for segment in zip(seq[:-1], seq[1:]):
+            info_a, info_b = segment
+            tma, tracka, saa, sba = info_a
+            tmb, trackb, sab, sbb = info_b
+            blen = tmb - tma
+
+            # Keep the state of each track up to date.
+            if tracka is not None:
+                tm, track, sa, sb = info_a
+                name = tracka.name
+                if track_to_state[name] != sa:
+                    raise Exception('incompatible transition: '
+                            'current state on track %s is %s '
+                            'but encountered a transition event from '
+                            'state %s to state %s' % (
+                                name, track_to_state[name], sa, sb))
+                track_to_state[name] = sb
+
+            fg_sa = track_to_state[fg_track.name]
+            poisson_rate = fg_track.poisson_rates[fg_sa]
+
+            # Sample some poisson events on the segment.
+            nevents = np.random.poisson(poisson_rate * blen)
+            times = np.random.uniform(low=tma, high=tmb, size=nevents)
+            for tm in times:
+                ev = Event(track=fg_track, tm=tm)
+                poisson_events.append(ev)
+
+        # Add the poisson events into the list of foreground
+        # track events for this edge.
+        fg_track.events[edge].extend(poisson_events)
+
 
 def sample_poisson_events(T, node_to_tm, fg_track, bg_tracks, bg_to_fg_fset):
     """
@@ -284,9 +464,6 @@ def sample_poisson_events(T, node_to_tm, fg_track, bg_tracks, bg_to_fg_fset):
     but also on the background tracks.
 
     """
-    P_nx = fg_track.P_nx
-    P_nx_identity = fg_track.P_nx_identity
-
     for edge in T.edges():
         va, vb = edge
         tma = node_to_tm[va]
@@ -356,23 +533,8 @@ def sample_poisson_events(T, node_to_tm, fg_track, bg_tracks, bg_to_fg_fset):
 
                 # Use the foreground and background track states
                 # to define the poisson rate that is homogeneous on this segment.
-                """
-                rate = 0
-                fg_sa = track_to_state[fg_track.name]
-                for fg_sb in fg_track.Q_nx[fg_sa]:
-                    tolerated = True
-                    for bg_track in bg_tracks:
-                        bg_state = track_to_state[bg_track.name]
-                        fset = bg_to_fg_fset[bg_track.name][bg_state]
-                        if fg_sb not in fset:
-                            tolerated = False
-                    if tolerated:
-                        rate += fg_track.Q_nx[fg_sa][fg_sb]['weight']
-                """
                 fg_state = track_to_state[fg_track.name]
                 poisson_rate = local_omega - local_rates[fg_state]
-                #TODO hack
-                #poisson_rate = fg_track.poisson_rates[fg_sa]
             else:
                 fg_sa = track_to_state[fg_track.name]
                 poisson_rate = fg_track.poisson_rates[fg_sa]
@@ -674,27 +836,29 @@ def blinking_model_rao_teh(
     # Outer loop of the Rao-Teh-Gibbs sampler.
     while True:
 
-        # Update the primary track.
-        sample_poisson_events(T, node_to_tm,
+        # add poisson events to the primary track
+        sample_primary_poisson_events(T, node_to_tm,
                 primary_track, tolerance_tracks, interaction_map['P'])
+        # clear state labels for the primary track
         primary_track.clear_state_labels()
+        # sample state transitions for the primary track
         sample_transitions(T, root, node_to_tm, primary_to_tol,
                 primary_track, tolerance_tracks, interaction_map['P'], Q_meta)
+        # remove self transitions for the primary track
         primary_track.remove_self_transitions()
 
         # Update each blinking track.
         for track in tolerance_tracks:
             name = track.name
-            #print('adding poisson events for track', name)
-            sample_poisson_events(T, node_to_tm,
+            # add poisson events to this blink track
+            sample_blink_poisson_events(T, node_to_tm,
                     track, [primary_track], interaction_map[name])
-            #track.add_poisson_events(T, node_to_tm)
-            #print('clearing state labels for track', name)
+            # clear state labels for this blink track
             track.clear_state_labels()
-            #print('sampling state transitions for track', name)
+            # sample state transitions for this blink track
             sample_transitions(T, root, node_to_tm, primary_to_tol,
                     track, [primary_track], interaction_map[name], Q_meta)
-            #print('removing self transitions for track', name)
+            # remove self transitions for this blink track
             track.remove_self_transitions()
 
         """
