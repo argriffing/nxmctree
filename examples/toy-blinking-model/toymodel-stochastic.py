@@ -1066,7 +1066,7 @@ def main():
                 'N5' : {False, True},
                 },
             }
-    run(primary_to_tol, interaction_map, data)
+    #run(primary_to_tol, interaction_map, data)
     print()
 
 
@@ -1107,7 +1107,7 @@ def main():
                 'N5' : {False, True},
                 },
             }
-    #run(primary_to_tol, interaction_map, data)
+    run(primary_to_tol, interaction_map, data)
     print()
 
     # Alignment and fully observed disease data.
