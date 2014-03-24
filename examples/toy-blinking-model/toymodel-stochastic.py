@@ -236,6 +236,23 @@ def get_blink_dwell_times(T, node_to_tm, blink_tracks):
     return dwell_off, dwell_on
 
 
+def get_node_to_meta(T, root, node_to_tm, fg_track):
+    """
+    Create meta nodes representing structural nodes in the tree.
+
+    """
+    P_nx_identity = fg_track.P_nx_identity
+    node_to_meta = {}
+    for v in T:
+        f = partial(set_or_confirm_history_state, fg_track.history, v)
+        fset = fg_track.data[v]
+        m = MetaNode(track=None, P_nx=P_nx_identity,
+                set_sa=f, set_sb=f, fset=fset,
+                tm=node_to_tm[v])
+        node_to_meta[v] = m
+    return node_to_meta
+
+
 def sample_blink_transitions(T, root, node_to_tm, primary_to_tol,
         fg_track, bg_tracks, bg_to_fg_fset, Q_meta):
     """
@@ -246,20 +263,7 @@ def sample_blink_transitions(T, root, node_to_tm, primary_to_tol,
 
     """
     P_nx_identity = fg_track.P_nx_identity
-
-    # Construct a meta node for each structural node.
-    node_to_meta = {}
-    #print('building meta nodes corresponding to structural nodes')
-    for v in T:
-        f = partial(set_or_confirm_history_state, fg_track.history, v)
-        fset = fg_track.data[v]
-        m = MetaNode(track=None, P_nx=P_nx_identity,
-                set_sa=f, set_sb=f, fset=fset,
-                tm=node_to_tm[v])
-        node_to_meta[v] = m
-        #print('adding meta node', v, m)
-
-    # Define the meta node corresponding to the root.
+    node_to_meta = get_node_to_meta(T, root, node_to_tm, fg_track)
     mroot = node_to_meta[root]
 
     # Build the tree whose vertices are meta nodes,
@@ -430,20 +434,7 @@ def sample_primary_transitions(T, root, node_to_tm, primary_to_tol,
 
     """
     P_nx_identity = fg_track.P_nx_identity
-
-    # Construct a meta node for each structural node.
-    node_to_meta = {}
-    #print('building meta nodes corresponding to structural nodes')
-    for v in T:
-        f = partial(set_or_confirm_history_state, fg_track.history, v)
-        fset = fg_track.data[v]
-        m = MetaNode(track=None, P_nx=P_nx_identity,
-                set_sa=f, set_sb=f, fset=fset,
-                tm=node_to_tm[v])
-        node_to_meta[v] = m
-        #print('adding meta node', v, m)
-
-    # Define the meta node corresponding to the root.
+    node_to_meta = get_node_to_meta(T, root, node_to_tm, fg_track)
     mroot = node_to_meta[root]
 
     # Build the tree whose vertices are meta nodes,
