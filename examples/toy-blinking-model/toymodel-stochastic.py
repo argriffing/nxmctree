@@ -44,8 +44,9 @@ from nxmodel import (
         hamming_distance, compound_state_is_ok)
 from poisson import sample_primary_poisson_events, sample_blink_poisson_events
 from util import (
-        get_node_to_tm, get_total_rates, get_omega, get_uniformized_P_nx)
-from navigation import gen_segments
+        get_node_to_tm, get_total_rates, get_omega, get_uniformized_P_nx,
+        do_nothing, set_or_confirm_history_state)
+from navigation import MetaNode, gen_meta_segments, gen_segments
 from trajectory import Trajectory, Event
 
 
@@ -133,67 +134,6 @@ def init_incomplete_primary_events(T, node_to_tm, primary_track, diameter):
 # Classes and functions for steps of Rao Teh iteration.
 
 
-class MetaNode(object):
-    """
-    This is hashable so it can be a node in a networkx graph.
-
-    """
-    def __init__(self, track=None, P_nx=None,
-            set_sa=None, set_sb=None, fset=None, transition=None, tm=None):
-        """
-
-        Parameters
-        ----------
-        track : Trajectory
-            event track if any
-        P_nx : nx transition matrix, optional
-            the node is associated with this transition matrix
-        set_sa : callback, optional
-            report the sampled initial state
-        set_sb : callback, optional
-            report the sampled final state
-        fset : set, optional
-            Set of foreground state restrictions or None.
-            None is interpreted as no restriction rather than
-            lack of feasible states.
-        transition : triple, optional
-            A transition like (trajectory_name, sa, sb) or None.
-            None is interpreted as absence of background transition.
-        tm : float
-            time elapsed since the root
-
-        """
-        self.track = track
-        self.P_nx = P_nx
-        self.set_sa = set_sa
-        self.set_sb = set_sb
-        self.fset = fset
-        self.transition = transition
-        self.tm = tm
-
-    def __eq__(self, other):
-        return id(self) == id(other)
-
-    def __hash__(self):
-        return id(self)
-
-
-def do_nothing(state):
-    """
-    Helper function as a placeholder callback.
-
-    """
-    pass
-
-
-def set_or_confirm_history_state(node_to_state, node, state):
-    """
-    Helper function for updating history within a trajectory.
-
-    """
-    if node_to_state.get(node, None) not in (state, None):
-        raise Exception('found a history incompatibility')
-    node_to_state[node] = state
 
 
 def get_edge_tree(T, root):
@@ -277,65 +217,12 @@ def sample_blink_transitions(T, root, node_to_tm, primary_to_tol,
     meta_node_tree = nx.DiGraph()
     node_to_data_lmap = dict()
     for edge in T.edges():
-        va, vb = edge
 
-        # Sequence meta nodes from three sources:
-        # the two structural endpoint nodes,
-        # the nodes representing transitions in background tracks,
-        # and nodes representing transitions in the foreground track.
-        # Note that meta nodes are not meaningfully sortable,
-        # but events are sortable.
-        events = []
-        events.extend(fg_track.events[edge])
-        for bg_track in bg_tracks:
-            events.extend(bg_track.events[edge])
-
-        # Construct the meta nodes corresponding to sorted events.
-        seq = []
-        for ev in sorted(events):
-            if ev.track is fg_track:
-                m = MetaNode(track=ev.track, P_nx=None,
-                        set_sa=ev.init_sa, set_sb=ev.init_sb,
-                        tm=ev.tm)
-            else:
-                m = MetaNode(track=ev.track, P_nx=P_nx_identity,
-                        set_sa=do_nothing, set_sb=do_nothing,
-                        transition=(ev.track.name, ev.sa, ev.sb),
-                        tm=ev.tm)
-            seq.append(m)
-        ma = node_to_meta[va]
-        mb = node_to_meta[vb]
-        seq = [ma] + seq + [mb]
-
-        # Initialize background states at the beginning of the edge.
-        bg_track_to_state = {}
-        for bg_track in bg_tracks:
-            bg_track_to_state[bg_track.name] = bg_track.history[va]
-
-        # Add segments of the edge as edges of the meta node tree.
-        # Track the state of each background track at each segment.
-        #print('processing edge', va, vb)
-        for segment in zip(seq[:-1], seq[1:]):
+        for segment, bg_track_to_state, fg_allowed in gen_meta_segments(
+                edge, node_to_meta, fg_track, bg_tracks, bg_to_fg_fset):
             ma, mb = segment
 
-            # Keep the state of each background track up to date.
-            if ma.transition is not None:
-                name, sa, sb = ma.transition
-                if bg_track_to_state[name] != sa:
-                    raise Exception('incompatible transition: '
-                            'current state on track %s is %s '
-                            'but encountered a transition event from '
-                            'state %s to state %s' % (
-                                name, bg_track_to_state[name], sa, sb))
-                bg_track_to_state[name] = sb
-
-            # Get the set of foreground states allowed by the background.
-            fsets = []
-            for name, state in bg_track_to_state.items():
-                fsets.append(bg_to_fg_fset[name][state])
-            fg_allowed = set.intersection(*fsets)
-
-            # Update the mb transition matrix if it is a foreground event.
+            # Update the ma transition matrix if it is a foreground event.
             if ma.track is fg_track:
                 # Use the generic transition matrix.
                 ma.P_nx = fg_track.P_nx
@@ -382,6 +269,8 @@ def sample_blink_transitions(T, root, node_to_tm, primary_to_tol,
             # Add the meta node to the meta node tree.
             #print('adding segment', ma, mb)
             meta_node_tree.add_edge(ma, mb)
+
+    #TODO reorganize after here
 
     # Build the tree whose vertices are edges of the meta node tree.
     meta_edge_tree, meta_edge_root = get_edge_tree(meta_node_tree, mroot)
@@ -448,66 +337,14 @@ def sample_primary_transitions(T, root, node_to_tm, primary_to_tol,
     meta_node_tree = nx.DiGraph()
     node_to_data_lmap = dict()
     for edge in T.edges():
-        va, vb = edge
 
-        # Sequence meta nodes from three sources:
-        # the two structural endpoint nodes,
-        # the nodes representing transitions in background tracks,
-        # and nodes representing transitions in the foreground track.
-        # Note that meta nodes are not meaningfully sortable,
-        # but events are sortable.
-        events = []
-        events.extend(fg_track.events[edge])
-        for bg_track in bg_tracks:
-            events.extend(bg_track.events[edge])
-
-        # Construct the meta nodes corresponding to sorted events.
-        seq = []
-        for ev in sorted(events):
-            if ev.track is fg_track:
-                m = MetaNode(track=ev.track, P_nx=None,
-                        set_sa=ev.init_sa, set_sb=ev.init_sb,
-                        tm=ev.tm)
-            else:
-                m = MetaNode(track=ev.track, P_nx=P_nx_identity,
-                        set_sa=do_nothing, set_sb=do_nothing,
-                        transition=(ev.track.name, ev.sa, ev.sb),
-                        tm=ev.tm)
-            seq.append(m)
-        ma = node_to_meta[va]
-        mb = node_to_meta[vb]
-        seq = [ma] + seq + [mb]
-
-        # Initialize background states at the beginning of the edge.
-        bg_track_to_state = {}
-        for bg_track in bg_tracks:
-            bg_track_to_state[bg_track.name] = bg_track.history[va]
-
-        # Add segments of the edge as edges of the meta node tree.
-        # Track the state of each background track at each segment.
-        #print('processing edge', va, vb)
-        for segment in zip(seq[:-1], seq[1:]):
+        for segment, bg_track_to_state, fg_allowed in gen_meta_segments(
+                edge, node_to_meta, fg_track, bg_tracks, bg_to_fg_fset):
             ma, mb = segment
 
-            # Keep the state of each background track up to date.
-            if ma.transition is not None:
-                name, sa, sb = ma.transition
-                if bg_track_to_state[name] != sa:
-                    raise Exception('incompatible transition: '
-                            'current state on track %s is %s '
-                            'but encountered a transition event from '
-                            'state %s to state %s' % (
-                                name, bg_track_to_state[name], sa, sb))
-                bg_track_to_state[name] = sb
-
-            # Get the set of foreground states allowed by the background.
-            fsets = []
-            for name, state in bg_track_to_state.items():
-                fsets.append(bg_to_fg_fset[name][state])
-            fg_allowed = set.intersection(*fsets)
-
-            # Update the mb transition matrix if it is a foreground event.
+            # Update the ma transition matrix if it is a foreground event.
             if ma.track is fg_track:
+
                 # Uniformize the transition matrix
                 # according to the background states.
                 Q_local = nx.DiGraph()
@@ -517,6 +354,7 @@ def sample_primary_transitions(T, root, node_to_tm, primary_to_tol,
                     if sb in fg_allowed:
                         rate = fg_track.Q_nx[sa][sb]['weight']
                         Q_local.add_edge(sa, sb, weight=rate)
+
                 # Compute the total local rates.
                 local_rates = get_total_rates(Q_local)
                 local_omega = get_omega(local_rates, 2)
@@ -546,6 +384,8 @@ def sample_primary_transitions(T, root, node_to_tm, primary_to_tol,
             # Add the meta node to the meta node tree.
             #print('adding segment', ma, mb)
             meta_node_tree.add_edge(ma, mb)
+
+    #TODO reorganize after here
 
     # Build the tree whose vertices are edges of the meta node tree.
     meta_edge_tree, meta_edge_root = get_edge_tree(meta_node_tree, mroot)
