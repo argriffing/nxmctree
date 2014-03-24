@@ -44,12 +44,13 @@ from nxmodel import (
         hamming_distance, compound_state_is_ok,
         )
 from poisson import (
-        sample_segment_poisson_events, gen_segments,
+        sample_segment_poisson_events,
         sample_primary_poisson_events, sample_blink_poisson_events,
         )
 from util import (
         get_node_to_tm, get_total_rates, get_omega, get_uniformized_P_nx,
         )
+from navigation import gen_segments
 from trajectory import Trajectory, Event
 
 
@@ -221,51 +222,14 @@ def get_edge_tree(T, root):
     return T_dual, dual_root
 
 
-#TODO use the segment enumeration from the poisson sampler
 def get_blink_dwell_times(T, node_to_tm, blink_tracks):
     dwell_off = 0
     dwell_on = 0
     for edge in T.edges():
         va, vb = edge
-        tma = node_to_tm[va]
-        tmb = node_to_tm[vb]
-
-        # construct unordered collection of events
-        events = []
-        for track in blink_tracks:
-            events.extend(track.events[edge])
-
-        # construct ordered sequence of events and endpoints
-        seq = [(ev.tm, ev.track, ev.sa, ev.sb) for ev in sorted(events)]
-        info_a = (tma, None, None, None)
-        info_b = (tmb, None, None, None)
-        seq = [info_a] + seq + [info_b]
-
-        # initialize the state of each blining track along the edge
-        track_to_state = {}
-        for track in blink_tracks:
-            track_to_state[track.name] = track.history[va]
-
-        # compute dwell times associated with each trajectory on each segment
-        for segment in zip(seq[:-1], seq[1:]):
-            info_a, info_b = segment
-            tma, tracka, saa, sba = info_a
-            tmb, trackb, sab, sbb = info_b
+        for tma, tmb, track_to_state in gen_segments(
+                edge, node_to_tm, blink_tracks):
             blen = tmb - tma
-
-            # Keep the state of each track up to date.
-            if tracka is not None:
-                tm, track, sa, sb = info_a
-                name = tracka.name
-                if track_to_state[name] != sa:
-                    raise Exception('incompatible transition: '
-                            'current state on track %s is %s '
-                            'but encountered a transition event from '
-                            'state %s to state %s' % (
-                                name, track_to_state[name], sa, sb))
-                track_to_state[name] = sb
-
-            # update the dwell times
             for track in blink_tracks:
                 state = track_to_state[track.name]
                 if state == False:
@@ -274,8 +238,6 @@ def get_blink_dwell_times(T, node_to_tm, blink_tracks):
                     dwell_on += blen
                 else:
                     raise Exception
-
-    # return the dwell times
     return dwell_off, dwell_on
 
 
