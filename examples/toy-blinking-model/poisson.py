@@ -14,13 +14,10 @@ from navigation import gen_segments
 from trajectory import Event
 
 
-__all__ = [
-        'sample_segment_poisson_events',
-        'sample_primary_poisson_events', 'sample_blink_poisson_events',
-        ]
+__all__ = ['sample_primary_poisson_events', 'sample_blink_poisson_events']
 
 
-def sample_segment_poisson_events(track, rate, tma, tmb):
+def _poisson_helper(track, rate, tma, tmb):
     """
     Sample poisson events on a segment.
 
@@ -111,8 +108,7 @@ def sample_primary_poisson_events(edge, node_to_tm,
         poisson_rate = local_omega - local_rates[fg_state]
 
         # Sample some poisson events on the segment.
-        segment_events = sample_segment_poisson_events(
-                fg_track, poisson_rate, tma, tmb)
+        segment_events = _poisson_helper(fg_track, poisson_rate, tma, tmb)
         poisson_events.extend(segment_events)
 
     # Add the poisson events into the list of foreground
@@ -130,12 +126,11 @@ def sample_blink_poisson_events(edge, node_to_tm,
     for tma, tmb, track_to_state in gen_segments(edge, node_to_tm, tracks):
 
         # Compute the poisson rate.
-        fg_sa = track_to_state[fg_track.name]
-        poisson_rate = fg_track.poisson_rates[fg_sa]
+        fg_state = track_to_state[fg_track.name]
+        poisson_rate = fg_track.poisson_rates[fg_state]
 
         # Sample some poisson events on the segment.
-        segment_events = sample_segment_poisson_events(
-                fg_track, poisson_rate, tma, tmb)
+        segment_events = _poisson_helper(fg_track, poisson_rate, tma, tmb)
         poisson_events.extend(segment_events)
 
     # Add the poisson events into the list of foreground
