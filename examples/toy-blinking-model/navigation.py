@@ -4,7 +4,7 @@ Functions related to navigation of the tree structure.
 """
 from __future__ import division, print_function, absolute_import
 
-from util import do_nothing, set_or_confirm_history_state
+from util import do_nothing
 
 
 # OK so this is not really navigation...
@@ -90,7 +90,6 @@ def gen_meta_segments(edge, node_to_meta, fg_track, bg_tracks, bg_to_fg_fset):
 
     # Add segments of the edge as edges of the meta node tree.
     # Track the state of each background track at each segment.
-    #print('processing edge', va, vb)
     for segment in zip(seq[:-1], seq[1:]):
         ma, mb = segment
 
@@ -106,6 +105,7 @@ def gen_meta_segments(edge, node_to_meta, fg_track, bg_tracks, bg_to_fg_fset):
             bg_track_to_state[name] = sb
 
         # Get the set of foreground states allowed by the background.
+        # Note that this deliberately does not include the data.
         fsets = []
         for name, state in bg_track_to_state.items():
             fsets.append(bg_to_fg_fset[name][state])
