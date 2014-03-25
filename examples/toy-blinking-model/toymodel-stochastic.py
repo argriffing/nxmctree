@@ -28,12 +28,9 @@ from __future__ import division, print_function, absolute_import
 
 from collections import defaultdict
 from functools import partial
-from itertools import product
-import warnings
 
 import networkx as nx
 import numpy as np
-import scipy.linalg
 
 import nxmctree
 from nxmctree.sampling import sample_history
@@ -63,13 +60,6 @@ RATE_OFF = 1.0
 
 P_ON = RATE_ON / (RATE_ON + RATE_OFF)
 P_OFF = RATE_OFF / (RATE_ON + RATE_OFF)
-
-
-#TODO adjust the poisson rate correctly for each segment
-# using the background context
-# adjust the transition matrices accordingly
-
-#TODO use 'segment' vs. 'edge' jargon
 
 
 ###############################################################################
