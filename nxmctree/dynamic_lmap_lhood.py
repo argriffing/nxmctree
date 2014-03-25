@@ -190,7 +190,8 @@ def _forward(T, edge_to_P, root, v_to_subtree_partial_likelihoods):
             for sb, pb in sb_distn.items():
                 distn[sb] += pa * pb
 
-        v_to_posterior_distn[vb] = distn
+        # Set the posterior distribution while converting from defaultdict.
+        v_to_posterior_distn[vb] = dict(distn)
 
     return v_to_posterior_distn
 
