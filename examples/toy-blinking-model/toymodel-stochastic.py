@@ -158,6 +158,10 @@ def get_edge_tree(T, root):
 
 
 def get_blink_dwell_times(T, node_to_tm, blink_tracks):
+    """
+    This function is only for reporting results.
+
+    """
     dwell_off = 0
     dwell_on = 0
     for edge in T.edges():
@@ -180,6 +184,8 @@ def get_node_to_meta(T, root, node_to_tm, fg_track):
     """
     Create meta nodes representing structural nodes in the tree.
 
+    This is a helper function.
+
     """
     P_nx_identity = fg_track.P_nx_identity
     node_to_meta = {}
@@ -191,6 +197,44 @@ def get_node_to_meta(T, root, node_to_tm, fg_track):
                 tm=node_to_tm[v])
         node_to_meta[v] = m
     return node_to_meta
+
+
+def resample_using_meta_node_tree(root, meta_node_tree, mroot,
+        fg_track, node_to_data_lmap):
+    """
+    Resample the states of the foreground process using the meta node tree.
+
+    This is a helper function.
+
+    """
+    # Build the tree whose vertices are edges of the meta node tree.
+    meta_edge_tree, meta_edge_root = get_edge_tree(meta_node_tree, mroot)
+
+    # Create the map from edges of the meta edge tree
+    # to primary state transition matrices.
+    edge_to_P = {}
+    for pair in meta_edge_tree.edges():
+        (ma, mb), (mb2, mc) = pair
+        if mb != mb2:
+            raise Exception('incompatibly constructed meta edge tree')
+        edge_to_P[pair] = mb.P_nx
+
+    # Use nxmctree to sample a history on the meta edge tree.
+    root_data_fset = fg_track.data[root]
+    node_to_data_lmap[meta_edge_root] = dict((s, 1) for s in root_data_fset)
+    meta_edge_to_sampled_state = sample_history(
+            meta_edge_tree, edge_to_P, meta_edge_root,
+            fg_track.prior_root_distn, node_to_data_lmap)
+
+    # Use the sampled history to update the primary history at structural nodes
+    # and to update the primary event transitions.
+    for meta_edge in meta_edge_tree:
+        ma, mb = meta_edge
+        state = meta_edge_to_sampled_state[meta_edge]
+        if ma is not None:
+            ma.set_sb(state)
+        if mb is not None:
+            mb.set_sa(state)
 
 
 def sample_blink_transitions(T, root, node_to_tm, primary_to_tol,
@@ -268,47 +312,9 @@ def sample_blink_transitions(T, root, node_to_tm, primary_to_tol,
             # Add the meta node to the meta node tree.
             meta_node_tree.add_edge(ma, mb)
 
-    #TODO reorganize after here
-
-    # Build the tree whose vertices are edges of the meta node tree.
-    meta_edge_tree, meta_edge_root = get_edge_tree(meta_node_tree, mroot)
-    #print('size of meta_edge_tree:')
-    #print(len(meta_edge_tree))
-    #print()
-    #print('meta edge root:')
-    #print(meta_edge_root)
-    #print()
-
-    # Create the map from edges of the meta edge tree
-    # to primary state transition matrices.
-    edge_to_P = {}
-    for pair in meta_edge_tree.edges():
-        (ma, mb), (mb2, mc) = pair
-        if mb != mb2:
-            raise Exception('incompatibly constructed meta edge tree')
-        edge_to_P[pair] = mb.P_nx
-
-    # Use nxmctree to sample a history on the meta edge tree.
-    root_data_fset = fg_track.data[root]
-    #print(root_data_fset)
-    #print(node_to_data_lmap)
-    node_to_data_lmap[meta_edge_root] = dict((s, 1) for s in root_data_fset)
-    meta_edge_to_sampled_state = sample_history(
-            meta_edge_tree, edge_to_P, meta_edge_root,
-            fg_track.prior_root_distn, node_to_data_lmap)
-    #print('size of sampled history:')
-    #print(len(meta_edge_to_sampled_state))
-    #print()
-
-    # Use the sampled history to update the primary history at structural nodes
-    # and to update the primary event transitions.
-    for meta_edge in meta_edge_tree:
-        ma, mb = meta_edge
-        state = meta_edge_to_sampled_state[meta_edge]
-        if ma is not None:
-            ma.set_sb(state)
-        if mb is not None:
-            mb.set_sa(state)
+    # Resample the states using the meta tree.
+    resample_using_meta_node_tree(root, meta_node_tree, mroot,
+            fg_track, node_to_data_lmap)
 
 
 def sample_primary_transitions(T, root, node_to_tm, primary_to_tol,
@@ -383,47 +389,9 @@ def sample_primary_transitions(T, root, node_to_tm, primary_to_tol,
             #print('adding segment', ma, mb)
             meta_node_tree.add_edge(ma, mb)
 
-    #TODO reorganize after here
-
-    # Build the tree whose vertices are edges of the meta node tree.
-    meta_edge_tree, meta_edge_root = get_edge_tree(meta_node_tree, mroot)
-    #print('size of meta_edge_tree:')
-    #print(len(meta_edge_tree))
-    #print()
-    #print('meta edge root:')
-    #print(meta_edge_root)
-    #print()
-
-    # Create the map from edges of the meta edge tree
-    # to primary state transition matrices.
-    edge_to_P = {}
-    for pair in meta_edge_tree.edges():
-        (ma, mb), (mb2, mc) = pair
-        if mb != mb2:
-            raise Exception('incompatibly constructed meta edge tree')
-        edge_to_P[pair] = mb.P_nx
-
-    # Use nxmctree to sample a history on the meta edge tree.
-    root_data_fset = fg_track.data[root]
-    #print(root_data_fset)
-    #print(node_to_data_lmap)
-    node_to_data_lmap[meta_edge_root] = dict((s, 1) for s in root_data_fset)
-    meta_edge_to_sampled_state = sample_history(
-            meta_edge_tree, edge_to_P, meta_edge_root,
-            fg_track.prior_root_distn, node_to_data_lmap)
-    #print('size of sampled history:')
-    #print(len(meta_edge_to_sampled_state))
-    #print()
-
-    # Use the sampled history to update the primary history at structural nodes
-    # and to update the primary event transitions.
-    for meta_edge in meta_edge_tree:
-        ma, mb = meta_edge
-        state = meta_edge_to_sampled_state[meta_edge]
-        if ma is not None:
-            ma.set_sb(state)
-        if mb is not None:
-            mb.set_sa(state)
+    # Resample the states using the meta tree.
+    resample_using_meta_node_tree(root, meta_node_tree, mroot,
+            fg_track, node_to_data_lmap)
 
 
 ###############################################################################
