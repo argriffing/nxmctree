@@ -70,10 +70,6 @@ def test_blinking_model_chain():
             va, vb = edge
             post_distn_dynamic = post_dynamic_map[edge]
             post_distn_brute = post_brute_map[edge]
-            #print(va, vb)
-            #for nxdistn in post_distn_dynamic, post_distn_brute:
-                #for sa, sb in product((False, True), repeat=2):
-                    #print(sa, sb, nxdistn[sa][sb]['weight'])
             assert_nx_distn_allclose(post_distn_dynamic, post_distn_brute)
 
         # posterior distributions at nodes
@@ -82,7 +78,6 @@ def test_blinking_model_chain():
         for v in T:
             post_distn_dynamic = post_dynamic_map[v]
             post_distn_brute = post_brute_map[v]
-            #print(v, post_distn_dynamic, post_distn_brute)
             assert_dict_distn_allclose(post_distn_dynamic, post_distn_brute)
 
 

@@ -1,5 +1,5 @@
 """
-Utility functions.
+Utility functions that do not use external packages.
 
 """
 from __future__ import division, print_function, absolute_import
