@@ -43,7 +43,7 @@ Test:
 
 Coverage:
 
-    $ python-coverage run --branch runtests.py
+    $ python-coverage run runtests.py
     $ python-coverage html
     $ chromium-browser htmlcov/index.html
 

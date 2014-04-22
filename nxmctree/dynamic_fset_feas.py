@@ -112,8 +112,6 @@ def get_edge_to_nxfset(T, edge_to_adjacency, root,
         along the edge.
 
     """
-    if not T:
-        return {}
     v_to_fset = get_node_to_fset(T, edge_to_adjacency, root,
             root_prior_fset, node_to_data_fset)
     edge_to_nxfset = {}
@@ -184,8 +182,6 @@ def _forward(T, edge_to_adjacency, root, v_to_subtree_fset):
     """
     v_to_posterior_fset = {}
     v_to_posterior_fset[root] = set(v_to_subtree_fset[root])
-    if not T:
-        return v_to_posterior_fset
     for edge in nx.bfs_edges(T, root):
         va, vb = edge
         A = edge_to_adjacency[edge]

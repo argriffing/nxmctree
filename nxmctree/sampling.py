@@ -25,35 +25,6 @@ def dict_random_choice(d):
             return i
 
 
-def sample_history_fset(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset):
-    """
-    Jointly sample states on a tree.
-    This is called a history.
-
-    """
-    v_to_subtree_partial_likelihoods = dynamic_fset_lhood._backward(
-            T, edge_to_P, root, root_prior_distn, node_to_data_fset)
-    node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
-            v_to_subtree_partial_likelihoods)
-    return node_to_state
-
-
-def sample_histories_fset(T, edge_to_P, root,
-        root_prior_distn, node_to_data_fset, nhistories):
-    """
-    Sample multiple history.
-    Each history is a joint sample of states on the tree.
-
-    """
-    v_to_subtree_partial_likelihoods = dynamic_fset_lhood._backward(
-            T, edge_to_P, root, root_prior_distn, node_to_data_fset)
-    for i in range(nhistories):
-        node_to_state = _sample_states_preprocessed(T, edge_to_P, root,
-                v_to_subtree_partial_likelihoods)
-        yield node_to_state
-
-
 def sample_history(T, edge_to_P, root,
         root_prior_distn, node_to_data_lmap):
     """
@@ -96,8 +67,6 @@ def _sample_states_preprocessed(T, edge_to_P, root,
         return None
     v_to_sampled_state = {}
     v_to_sampled_state[root] = dict_random_choice(root_partial_likelihoods)
-    if not T:
-        return v_to_sampled_state
     for edge in nx.bfs_edges(T, root):
         va, vb = edge
         P = edge_to_P[edge]
