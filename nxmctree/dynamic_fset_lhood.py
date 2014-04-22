@@ -130,11 +130,7 @@ def _backward(T, edge_to_P, root, root_prior_distn, node_to_data_fset):
 
     """
     v_to_subtree_partial_likelihoods = {}
-    if T:
-        postorder_nodes = reversed(nx.topological_sort(T, [root]))
-    else:
-        postorder_nodes = [root]
-    for v in postorder_nodes:
+    for v in nx.topological_sort(T, [root], reverse=True):
         fset_data = node_to_data_fset[v]
         if T and T[v]:
             cs = T[v]

@@ -116,10 +116,11 @@ def sample_data_lmaps(nodes, states, pzero):
 
 
 def _sample_single_node_system(pzero, fn_sample_data):
-    root = 42
-    nodes = {root}
-    states = set(['a', 'b', 'c'])
     T = nx.DiGraph()
+    root = 42
+    T.add_node(root)
+    nodes = set(T)
+    states = set(['a', 'b', 'c'])
     root_prior_distn = sample_dict_distn(states, pzero)
     edge_to_P = {}
     node_to_data = fn_sample_data(nodes, states, pzero)
