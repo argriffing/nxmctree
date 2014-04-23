@@ -186,7 +186,7 @@ def _forward(T, edge_to_P, root, v_to_subtree_partial_likelihoods):
             for sb, pb in sb_distn.items():
                 distn[sb] += pa * pb
 
-        v_to_posterior_distn[vb] = distn
+        v_to_posterior_distn[vb] = dict(distn)
 
     return v_to_posterior_distn
 
@@ -230,7 +230,7 @@ def _forward_edges(T, edge_to_P, root,
                 distn[sb] += p
                 J.add_edge(sa, sb, weight=p)
 
-        v_to_posterior_distn[vb] = distn
+        v_to_posterior_distn[vb] = dict(distn)
 
     return edge_to_J
 
