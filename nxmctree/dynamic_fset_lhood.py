@@ -27,9 +27,9 @@ __all__ = [
 params = """\
     T : directed networkx tree graph
         Edge and node annotations are ignored.
-    edge_to_adjacency : dict
+    edge_to_P : dict
         A map from directed edges of the tree graph
-        to networkx graphs representing state transition feasibility.
+        to networkx graphs representing state transition probabilities.
     root : hashable
         This is the root node.
         Following networkx convention, this may be anything hashable.
