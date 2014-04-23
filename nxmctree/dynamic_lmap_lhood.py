@@ -29,9 +29,9 @@ __all__ = [
 params = """\
     T : directed networkx tree graph
         Edge and node annotations are ignored.
-    edge_to_adjacency : dict
+    edge_to_P : dict
         A map from directed edges of the tree graph
-        to networkx graphs representing state transition feasibility.
+        to networkx graphs representing state transition probability.
     root : hashable
         This is the root node.
         Following networkx convention, this may be anything hashable.
@@ -120,7 +120,7 @@ def _get_root_lhoods(T, edge_to_P, root,
 @ddec(params=params)
 def _backward(T, edge_to_P, root, root_prior_distn, node_to_data_lmap):
     """
-    Determine the subtree feasible state set of each node.
+    Determine the subtree partial likelihoods for each node.
 
     This is the backward pass of a backward-forward algorithm.
 

@@ -120,7 +120,7 @@ def _get_root_lhoods(T, edge_to_P, root,
 @ddec(params=params)
 def _backward(T, edge_to_P, root, root_prior_distn, node_to_data_fset):
     """
-    Determine the subtree feasible state set of each node.
+    Determine the subtree partial likelihoods for each node.
 
     This is the backward pass of a backward-forward algorithm.
 
