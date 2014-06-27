@@ -13,6 +13,8 @@ from nxmctree import dynamic_fset_lhood, dynamic_lmap_lhood
 __all__ = [
         'sample_history',
         'sample_histories',
+        'sample_unconditional_history',
+        'sample_unconditional_histories',
         ]
 
 
@@ -87,4 +89,32 @@ def _sample_states_preprocessed(T, edge_to_P, root,
         v_to_sampled_state[vb] = dict_random_choice(sb_weights)
 
     return v_to_sampled_state
+
+
+def sample_unconditional_history(T, edge_to_P, root, root_prior_distn):
+    """
+    No data is used in the sampling of this state history at nodes.
+
+    """
+    node_to_state = {root : dict_random_choice(root_prior_distn)}
+    for edge in nx.bfs_edges(T, root):
+        va, vb = edge
+        P = edge_to_P[edge]
+        sa = node_to_state[va]
+        sb_weights = dict((sb, P[sa][sb]['weight']) for sb in P[sa])
+        node_to_state[vb] = dict_random_choice(sb_weights)
+    return v_to_sampled_state
+
+
+def sample_unconditional_histories(T, edge_to_P, root,
+        root_prior_distn, nhistories):
+    """
+    Sample multiple unconditional histories.
+
+    This function is not as useful as its conditional sampling analog,
+    because this function does not require pre-processing.
+
+    """
+    for i in range(nhistories):
+        yield sample_unconditional_history(T, edge_to_P, root, root_prior_distn)
 
