@@ -103,7 +103,7 @@ def sample_unconditional_history(T, edge_to_P, root, root_prior_distn):
         sa = node_to_state[va]
         sb_weights = dict((sb, P[sa][sb]['weight']) for sb in P[sa])
         node_to_state[vb] = dict_random_choice(sb_weights)
-    return v_to_sampled_state
+    return node_to_state
 
 
 def sample_unconditional_histories(T, edge_to_P, root,

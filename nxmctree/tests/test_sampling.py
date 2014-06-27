@@ -179,3 +179,4 @@ def test_puzzles():
                 # failed to sample a node to state map for infeasible problem
                 pass
 
+
